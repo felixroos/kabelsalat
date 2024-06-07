@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "build": "vite build --base /kabelsalat/",
+    "preview": "vite preview --base /kabelsalat/"
   },
   "dependencies": {
     "@hpcc-js/wasm": "^2.16.2",
