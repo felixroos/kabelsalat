@@ -3,14 +3,16 @@ import { render } from "solid-js/web";
 import { assert } from "./util";
 import { createSignal, createEffect } from "solid-js";
 import "./index.css";
-import "./node";
-import { node, n, saw, sine } from "./node";
+import * as api from "./node.js";
 import "./graphviz";
 import "./compiler";
-import workletUrl from "./worklet.js?url";
+import workletUrl from "./worklet.js?worker&url";
+
+Object.assign(globalThis, api);
 
 class AudioView {
   updateGraph(node) {
+    console.log("node", node);
     const { src, nodes } = node.compile();
     this.send({
       type: "NEW_UNIT",
@@ -82,7 +84,10 @@ function App() {
   );
   let container;
   async function run() {
-    const node = eval(code()); // run code TBD: don't use eval
+    const body = `return ${code()}`;
+    console.log("run", body);
+    const node = Function(body)();
+
     audio.updateGraph(node); // update dsp
     node.render(container); // update viz
   }
