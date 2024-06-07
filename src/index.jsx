@@ -75,24 +75,26 @@ document.addEventListener("click", () => {
 
 // library
 function App() {
-  let [code, setCode] = createSignal(
-    //`sine(sine(2).range(200,210)).mul(.25).out()` // vibrato
-    // `sine(110).mul(sine(8).range(1,2)).mul(.25).out()` // tremolo
-    // `sine(110).mul(sine(saw(.5).range(1,16)).range(1,2)).mul(.25).out()` // modulated tremolo
-    //`saw(sine(8).range(110,114)).mul(.1).out()`
-    `sine(n(200).mul(sine(154))).mul(.25).out()`
-  );
+  let urlCode = window.location.hash.slice(1);
+  if (urlCode) {
+    urlCode = atob(urlCode);
+    console.log("loaded code from url!");
+  }
+  const initialCode = urlCode || `sine(n(200).mul(sine(154))).mul(.25).out()`;
+  let [code, setCode] = createSignal(initialCode);
   let container;
   async function run() {
     const body = `return ${code()}`;
+
     console.log("run", body);
     const node = Function(body)();
 
     audio.updateGraph(node); // update dsp
+    window.location.hash = "#" + btoa(code());
     node.render(container); // update viz
   }
   return (
-    <div className="flex flex-col h-full justify-stretch text-teal-600 font-mono">
+    <div className="flex flex-col  h-full max-h-full justify-stretch text-teal-600 font-mono ">
       <div className="px-4 py-2  font-bold border-b border-teal-500 flex">
         <marquee className="text-teal-100">KABƎL.SALAT</marquee>
         <marquee className="text-teal-200">KABƎL.SALAT</marquee>
@@ -104,26 +106,28 @@ function App() {
         <marquee className="text-teal-800">KABƎL.SALAT</marquee>
         <marquee className="text-teal-900">KABƎL.SALAT</marquee>
       </div>
-      <textarea
-        onKeyDown={(e) => {
-          if (e.key === "Enter" && e.ctrlKey) {
-            run();
-          } else if (e.key === "." && e.ctrlKey) {
-            stop();
-          }
-        }}
-        className="bg-stone-900 grow shrink-0 p-4 focus:ring-0 outline-0 border-b border-teal-500"
-        spellcheck="false"
-        value={code()}
-        onInput={(e) => setCode(e.target.value)}
-      ></textarea>
-      <div
-        class="bg-stone-900 overflow-auto text-gray-500 grow-0 p-4"
-        ref={container}
-      >
-        run the code to see graph...
+      <div className="grid grid-cols-2 flex-auto">
+        <textarea
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && e.ctrlKey) {
+              run();
+            } else if (e.key === "." && e.ctrlKey) {
+              stop();
+            }
+          }}
+          className="bg-stone-900 shrink-0 p-4 focus:ring-0 outline-0 border-r border-teal-500"
+          spellcheck="false"
+          value={code()}
+          onInput={(e) => setCode(e.target.value)}
+        ></textarea>
+        <div
+          class="bg-stone-900 overflow-auto text-gray-500 p-4 grow-0"
+          ref={container}
+        >
+          run the code to see graph...
+        </div>
       </div>
-      <div className="px-4 py-2 border-t border-teal-500">
+      <div className="px-4 py-2 border-t border-teal-500 grow-0">
         <p>
           welcome to kabelsalat. this is a very experimental audio graph live
           coding prototype..
