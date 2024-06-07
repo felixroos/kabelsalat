@@ -128,6 +128,11 @@ function App() {
         </div>
       </div>
       <div className="px-4 py-2 border-t border-teal-500 grow-0">
+        <div className="float-right">
+          <a href="https://github.com/felixroos/kabelsalat" target="_blank">
+            code on github
+          </a>
+        </div>
         <p>
           welcome to kabelsalat. this is a very experimental audio graph live
           coding prototype..
