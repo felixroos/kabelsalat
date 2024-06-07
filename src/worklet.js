@@ -1,10 +1,8 @@
 import { AudioGraph } from "./audiograph.js";
 
-// Great intro to audio worklets:
-// https://developers.google.com/web/updates/2017/12/audio-worklet
-//
-// Mozilla reference:
-// https://developer.mozilla.org/en-US/docs/Web/API/AudioWorkletNode
+// taken / slightly modified from noisecraft
+// https://github.com/maximecb/noisecraft
+// LICENSE: GPL-2.0
 
 class GraphWorklet extends AudioWorkletProcessor {
   constructor() {

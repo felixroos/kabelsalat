@@ -86,3 +86,37 @@ function visitKeyed(node, visited = {}) {
   });
   return visited;
 }
+
+// TODO: find a cool api to register functions (maybe similar to strudel's register)
+// so far, node types added here also have to be added to the compiler, as well as NODE_CLASSES (for audio nodes)
+// it would be nice if there was a way to define custom functions / nodes / dsp logic in a single place...
+
+export const node = (type, value) => new Node(type, value);
+
+export function n(value) {
+  if (value.isNode) {
+    return value;
+  }
+  return node("n", value);
+}
+
+export function saw(freq) {
+  return n(freq).connect(node("saw"));
+}
+export function sine(freq) {
+  return n(freq).connect(node("sine"));
+}
+
+Node.prototype.mul = function (value) {
+  return this.connect(n(value).connect(node("mul")));
+};
+Node.prototype.range = function (min, max) {
+  return node("range").withIns(this, n(min), n(max));
+};
+Node.prototype.add = function (value) {
+  return this.connect(n(value).connect(node("add")));
+};
+
+Node.prototype.out = function () {
+  return this.connect(node("out"));
+};

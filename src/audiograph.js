@@ -1,5 +1,8 @@
-import { n } from "./lib.js";
-import { Node } from "./node.js";
+import { assert } from "./util.js";
+
+// taken / slightly modified from noisecraft
+// https://github.com/maximecb/noisecraft
+// LICENSE: GPL-2.0
 
 export class AudioGraph {
   constructor(sampleRate, send) {
@@ -22,7 +25,7 @@ export class AudioGraph {
    * Parse a message from the main thread
    */
   parseMsg(msg) {
-    console.log("msg", msg);
+    // console.log("msg", msg);
     switch (msg.type) {
       case "NEW_UNIT":
         this.newUnit(msg.unit);
@@ -56,7 +59,6 @@ export class AudioGraph {
         );
       }
     }
-
     console.log("compiled code");
     console.log(unit.src);
     // Create the sample generation function
