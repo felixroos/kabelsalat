@@ -55,7 +55,8 @@ export function topoSort(graph) {
 
       if (!edge) continue;
 
-      let [srcId, srcPort] = node.ins[i];
+      //let [srcId, srcPort] = node.ins[i];
+      let srcId = node.ins[i].id;
       let srcOuts = outEdges.get(srcId);
       srcOuts.push([nodeId, edge]);
     }

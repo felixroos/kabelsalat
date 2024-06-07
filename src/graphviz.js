@@ -5,37 +5,22 @@ import { Graphviz } from "@hpcc-js/wasm";
 const graphvizLoaded = Graphviz.load();
 
 Node.prototype.render = async function (container) {
-  console.log("render", this);
-  let visit = (node, visited = []) => {
-    visited.push(node);
-    const connections = [...node.inlets /* , ...node.outlets */];
-    connections.forEach((n) => {
-      if (!visited.find((_n) => _n.id === n.id)) {
-        visit(n, visited);
-      }
-    });
-    return visited;
-  };
-  let nodes = visit(this);
+  let nodes = this.visitKeyed();
   let edges = [];
   const color = "white";
   const fontcolor = "white";
-
-  nodes.forEach((a) => {
-    /* a.outlets.forEach((b) => {
-      edges.push({ source: a.id, target: b.id, color, directed: true });
-    }); */
-    a.inlets.forEach((b) => {
-      edges.push({ source: b.id, target: a.id, color, directed: true });
+  for (let id in nodes) {
+    nodes[id].ins.forEach((b) => {
+      edges.push({ source: b.id, target: nodes[id].id, color, directed: true });
     });
-  });
-  nodes = nodes.map((node) => ({
+  }
+
+  nodes = Object.values(nodes).map((node) => ({
     id: node.id,
     color,
     fontcolor,
     label: node.label,
   }));
-  console.log("render", nodes, edges);
 
   const graphviz = await graphvizLoaded;
 
