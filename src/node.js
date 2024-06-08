@@ -165,6 +165,7 @@ export const NODE_SCHEMA = {
       { name: "sus", default: 0.2 },
       { name: "rel", default: 0.1 },
     ],
+    time: true, // if set, the update function will get time as first param
     outs: ["out"],
     params: [],
     description: "ADSR envelope generator",
@@ -217,6 +218,7 @@ export const NODE_SCHEMA = {
 
   ClockOut: {
     unique: true,
+    time: true,
     ins: [{ name: "clock", default: 0 }],
     outs: [],
     params: [],
@@ -559,10 +561,12 @@ export const NODE_SCHEMA = {
 
 console.log(
   "NODE_CLASSES",
-  Object.keys(NODE_CLASSES).map(
-    (type) =>
-      `${type.toLowerCase()}(${NODE_SCHEMA[type].ins
-        .map((inlet) => inlet.name)
-        .join(", ")})`
-  ).join(' ')
+  Object.keys(NODE_CLASSES)
+    .map(
+      (type) =>
+        `${type.toLowerCase()}(${NODE_SCHEMA[type].ins
+          .map((inlet) => inlet.name)
+          .join(", ")})`
+    )
+    .join(" ")
 );

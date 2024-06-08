@@ -2,7 +2,6 @@ import { Node, NODE_SCHEMA } from "./node.js";
 
 // this compiler is actually not from noisecraft :)
 
-const audioNodeTypes = Object.keys(NODE_SCHEMA);
 const audioNodeDefaults = {};
 
 for (let type in NODE_SCHEMA) {
@@ -19,13 +18,15 @@ Node.prototype.compile = function () {
   let pushVar = (id, value, comment) =>
     lines.push(`const ${v(id)} = ${value};${comment ? ` // ${comment}` : ""}`);
   let u = (id, ...ins) => `nodes['${id}'].update(${ins.join(", ")})`;
+  let ut = (id, ...ins) => `nodes['${id}'].update(time, ${ins.join(", ")})`; // some functions want time as first arg (without being an inlet)
   let infix = (a, op, b) => `(${a} ${op} ${b})`;
   let inlets = (id) => nodes[id].ins;
-  let inletVars = (id, defaultValues, comment) => {
+  let inletVars = (id, defaultValues, comment, addTime = false) => {
     const vars = defaultValues.map((fallback, i) =>
       nodes[id].ins[i] ? v(nodes[id].ins[i].id) : fallback
     );
-    pushVar(id, u(id, ...vars), comment); // TODO: actually calculate saw
+    const ufn = addTime ? ut : u;
+    pushVar(id, ufn(id, ...vars), comment);
   };
   let op2 = (id, op, comment) => {
     const ins = inlets(id);
@@ -68,8 +69,13 @@ Node.prototype.compile = function () {
         break;
       }
       default: {
-        if (audioNodeTypes.includes(node.type)) {
-          inletVars(id, audioNodeDefaults[node.type], node.type);
+        if (NODE_SCHEMA[node.type]) {
+          inletVars(
+            id,
+            audioNodeDefaults[node.type],
+            node.type,
+            NODE_SCHEMA[node.type].time
+          );
           break;
         }
         console.warn(`unhandled node type ${nodes[id].type}`);
@@ -80,8 +86,7 @@ Node.prototype.compile = function () {
   const src = lines.join("\n");
   console.log("code");
   console.log(src);
-  const run = () => new Function("nodes", src)(nodes);
-  return { src, nodes, run };
+  return { src, nodes };
 };
 
 // taken from noisecraft
