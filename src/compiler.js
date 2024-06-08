@@ -1,6 +1,13 @@
-import { Node } from "./node.js";
+import { Node, NODE_SCHEMA } from "./node.js";
 
 // this compiler is actually not from noisecraft :)
+
+const audioNodeTypes = Object.keys(NODE_SCHEMA);
+const audioNodeDefaults = {};
+
+for (let type in NODE_SCHEMA) {
+  audioNodeDefaults[type] = NODE_SCHEMA[type].ins.map((inlet) => inlet.default);
+}
 
 Node.prototype.compile = function () {
   const nodes = this.visitKeyed();
@@ -14,6 +21,12 @@ Node.prototype.compile = function () {
   let u = (id, ...ins) => `nodes['${id}'].update(${ins.join(", ")})`;
   let infix = (a, op, b) => `(${a} ${op} ${b})`;
   let inlets = (id) => nodes[id].ins;
+  let inletVars = (id, defaultValues, comment) => {
+    const vars = defaultValues.map((fallback, i) =>
+      nodes[id].ins[i] ? v(nodes[id].ins[i].id) : fallback
+    );
+    pushVar(id, u(id, ...vars), comment); // TODO: actually calculate saw
+  };
   let op2 = (id, op, comment) => {
     const ins = inlets(id);
     const a = v(ins[0].id);
@@ -49,28 +62,24 @@ Node.prototype.compile = function () {
         op2(id, "+");
         break;
       }
-      case "saw": {
-        const freq = v(node.ins[0].id);
-        pushVar(id, u(id, freq), "saw"); // TODO: actually calculate saw
-        break;
-      }
-      case "sine": {
-        const freq = v(node.ins[0].id);
-        pushVar(id, u(id, freq), "sine"); // TODO: actually calculate saw
-        break;
-      }
       case "out": {
         const sum = v(node.ins[0].id);
         lines.push(`return [${sum},${sum}]`);
         break;
       }
       default: {
+        if (audioNodeTypes.includes(node.type)) {
+          inletVars(id, audioNodeDefaults[node.type], node.type);
+          break;
+        }
         console.warn(`unhandled node type ${nodes[id].type}`);
         thru(id);
       }
     }
   }
   const src = lines.join("\n");
+  console.log("code");
+  console.log(src);
   const run = () => new Function("nodes", src)(nodes);
   return { src, nodes, run };
 };

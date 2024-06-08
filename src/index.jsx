@@ -1,6 +1,6 @@
 /* @refresh reload */
 import { render } from "solid-js/web";
-import { assert } from "./util";
+import { assert } from "./utils";
 import { createSignal, createEffect } from "solid-js";
 import "./index.css";
 import * as api from "./node.js";
@@ -138,10 +138,15 @@ function App() {
           coding prototype..
         </p>
         <pre>keyboard: ctrl+enter: start, ctrl+dot: stop</pre>
-        <pre>
-          functions: n(number) saw(freq) sine(freq) .mul(n) .add(n)
-          .range(min,max)
-        </pre>
+        <code>
+          utility functions: n(number) .mul(n) .add(n) .range(min,max){" "}
+        </code>
+        <br />
+        <code>
+          audio functions:{" "}
+          {`adsr(gate, att, dec, sus, rel) clock() clockdiv() clockout(clock) delay(in, time) distort(in, amt) hold(in, trig) noise() pulse(freq, pw) saw(freq) sine(freq, sync) tri(freq) slide(in, rate) filter(in, cutoff, reso) fold(in, rate) midiin() monoseq(clock, gateT) gateseq(clock, gateT)`}
+        </code>
+        <pre></pre>
       </div>
     </div>
   );
