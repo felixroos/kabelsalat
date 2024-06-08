@@ -144,8 +144,14 @@ function App() {
         <br />
         <code>
           audio functions:{" "}
-          {`adsr(gate, att, dec, sus, rel) clock() clockdiv() clockout(clock) delay(in, time) distort(in, amt) hold(in, trig) noise() pulse(freq, pw) saw(freq) sine(freq, sync) tri(freq) slide(in, rate) filter(in, cutoff, reso) fold(in, rate) midiin() monoseq(clock, gateT) gateseq(clock, gateT)`}
+          {`adsr(gate, att, dec, sus, rel) clock(bpm) clockdiv(clock, divisor) distort(in, amt) noise() pulse(freq, pw) saw(freq) sine(freq, sync) tri(freq) slide(in, rate) filter(in, cutoff, reso) fold(in, rate)`}
         </code>
+        {/* clockout(clock) */}
+        {/* delay(in, time) */}
+        {/* hold(in, trig) */}
+        {/* midiin() */}
+        {/* monoseq(clock, gateT) */}
+        {/* gateseq(clock, gateT) */}
         <pre></pre>
       </div>
     </div>

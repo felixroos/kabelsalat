@@ -65,7 +65,8 @@ Node.prototype.compile = function () {
       }
       case "out": {
         const sum = v(node.ins[0].id);
-        lines.push(`return [${sum},${sum}]`);
+        const lvl = 0.3; // turn down to avoid clipping
+        lines.push(`return [${sum}*${lvl},${sum}*${lvl}]`);
         break;
       }
       default: {

@@ -192,9 +192,10 @@ class Clock extends AudioNode
         this.phase = 0;
     }
 
-    update()
+    update(bpm)
     {
-        let freq = music.CLOCK_PPQ * this.params.value / 60;
+        // let freq = music.CLOCK_PPQ * this.params.value / 60; // <-- og
+        let freq = music.CLOCK_PPQ * bpm / 60; 
         let duty = 0.5;
         this.phase += this.sampleTime * freq;
         let cyclePos = this.phase % 1;
@@ -226,7 +227,8 @@ class ClockDiv extends AudioNode
         this.clockCnt = 0;
     }
 
-    update(clock)
+    // update(clock) // <- og
+    update(clock, factor = this.params.factor)
     {
         // Current clock sign at the input
         let curSgn = (clock > 0);
@@ -238,7 +240,8 @@ class ClockDiv extends AudioNode
             this.clockCnt++;
 
             // If we've reached the division factor
-            if (this.clockCnt >= this.params.factor)
+            // if (this.clockCnt >= factor) // <- og
+            if (this.clockCnt >= factor)
             {
                 // Reset the clock count
                 this.clockCnt = 0;
@@ -284,6 +287,7 @@ class ClockOut extends AudioNode
         }
 
         this.inSgn = curSgn;
+        return 0; // <-- added this
     }
 }
 

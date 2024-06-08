@@ -112,11 +112,8 @@ let makeNode = (type, name = type.toLowerCase()) => {
 
 export let adsr = makeNode("ADSR");
 export let clock = makeNode("Clock");
-export let clockDiv = makeNode("ClockDiv");
-export let clockOut = makeNode("ClockOut");
-export let delay = makeNode("Delay");
+export let clockdiv = makeNode("ClockDiv");
 export let distort = makeNode("Distort");
-export let hold = makeNode("Hold");
 export let noise = makeNode("Noise");
 export let pulse = makeNode("Pulse");
 export let saw = makeNode("Saw");
@@ -125,9 +122,12 @@ export let tri = makeNode("Tri");
 export let slide = makeNode("Slide");
 export let filter = makeNode("Filter");
 export let fold = makeNode("Fold");
-export let midiIn = makeNode("MidiIn");
-export let monoSeq = makeNode("MonoSeq");
-export let gateSeq = makeNode("GateSeq");
+//export let clockOut = makeNode("ClockOut"); // only sends worklet msg so far...
+//export let delay = makeNode("Delay"); // requires special compiler feature
+//export let hold = makeNode("Hold"); // requires special compiler feature
+//export let midiIn = makeNode("MidiIn"); // not implemented
+//export let monoSeq = makeNode("MonoSeq"); // state too complex?
+//export let gateSeq = makeNode("GateSeq"); // state too complex?
 
 Node.prototype.mul = function (value) {
   return this.connect(n(value).connect(node("mul")));
@@ -196,7 +196,7 @@ export const NODE_SCHEMA = {
     },
     */
 
-  Clock: {
+  /*   Clock: {
     ins: [],
     outs: [""],
     params: [
@@ -207,12 +207,34 @@ export const NODE_SCHEMA = {
       { name: "controlId", default: null },
     ],
     description: "MIDI clock signal source with tempo in BPM",
-  },
+  }, */
 
-  ClockDiv: {
-    ins: [{ name: "", default: 0 }],
+  /* ClockDiv: {
+    ins: [{ name: "division", default: 0 }],
     outs: [""],
     params: [{ name: "factor", default: 2 }],
+    description: "clock signal divider",
+  }, */
+
+  Clock: {
+    ins: [{ name: "bpm", default: 120 }],
+    outs: [""],
+    params: [
+      { name: "minVal", default: 60 },
+      { name: "maxVal", default: 240 },
+      { name: "value", default: 120 },
+      { name: "deviceId", default: null },
+      { name: "controlId", default: null },
+    ],
+    description: "MIDI clock signal source with tempo in BPM",
+  },
+  ClockDiv: {
+    ins: [
+      { name: "clock", default: 0 },
+      { name: "divisor", default: 2 },
+    ],
+    outs: [""],
+    params: [],
     description: "clock signal divider",
   },
 
@@ -322,6 +344,7 @@ export const NODE_SCHEMA = {
   },
 
   GateSeq: {
+    time: true,
     ins: [
       { name: "clock", default: 0 },
       { name: "gateT", default: 0.1 },
@@ -414,6 +437,7 @@ export const NODE_SCHEMA = {
   },
 
   MonoSeq: {
+    time: true,
     ins: [
       { name: "clock", default: 0 },
       { name: "gateT", default: 0.1 },
@@ -559,7 +583,7 @@ export const NODE_SCHEMA = {
   },
 };
 
-console.log(
+/* console.log(
   "NODE_CLASSES",
   Object.keys(NODE_CLASSES)
     .map(
@@ -569,4 +593,4 @@ console.log(
           .join(", ")})`
     )
     .join(" ")
-);
+); */
