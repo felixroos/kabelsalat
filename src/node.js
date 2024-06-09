@@ -139,6 +139,9 @@ Node.prototype.mul = function (value) {
 Node.prototype.range = function (min, max) {
   return node("range").withIns(this, n(min), n(max));
 };
+Node.prototype.midinote = function () {
+  return node("midinote").withIns(this);
+};
 Node.prototype.add = function (value) {
   return this.connect(n(value).connect(node("add")));
 };

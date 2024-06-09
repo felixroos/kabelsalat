@@ -64,6 +64,12 @@ Node.prototype.compile = function () {
         pushVar(id, calc, "val*(max-min)+min");
         break;
       }
+      case "midinote": {
+        const note = v(nodes[id].ins[0].id);
+        const calc = `(2 ** ((${note} - 69) / 12) * 440)`;
+        pushVar(id, calc, "midinote");
+        break;
+      }
       case "add": {
         op2(id, "+");
         break;
