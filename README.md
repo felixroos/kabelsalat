@@ -84,7 +84,7 @@ sine(220).mul(clock(120).clockdiv(24).adsr(0.02, 0.2, 0, 0.01)).out();
 ### seq
 
 ```js
-pulse(4).seq(110,220,330,440).sine().out()
+clock().clockdiv(16).seq(110, 220, 330, 440).sine().out();
 ```
 
 <!-- clock(120).clockdiv(24).clockout()

@@ -1013,9 +1013,9 @@ class GateSeq extends Sequencer
 export class Sequence extends AudioNode {
   constructor(id, state, sampleRate, send) {
     super(id, state, sampleRate, send);
-    this.clockSgn = false;
+    this.clockSgn = true;
     this.step = 0;
-    this.first=true
+    this.first= true
   }
 
   update(clock, ...ins) {
