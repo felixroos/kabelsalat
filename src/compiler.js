@@ -181,6 +181,8 @@ export function topoSort(graph) {
       if (countInEdges(dstId) == 0) S.push(dstId);
     }
   }
+  L = Array.from(new Set(L)); // <--- had to add this to make .apply(x=>x.mul(x)) work
+  // hopefully doesn't break anything
 
   // If the topological ordering doesn't include all the nodes
   if (L.length != Object.keys(graph.nodes).length) {
