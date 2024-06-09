@@ -105,8 +105,11 @@ sine(220)
   .out();
 ```
 
-<!-- clock(120).clockdiv(24).clockout()
-.add(sine(220)).out() -->
+### hold(in, trig)
+
+```js
+noise().range(55, 880).hold(pulse(2)).sine().out();
+```
 
 ## notable noisecraft changes
 

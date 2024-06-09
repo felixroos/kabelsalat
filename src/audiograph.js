@@ -354,6 +354,12 @@ class Hold extends AudioNode
     {
         return this.value;
     }
+
+    update(input, trig)
+    { // in the oh noisecraft, hold is split into 2 intermediate nodes, not sure why.. (same as delay)
+        this.write(input, trig);
+        return this.read()
+    }
 }
 
 /**

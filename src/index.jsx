@@ -145,10 +145,9 @@ function App() {
         <br />
         <code>
           audio functions:{" "}
-          {`adsr(gate, att, dec, sus, rel) clock(bpm) clockdiv(clock, divisor) distort(in, amt) noise() pulse(freq, pw) saw(freq) sine(freq, sync) tri(freq) slide(in, rate) filter(in, cutoff, reso) fold(in, rate) seq(clock, ...steps) delay(in, time)`}
+          {`adsr(gate, att, dec, sus, rel) clock(bpm) clockdiv(clock, divisor) distort(in, amt) noise() pulse(freq, pw) saw(freq) sine(freq, sync) tri(freq) slide(in, rate) filter(in, cutoff, reso) fold(in, rate) seq(clock, ...steps) delay(in, time) hold(in, trig)`}
         </code>
         {/* clockout(clock) */}
-        {/* hold(in, trig) */}
         {/* midiin() */}
         {/* monoseq(clock, gateT) */}
         {/* gateseq(clock, gateT) */}
