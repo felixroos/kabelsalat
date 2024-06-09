@@ -1032,6 +1032,8 @@ export class Sequence extends AudioNode {
   update(clock, ...ins) {
     if (!this.clockSgn && clock > 0) {
       this.step = (this.step + 1) % ins.length;
+      this.clockSgn = clock > 0;
+      return 0; // set first sample to zero to retrigger gates on step change...
     }
     this.clockSgn = clock > 0;
     return ins[this.step];
