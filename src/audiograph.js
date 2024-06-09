@@ -1008,6 +1008,27 @@ class GateSeq extends Sequencer
 }
 
 /**
+ * Sequence of Signals (new)
+ */
+export class Sequence extends AudioNode {
+  constructor(id, state, sampleRate, send) {
+    super(id, state, sampleRate, send);
+    this.clockSgn = false;
+    this.step = 0;
+    this.first=true
+  }
+
+  update(clock, ...ins) {
+    if (!this.clockSgn && clock > 0) {
+      this.step = (this.step + 1) % ins.length;
+    }
+    this.clockSgn = clock > 0;
+    return ins[this.step];
+  }
+}
+
+
+/**
  * Map of node types to classes
  */
 export let NODE_CLASSES =
@@ -1031,4 +1052,5 @@ export let NODE_CLASSES =
     MidiIn: MidiIn,
     MonoSeq: MonoSeq,
     GateSeq: GateSeq,
+    Seq: Sequence,
 };

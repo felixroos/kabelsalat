@@ -122,6 +122,7 @@ export let tri = makeNode("Tri");
 export let slide = makeNode("Slide");
 export let filter = makeNode("Filter");
 export let fold = makeNode("Fold");
+export let seq = makeNode("Seq");
 //export let clockOut = makeNode("ClockOut"); // only sends worklet msg so far...
 //export let delay = makeNode("Delay"); // requires special compiler feature
 //export let hold = makeNode("Hold"); // requires special compiler feature
@@ -353,6 +354,18 @@ export const NODE_SCHEMA = {
     params: [],
     state: ["numRows", "patterns", "curPattern"],
     description: "step sequencer with multiple gate outputs",
+  },
+
+  Seq: {
+    dynamic: true, // dynamic number of inlets
+    ins: [
+      { name: "clock", default: 0 },
+      // 1-Infinity of steps
+    ],
+    outs: [],
+    params: [],
+    state: [],
+    description: "step sequencer",
   },
 
   Greater: {

@@ -28,6 +28,11 @@ Node.prototype.compile = function () {
     const ufn = addTime ? ut : u;
     pushVar(id, ufn(id, ...vars), comment);
   };
+  let dynamicInletVars = (id, addTime, comment) => {
+    const vars = nodes[id].ins.map((inlet) => v(inlet.id));
+    const ufn = addTime ? ut : u;
+    pushVar(id, ufn(id, ...vars), comment);
+  };
   let op2 = (id, op, comment) => {
     const ins = inlets(id);
     const a = v(ins[0].id);
@@ -71,12 +76,16 @@ Node.prototype.compile = function () {
       }
       default: {
         if (NODE_SCHEMA[node.type]) {
-          inletVars(
-            id,
-            audioNodeDefaults[node.type],
-            node.type,
-            NODE_SCHEMA[node.type].time
-          );
+          if (NODE_SCHEMA[node.type].dynamic) {
+            dynamicInletVars(id, NODE_SCHEMA[node.type].time, node.type);
+          } else {
+            inletVars(
+              id,
+              audioNodeDefaults[node.type],
+              node.type,
+              NODE_SCHEMA[node.type].time
+            );
+          }
           break;
         }
         console.warn(`unhandled node type ${nodes[id].type}`);
