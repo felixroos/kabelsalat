@@ -10,8 +10,15 @@ Node.prototype.render = async function (container) {
   const color = "teal";
   const fontcolor = "teal";
   for (let id in nodes) {
-    nodes[id].ins.forEach((b) => {
-      edges.push({ source: b.id, target: nodes[id].id, color, directed: true });
+    nodes[id].ins.forEach((b, i) => {
+      edges.push({
+        source: b.id,
+        target: nodes[id].id,
+        color,
+        directed: true,
+        // label: `${b.type}>${nodes[id].type}`,
+        id: i, // we need to set an id to make sure things like .apply(x=>x.mul(x)) are displayed correctly
+      });
     });
   }
 
