@@ -144,7 +144,7 @@ function App() {
         <br />
         <code>
           audio functions:{" "}
-          {`adsr(gate, att, dec, sus, rel) clock(bpm) clockdiv(clock, divisor) distort(in, amt) noise() pulse(freq, pw) saw(freq) sine(freq, sync) tri(freq) slide(in, rate) filter(in, cutoff, reso) fold(in, rate)`}
+          {`adsr(gate, att, dec, sus, rel) clock(bpm) clockdiv(clock, divisor) distort(in, amt) noise() pulse(freq, pw) saw(freq) sine(freq, sync) tri(freq) slide(in, rate) filter(in, cutoff, reso) fold(in, rate) seq(clock, ...steps)`}
         </code>
         {/* clockout(clock) */}
         {/* delay(in, time) */}
