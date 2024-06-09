@@ -139,7 +139,8 @@ function App() {
         </p>
         <pre>keyboard: ctrl+enter: start, ctrl+dot: stop</pre>
         <code>
-          utility functions: n(number) .mul(n) .add(n) .range(min,max){" "}
+          utility functions:{" "}
+          {`n(number) .mul(n) .add(n) .range(min,max) .apply(fn)`}
         </code>
         <br />
         <code>

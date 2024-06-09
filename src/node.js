@@ -61,6 +61,9 @@ export class Node {
   visitKeyed() {
     return visitKeyed(this);
   }
+  apply(fn) {
+    return fn(this);
+  }
 }
 
 // helper function to generate repl ids

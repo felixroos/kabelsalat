@@ -87,6 +87,15 @@ sine(220).mul(clock(120).clockdiv(24).adsr(0.02, 0.2, 0, 0.01)).out();
 clock().clockdiv(16).seq(110, 220, 330, 440).sine().out();
 ```
 
+### apply
+
+```js
+clock()
+  .clockdiv(8)
+  .apply((x) => x.seq(55, 0, 110, 66).saw().mul(x.adsr(0.02, 0.2)))
+  .out();
+```
+
 <!-- clock(120).clockdiv(24).clockout()
 .add(sine(220)).out() -->
 
