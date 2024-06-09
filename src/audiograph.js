@@ -303,6 +303,11 @@ class Delay extends AudioNode
         // Stateful delay line object
         this.delay = new synth.Delay(sampleRate);
     }
+    // og noisecraft splits nodes here, but it seems to work..
+    update(input, time) {
+      this.delay.write(input, time);
+      return this.delay.read()
+    }
 }
 
 /**

@@ -81,18 +81,27 @@ sine(110).fold(sine(0.5).range(0, 4)).out();
 sine(220).mul(clock(120).clockdiv(24).adsr(0.02, 0.2, 0, 0.01)).out();
 ```
 
-### seq
+### seq(...steps)
 
 ```js
 clock().clockdiv(16).seq(110, 220, 330, 440).sine().out();
 ```
 
-### apply
+### apply(fn)
 
 ```js
 clock()
   .clockdiv(8)
   .apply((x) => x.seq(55, 0, 110, 66).saw().mul(x.adsr(0.02, 0.2)))
+  .out();
+```
+
+### delay(in, time)
+
+```js
+sine(220)
+  .mul(pulse(1, 0.1).adsr(0.01, 0.1, 0))
+  .apply((x) => x.add(x.delay(0.25).mul(0.25)))
   .out();
 ```
 
