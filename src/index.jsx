@@ -26,9 +26,9 @@ function App() {
     if (!audio.isRunning) {
       await audio.init();
     }
+    node.render(container); // update viz
     audio.updateGraph(node); // update dsp
     window.location.hash = "#" + btoa(code());
-    node.render(container); // update viz
   }
   return (
     <div className="flex flex-col  h-full max-h-full justify-stretch text-teal-600 font-mono ">

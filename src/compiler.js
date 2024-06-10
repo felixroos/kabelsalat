@@ -3,19 +3,20 @@ import { Node, NODE_SCHEMA } from "./node.js";
 // this compiler is actually not from noisecraft :)
 
 Node.prototype.compile = function () {
-  const nodes = this.visit();
-  const graph = { nodes };
-  // const sorted = Object.keys(nodes).reverse();
-  const sorted = topoSort(graph);
+  const nodes = this.flatten();
+  const sorted = topoSort(nodes);
   let lines = [];
-  let v = (id) => `_${id}`;
+  let v = (id) => (nodes[id].type === "n" ? nodes[id].value : `n${id}`);
   let pushVar = (id, value, comment) =>
-    lines.push(`const ${v(id)} = ${value};${comment ? ` // ${comment}` : ""}`);
-  let u = (id, ...ins) => `nodes['${id}'].update(${ins.join(", ")})`;
-  let ut = (id, ...ins) => `nodes['${id}'].update(time, ${ins.join(", ")})`; // some functions want time as first arg (without being an inlet)
+    lines.push(
+      `const ${v(id)} = ${value};${comment ? ` /* ${comment} */` : ""}`
+    );
+  const consts = {};
+  let u = (id, ...ins) => `nodes[${id}].update(${ins.join(", ")})`;
+  let ut = (id, ...ins) => `nodes[${id}].update(time, ${ins.join(", ")})`; // some functions want time as first arg (without being an inlet)
   let infix = (a, op, b) => `(${a} ${op} ${b})`;
   let inlets = (id) => nodes[id].ins;
-  let thru = (id) => pushVar(id, v(nodes[id].ins[0].id));
+  let thru = (id) => pushVar(id, v(nodes[id].ins[0]));
   const infixOperators = {
     add: "+",
     mul: "*",
@@ -25,19 +26,24 @@ Node.prototype.compile = function () {
   };
   for (let id of sorted) {
     const node = nodes[id];
-    const vars = nodes[id].ins.map((inlet) => v(inlet.id));
+    const vars = nodes[id].ins.map((inlet) => v(inlet));
     // is infix operator node?
     if (infixOperators[node.type]) {
       const op = infixOperators[node.type];
       const ins = inlets(id);
       // TODO: support variable args
-      const a = v(ins[0].id);
-      const b = v(ins[1].id);
-      pushVar(id, infix(a, op, b), infix(ins[0].type, op, ins[1].type));
+      const a = v(ins[0]);
+      const b = v(ins[1]);
+
+      pushVar(
+        id,
+        infix(a, op, b),
+        infix(nodes[ins[0]].type, op, nodes[ins[1]].type)
+      );
       continue;
     }
     // is stateful node?
-    if (NODE_SCHEMA[node.type]) {
+    if (NODE_SCHEMA[node.type] && NODE_SCHEMA[node.type].audio !== false) {
       const comment = node.type;
       const addTime = NODE_SCHEMA[node.type].time;
       const dynamic = NODE_SCHEMA[node.type].dynamic;
@@ -56,7 +62,8 @@ Node.prototype.compile = function () {
     }
     switch (node.type) {
       case "n": {
-        pushVar(id, node.value, "n");
+        // do nothing, n values are written directly
+        // pushVar(id, node.value, "n");
         break;
       }
       case "range": {
@@ -78,7 +85,7 @@ Node.prototype.compile = function () {
       case "out": {
         const [sum] = vars;
         const lvl = 0.3; // turn down to avoid clipping
-        lines.push(`return [${sum}*${lvl},${sum}*${lvl}]`);
+        lines.push(`return [${sum}*${lvl}, ${sum}*${lvl}]`);
         break;
       }
       default: {
@@ -97,10 +104,10 @@ Node.prototype.compile = function () {
 // https://github.com/maximecb/noisecraft
 // LICENSE: GPL-2.0
 
-export function topoSort(graph) {
+export function topoSort(nodes) {
   // Count the number of input edges going into a node
   function countInEdges(nodeId) {
-    let node = graph.nodes[nodeId];
+    let node = nodes[nodeId];
     let numIns = 0;
 
     for (let i = 0; i < node.ins.length; ++i) {
@@ -123,35 +130,32 @@ export function topoSort(graph) {
   let L = [];
 
   // Map of input-side edges removed from the graph
-  let remEdges = new WeakSet();
+  let remEdges = new Set();
 
   // Map of each node to a list of outgoing edges
   let outEdges = new Map();
 
   // Populate the initial list of nodes without input edges
-  for (let nodeId in graph.nodes) {
+  for (let nodeId in nodes) {
     if (countInEdges(nodeId) == 0) {
       S.push(nodeId);
     }
   }
-
   // Initialize the set of list of output edges for each node
-  for (let nodeId in graph.nodes) {
+  for (let nodeId in nodes) {
     outEdges.set(nodeId, []);
   }
 
   // Populate the list of output edges for each node
-  for (let nodeId in graph.nodes) {
-    let node = graph.nodes[nodeId];
+  for (let nodeId in nodes) {
+    let node = nodes[nodeId];
 
     // For each input of this node
     for (let i = 0; i < node.ins.length; ++i) {
       let edge = node.ins[i];
+      if (edge === undefined) continue;
 
-      if (!edge) continue;
-
-      //let [srcId, srcPort] = node.ins[i];
-      let srcId = node.ins[i].id;
+      let srcId = node.ins[i];
       let srcOuts = outEdges.get(srcId);
       srcOuts.push([nodeId, edge]);
     }
@@ -179,7 +183,7 @@ export function topoSort(graph) {
   // hopefully doesn't break anything
 
   // If the topological ordering doesn't include all the nodes
-  if (L.length != Object.keys(graph.nodes).length) {
+  if (L.length != Object.keys(nodes).length) {
     throw SyntaxError("graph contains cycles");
   }
 

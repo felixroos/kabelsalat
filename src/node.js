@@ -15,10 +15,6 @@ export class Node {
   get isNode() {
     return true;
   }
-  addConnection(node) {
-    node.ins.push(this);
-    return node;
-  }
   isConnectedTo(node) {
     return this.ins.find((n) => n.id === node.id);
   }
@@ -27,18 +23,8 @@ export class Node {
     return this;
   }
   connect(node) {
-    if (this.isConnectedTo(node)) {
-      return node;
-    }
-    this.addConnection(node);
+    node.ins.push(this);
     return node;
-  }
-  get label() {
-    let str = this.type;
-    if (this.value !== undefined) {
-      str += ` =${this.value}`;
-    }
-    return str;
   }
   show(parent) {
     //const connections = this.connections.filter(
@@ -53,8 +39,8 @@ export class Node {
     }
     return `${str} [${connections.map((node) => node.show(this)).join(", ")}]`;
   }
-  visit() {
-    return visit(this);
+  flatten() {
+    return flatten(this);
   }
   apply(fn) {
     return fn(this);
@@ -72,14 +58,27 @@ function s4() {
     .substring(1);
 }
 
-function visit(node, visited = {}) {
-  visited[node.id] = node;
-  node.ins.forEach((n) => {
-    if (!visited[n.id]) {
-      visit(n, visited);
+function visit(node, visited = []) {
+  visited.push(node);
+  node.ins.forEach((child) => {
+    if (!visited.includes(child)) {
+      visit(child, visited);
     }
   });
   return visited;
+}
+
+function flatten(node) {
+  const flat = visit(node);
+  return flat.map((node) => {
+    let clone = {
+      type: node.type,
+      params: node.params,
+      ins: node.ins.map((child) => flat.indexOf(child) + ""),
+    };
+    node.value !== undefined && (clone.value = node.value);
+    return clone;
+  });
 }
 
 // TODO: find a cool api to register functions (maybe similar to strudel's register)
@@ -129,6 +128,21 @@ export let range = makeNode("range");
 export let midinote = makeNode("midinote");
 export let out = makeNode("out");
 
+Node.prototype.perc = function (decay) {
+  return this.adsr(0, decay, 0, 0);
+};
+
+Node.prototype.over = function (fn) {
+  return this.apply((x) => add(x, fn(x)));
+};
+
+export function getInletName(type, index) {
+  if (!NODE_SCHEMA[type]?.ins?.[index]) {
+    return "";
+  }
+  return NODE_SCHEMA[type].ins[index].name;
+}
+
 // not implemented noisecraft nodes
 // TODO:
 // Greater, Scope, ClockOut, MidiIn, Scope, BitCrush?
@@ -153,6 +167,10 @@ export const NODE_SCHEMA = {
     outs: ["out"],
     params: [],
     description: "ADSR envelope generator",
+  },
+  range: {
+    audio: false,
+    ins: [{ name: "in" }, { name: "min" }, { name: "max" }],
   },
   Clock: {
     ins: [{ name: "bpm", default: 120 }],
