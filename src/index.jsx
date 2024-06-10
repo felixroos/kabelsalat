@@ -32,6 +32,9 @@ class AudioView {
   }
 
   async init() {
+    if (this.audioCtx) {
+      return;
+    }
     assert(!this.audioCtx);
 
     this.audioCtx = new AudioContext({
@@ -53,10 +56,14 @@ class AudioView {
     this.audioWorklet.connect(this.audioCtx.destination);
   }
 
+  get isRunning() {
+    return !!this.audioCtx;
+  }
+
   /**
    * Stop audio playback
    */
-  stopAudio() {
+  stop() {
     assert(this.audioCtx);
 
     this.audioWorklet.disconnect();
@@ -88,7 +95,9 @@ function App() {
 
     console.log("run", body);
     const node = Function(body)();
-
+    if (!audio.isRunning) {
+      await audio.init();
+    }
     audio.updateGraph(node); // update dsp
     window.location.hash = "#" + btoa(code());
     node.render(container); // update viz
@@ -112,7 +121,7 @@ function App() {
             if (e.key === "Enter" && e.ctrlKey) {
               run();
             } else if (e.key === "." && e.ctrlKey) {
-              stop();
+              audio.stop();
             }
           }}
           className="bg-stone-900 shrink-0 p-4 focus:ring-0 outline-0 border-r border-teal-500"
