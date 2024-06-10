@@ -1,86 +1,14 @@
-/* @refresh reload */
+import { createSignal } from "solid-js";
 import { render } from "solid-js/web";
-import { assert } from "./utils";
-import { createSignal, createEffect } from "solid-js";
+import { AudioView } from "./audioview.js";
+import "./graphviz";
 import "./index.css";
 import * as api from "./node.js";
-import "./graphviz";
-import "./compiler";
-import workletUrl from "./worklet.js?worker&url";
 
 Object.assign(globalThis, api);
 
-class AudioView {
-  updateGraph(node) {
-    console.log("node", node);
-    const { src, nodes } = node.compile();
-    this.send({
-      type: "NEW_UNIT",
-      unit: { src, nodes },
-    });
-  }
-
-  /**
-   * Send a message to the audio thread (audio worket)
-   */
-  send(msg) {
-    assert(msg instanceof Object);
-
-    if (!this.audioWorklet) return;
-
-    this.audioWorklet.port.postMessage(msg);
-  }
-
-  async init() {
-    if (this.audioCtx) {
-      return;
-    }
-    assert(!this.audioCtx);
-
-    this.audioCtx = new AudioContext({
-      latencyHint: "interactive",
-      sampleRate: 44100,
-    });
-    await this.audioCtx.audioWorklet.addModule(workletUrl);
-    this.audioWorklet = new AudioWorkletNode(
-      this.audioCtx,
-      "sample-generator",
-      {
-        outputChannelCount: [2],
-      }
-    );
-    // Callback to receive messages from the audioworklet
-    this.audioWorklet.port.onmessage = (msg) => {
-      console.log("msg from worklet", msg);
-    };
-    this.audioWorklet.connect(this.audioCtx.destination);
-  }
-
-  get isRunning() {
-    return !!this.audioCtx;
-  }
-
-  /**
-   * Stop audio playback
-   */
-  stop() {
-    assert(this.audioCtx);
-
-    this.audioWorklet.disconnect();
-    this.audioWorklet = null;
-
-    this.audioCtx.close();
-    this.audioCtx = null;
-  }
-}
-
 const audio = new AudioView();
 
-document.addEventListener("click", () => {
-  !audio.audioCtx && audio.init();
-});
-
-// library
 function App() {
   let urlCode = window.location.hash.slice(1);
   if (urlCode) {
