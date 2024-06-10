@@ -57,11 +57,10 @@ Node.prototype.compile = function () {
         const max = v(nodes[id].ins[2].id);
         // bipolar [-1,1] to unipolar [0,1] => (v+1)/2
         const unipolar = infix(infix(bipolar, "+", 1), "*", 0.5);
-        // (bip+1)/2
         // var = val*(max-min)+min
         const range = infix(max, "-", min);
         const calc = infix(infix(unipolar, "*", range), "+", min);
-        pushVar(id, calc, "val*(max-min)+min");
+        pushVar(id, calc, "range");
         break;
       }
       case "midinote": {
