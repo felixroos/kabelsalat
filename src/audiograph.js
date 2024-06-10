@@ -1,7 +1,16 @@
 import { assert } from './utils.js';
 // import { NODE_SCHEMA } from './model.js';
 import * as synth from './synth.js';
-import * as music from './music.js';
+
+/**
+MIDI clock pulses per quarter note
+*/
+export const CLOCK_PPQ = 24;
+
+/**
+MIDI clock pulses per 16th note
+*/
+export const CLOCK_PPS = CLOCK_PPQ / 4;
 
 /**
  * Stateful graph that generates audio samples
@@ -195,7 +204,7 @@ class Clock extends AudioNode
     update(bpm)
     {
         // let freq = music.CLOCK_PPQ * this.params.value / 60; // <-- og
-        let freq = music.CLOCK_PPQ * bpm / 60; 
+        let freq = CLOCK_PPQ * bpm / 60; 
         let duty = 0.5;
         this.phase += this.sampleTime * freq;
         let cyclePos = this.phase % 1;
@@ -639,7 +648,7 @@ class Fold extends AudioNode
 /**
  * Midi input node with freq and gate outputs
  */
-class MidiIn extends AudioNode
+/* class MidiIn extends AudioNode
 {
     constructor(id, state, sampleRate, send)
     {
@@ -660,7 +669,8 @@ class MidiIn extends AudioNode
         if (velocity > 0)
         {
             this.noteNo = noteNo;
-            this.freq = music.Note(noteNo).getFreq();
+            // this.freq = music.Note(noteNo).getFreq(); // <- og
+            this.freq = midi2freq(noteNo);
             this.gateState = 'pretrig';
         }
         else
@@ -694,329 +704,9 @@ class MidiIn extends AudioNode
             assert (false);
         }
     }
-}
+} */
 
-/**
- * Parent class for sequencer nodes
- */
-class Sequencer extends AudioNode
-{
-    constructor(id, state, sampleRate, send)
-    {
-        super(id, state, sampleRate, send);
-
-        // Current clock sign (positive/negative)
-        this.clockSgn = false;
-
-        // Number of clock ticks until the next step is triggered
-        this.clockCnt = 0;
-
-        // Next step to trigger
-        this.nextStep = 0;
-
-        // Currently playing pattern
-        this.patIdx = state.curPattern;
-
-        // Next pattern that is queued for playback
-        this.nextPat = undefined;
-    }
-
-    /**
-     * Set/update the entire state for this node
-     */
-    setState(state)
-    {
-        AudioNode.prototype.setState.call(this, state);
-
-        this.patIdx = state.curPattern;
-    }
-
-    /**
-     * Set a given cell in a step sequencer
-     */
-    setCell(patIdx, stepIdx, rowIdx, value)
-    {
-        let pattern = this.state.patterns[patIdx];
-        pattern[stepIdx][rowIdx] = value;
-    }
-
-    /**
-     * Queue the next pattern to play
-     */
-    queuePattern(patIdx, patData)
-    {
-        console.log(`got queuePattern, patIdx=${patIdx}`);
-
-        this.state.patterns[patIdx] = patData;
-        this.nextPat = patIdx;
-    }
-
-    /**
-     * Trigger a note at this row
-     */
-    trigRow(rowIdx, time)
-    {
-        throw Error('each sequencer must implement trigRow');
-    }
-
-    /**
-     * Takes the current time and clock signal as input.
-     * Produces frequency and gate signals as output.
-     */
-    update(time, clock, gateTime)
-    {
-        if (!this.clockSgn && clock > 0)
-        {
-            // If we are at the beginning of a new sequencer step
-            if (this.clockCnt == 0)
-            {
-                var grid = this.state.patterns[this.patIdx];
-
-                this.clockCnt = music.CLOCK_PPS;
-                var stepIdx = this.nextStep % grid.length;
-                this.nextStep++;
-
-                // Send the current step back to the main thread
-                this.send({
-                    type: 'SET_CUR_STEP',
-                    nodeId: this.nodeId,
-                    stepIdx: stepIdx
-                });
-
-                // For each row
-                for (var rowIdx = 0; rowIdx < grid[stepIdx].length; ++rowIdx)
-                {
-                    if (!grid[stepIdx][rowIdx])
-                        continue
-
-                    // Trigger this row
-                    this.trigRow(rowIdx, time);
-                }
-
-                // If this is the last step of this pattern
-                if (stepIdx === grid.length - 1)
-                {
-                    this.nextStep = 0;
-
-                    if (this.nextPat !== undefined)
-                    {
-                        // Send the pattern change to the main thread
-                        this.send({
-                            type: 'SET_PATTERN',
-                            nodeId: this.nodeId,
-                            patIdx: this.nextPat
-                        });
-
-                        // Move to the next pattern
-                        this.patIdx = this.nextPat;
-                        this.nextPat = undefined;
-                    }
-                }
-            }
-
-            this.clockCnt--;
-        }
-
-        // Store the sign of the clock signal for this cycle
-        this.clockSgn = (clock > 0);
-    }
-}
-
-/**
- * Monophonic note sequencer
- */
-class MonoSeq extends Sequencer
-{
-    constructor(id, state, sampleRate, send)
-    {
-        super(id, state, sampleRate, send);
-
-        // Generate the scale notes
-        this.scale = music.genScale(state.scaleRoot, state.scaleName, state.numOctaves);
-
-        // Current gate state
-        this.gateState = 'off';
-
-        // Time the last note was triggered
-        this.trigTime = 0;
-
-        // Frequency of the note being held
-        this.freq = 0;
-    }
-
-    /**
-     * Set/update the entire state for this node
-     */
-    setState(state)
-    {
-        Sequencer.prototype.setState.call(this, state);
-
-        // Generate the scale notes
-        this.scale = music.genScale(state.scaleRoot, state.scaleName, state.numOctaves);
-    }
-
-    /**
-     * Set a given cell in a step sequencer
-     */
-    setCell(patIdx, stepIdx, rowIdx, value)
-    {
-        // Clear all other notes at this step
-        let pattern = this.state.patterns[patIdx];
-        let numRows = pattern[stepIdx].length;
-        for (let i = 0; i < numRows; ++i)
-            pattern[stepIdx][i] = 0;
-
-        Sequencer.prototype.setCell.call(this, patIdx, stepIdx, rowIdx, value);
-    }
-
-    /**
-     * Trigger a note at this row
-     */
-    trigRow(rowIdx, time)
-    {
-        this.gateState = 'pretrig';
-        this.trigTime = time;
-        let note = this.scale[rowIdx];
-        this.freq = note.getFreq();
-    }
-
-    /**
-     * Takes the current time and clock signal as input.
-     * Produces frequency and gate signals as output.
-     */
-    update(time, clock, gateTime)
-    {
-        Sequencer.prototype.update.call(this, time, clock, gateTime);
-
-        assert (!isNaN(this.freq), 'MonoSeq freq is NaN');
-
-        // The pretrig state serves to force the gate to go to
-        // zero for at least one cycle so that ADSR envelopes
-        // can be retriggered if already active.
-        switch (this.gateState)
-        {
-            case 'off':
-            return [this.freq, 0];
-
-            case 'pretrig':
-            this.gateState = 'on';
-            return [0, 0];
-
-            case 'on':
-            {
-                // If we are past the end of the note
-                if (time - this.trigTime > gateTime)
-                {
-                    this.gateState = 'off';
-                    this.trigTime = 0;
-                }
-
-                return [this.freq, 1];
-            }
-
-            default:
-            assert (false);
-        }
-    }
-}
-
-/**
- * Multi-gate grid sequencer
- */
-class GateSeq extends Sequencer
-{
-    constructor(id, state, sampleRate, send)
-    {
-        super(id, state, sampleRate, send);
-
-        // Generate the scale notes
-        this.numRows = state.numRows;
-
-        // Current gate states
-        this.gateState = (new Array(this.numRows)).fill('off');
-
-        // Time when the gate was triggered
-        this.trigTime = (new Array(this.numRows)).fill(0);
-
-        // Gate output values, one per row
-        this.gates = (new Array(this.numRows)).fill(0);
-    }
-
-    /**
-     * Set/update the entire state for this node
-     */
-    setState(state)
-    {
-        Sequencer.prototype.setState.call(this, state);
-
-        this.numRows = state.numRows;
-        this.gateState = (new Array(this.numRows)).fill('off');
-        this.trigTime = (new Array(this.numRows)).fill(0);
-        this.gates = (new Array(this.numRows)).fill(0);
-    }
-
-    /**
-     * Set a given cell in a step sequencer
-     */
-    setCell(patIdx, stepIdx, rowIdx, value)
-    {
-        Sequencer.prototype.setCell.call(this, patIdx, stepIdx, rowIdx, value);
-    }
-
-    /**
-     * Trigger a note at this row
-     */
-    trigRow(rowIdx, time)
-    {
-        this.gateState[rowIdx] = 'pretrig';
-        this.trigTime[rowIdx] = time;
-    }
-
-    /**
-     * Takes the current time and clock signal as input.
-     * Produces frequency and gate signals as output.
-     */
-    update(time, clock, gateTime)
-    {
-        Sequencer.prototype.update.call(this, time, clock, gateTime);
-
-        // For each row
-        for (let i = 0; i < this.numRows; ++i)
-        {
-            // The pretrig state serves to force the gate to go to
-            // zero for at least one cycle so that ADSR envelopes
-            // can be retriggered if already active.
-            switch (this.gateState[i])
-            {
-                case 'pretrig':
-                this.gateState[i] = 'on';
-                break;
-
-                case 'on':
-                {
-                    // If we are past the end of the note
-                    if (time - this.trigTime[i] > gateTime)
-                    {
-                        this.gateState[i] = 'off';
-                        this.trigTime[i] = 0;
-                    }
-                }
-                break;
-
-                case 'off':
-                break;
-
-                default:
-                assert (false);
-            }
-
-            this.gates[this.numRows - (i+1)] = (this.gateState[i] == 'on')? 1:0;
-        }
-
-        // Return the gate values (one per row)
-        return this.gates;
-    }
-}
+// removed: Sequencer, MonoSeq, GateSeq
 
 /**
  * Sequence of Signals (new)
@@ -1028,7 +718,7 @@ export class Sequence extends AudioNode {
     this.step = 0;
     this.first= true
   }
-
+  // TODO: use CLOCK_PPS to get correct tempo...
   update(clock, ...ins) {
     if (!this.clockSgn && clock > 0) {
       this.step = (this.step + 1) % ins.length;
@@ -1062,8 +752,6 @@ export let NODE_CLASSES =
     Slide: Slide,
     Filter: Filter,
     Fold: Fold,
-    MidiIn: MidiIn,
-    MonoSeq: MonoSeq,
-    GateSeq: GateSeq,
+    // MidiIn: MidiIn,
     Seq: Sequence,
 };

@@ -2,17 +2,11 @@ import { Node, NODE_SCHEMA } from "./node.js";
 
 // this compiler is actually not from noisecraft :)
 
-const audioNodeDefaults = {};
-
-for (let type in NODE_SCHEMA) {
-  audioNodeDefaults[type] = NODE_SCHEMA[type].ins.map((inlet) => inlet.default);
-}
-
 Node.prototype.compile = function () {
-  const nodes = this.visitKeyed();
+  const nodes = this.visit();
   const graph = { nodes };
   // const sorted = Object.keys(nodes).reverse();
-  const sorted = topoSort(graph); // do we need this?
+  const sorted = topoSort(graph);
   let lines = [];
   let v = (id) => `_${id}`;
   let pushVar = (id, value, comment) =>
@@ -21,40 +15,52 @@ Node.prototype.compile = function () {
   let ut = (id, ...ins) => `nodes['${id}'].update(time, ${ins.join(", ")})`; // some functions want time as first arg (without being an inlet)
   let infix = (a, op, b) => `(${a} ${op} ${b})`;
   let inlets = (id) => nodes[id].ins;
-  let inletVars = (id, defaultValues, comment, addTime = false) => {
-    const vars = defaultValues.map((fallback, i) =>
-      nodes[id].ins[i] ? v(nodes[id].ins[i].id) : fallback
-    );
-    const ufn = addTime ? ut : u;
-    pushVar(id, ufn(id, ...vars), comment);
-  };
-  let dynamicInletVars = (id, addTime, comment) => {
-    const vars = nodes[id].ins.map((inlet) => v(inlet.id));
-    const ufn = addTime ? ut : u;
-    pushVar(id, ufn(id, ...vars), comment);
-  };
-  let op2 = (id, op, comment) => {
-    const ins = inlets(id);
-    const a = v(ins[0].id);
-    const b = v(ins[1].id);
-    pushVar(id, infix(a, op, b), infix(ins[0].type, op, ins[1].type));
-  };
   let thru = (id) => pushVar(id, v(nodes[id].ins[0].id));
+  const infixOperators = {
+    add: "+",
+    mul: "*",
+    sub: "-",
+    div: "/",
+    mod: "%",
+  };
   for (let id of sorted) {
     const node = nodes[id];
+    const vars = nodes[id].ins.map((inlet) => v(inlet.id));
+    // is infix operator node?
+    if (infixOperators[node.type]) {
+      const op = infixOperators[node.type];
+      const ins = inlets(id);
+      // TODO: support variable args
+      const a = v(ins[0].id);
+      const b = v(ins[1].id);
+      pushVar(id, infix(a, op, b), infix(ins[0].type, op, ins[1].type));
+      continue;
+    }
+    // is stateful node?
+    if (NODE_SCHEMA[node.type]) {
+      const comment = node.type;
+      const addTime = NODE_SCHEMA[node.type].time;
+      const dynamic = NODE_SCHEMA[node.type].dynamic;
+      const ufn = addTime ? ut : u;
+      if (dynamic) {
+        pushVar(id, ufn(id, ...vars), comment);
+      } else {
+        // defaults could theoretically also be set inside update function
+        // but that might be bad for the jit compiler, as it needs to check for undefined values?
+        const varsWithDefaults = NODE_SCHEMA[node.type].ins.map(
+          (inlet, i) => vars[i] ?? inlet.default
+        );
+        pushVar(id, ufn(id, ...varsWithDefaults), comment);
+      }
+      continue;
+    }
     switch (node.type) {
       case "n": {
         pushVar(id, node.value, "n");
         break;
       }
-      case "mul": {
-        op2(id, "*");
-        break;
-      }
       case "range": {
-        const bipolar = v(nodes[id].ins[0].id);
-        const min = v(nodes[id].ins[1].id);
-        const max = v(nodes[id].ins[2].id);
+        const [bipolar, min, max] = vars;
         // bipolar [-1,1] to unipolar [0,1] => (v+1)/2
         const unipolar = infix(infix(bipolar, "+", 1), "*", 0.5);
         // var = val*(max-min)+min
@@ -64,35 +70,18 @@ Node.prototype.compile = function () {
         break;
       }
       case "midinote": {
-        const note = v(nodes[id].ins[0].id);
+        const [note] = vars;
         const calc = `(2 ** ((${note} - 69) / 12) * 440)`;
         pushVar(id, calc, "midinote");
         break;
       }
-      case "add": {
-        op2(id, "+");
-        break;
-      }
       case "out": {
-        const sum = v(node.ins[0].id);
+        const [sum] = vars;
         const lvl = 0.3; // turn down to avoid clipping
         lines.push(`return [${sum}*${lvl},${sum}*${lvl}]`);
         break;
       }
       default: {
-        if (NODE_SCHEMA[node.type]) {
-          if (NODE_SCHEMA[node.type].dynamic) {
-            dynamicInletVars(id, NODE_SCHEMA[node.type].time, node.type);
-          } else {
-            inletVars(
-              id,
-              audioNodeDefaults[node.type],
-              node.type,
-              NODE_SCHEMA[node.type].time
-            );
-          }
-          break;
-        }
         console.warn(`unhandled node type ${nodes[id].type}`);
         thru(id);
       }

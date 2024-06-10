@@ -5,7 +5,7 @@ import { Graphviz } from "@hpcc-js/wasm";
 const graphvizLoaded = Graphviz.load();
 
 Node.prototype.render = async function (container) {
-  let nodes = this.visitKeyed();
+  let nodes = this.visit();
   let edges = [];
   const color = "teal";
   const fontcolor = "teal";
