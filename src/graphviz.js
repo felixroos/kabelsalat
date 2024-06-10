@@ -27,6 +27,7 @@ Node.prototype.render = async function (container) {
     color,
     fontcolor,
     label: node.label,
+    ordering: "in",
   }));
 
   const graphviz = await graphvizLoaded;
