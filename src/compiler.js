@@ -11,7 +11,6 @@ Node.prototype.compile = function () {
     lines.push(
       `const ${v(id)} = ${value};${comment ? ` /* ${comment} */` : ""}`
     );
-  const consts = {};
   let u = (id, ...ins) => `nodes[${id}].update(${ins.join(", ")})`;
   let ut = (id, ...ins) => `nodes[${id}].update(time, ${ins.join(", ")})`; // some functions want time as first arg (without being an inlet)
   let infix = (a, op, b) => `(${a} ${op} ${b})`;
@@ -42,7 +41,7 @@ Node.prototype.compile = function () {
       );
       continue;
     }
-    // is stateful node?
+    // is audio node?
     if (NODE_SCHEMA[node.type] && NODE_SCHEMA[node.type].audio !== false) {
       const comment = node.type;
       const addTime = NODE_SCHEMA[node.type].time;

@@ -4,7 +4,6 @@ import workletUrl from "./worklet.js?worker&url";
 
 export class AudioView {
   updateGraph(node) {
-    console.log("node", node);
     const { src, nodes } = node.compile();
     this.send({
       type: "NEW_UNIT",
