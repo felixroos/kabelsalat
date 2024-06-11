@@ -148,7 +148,7 @@ class AudioNode
     {
         this.nodeId = id;
         this.state = state;
-        this.params = state.params;
+        this.params = { minVal:-1, maxVal:1 };
         this.sampleRate = sampleRate;
         this.sampleTime = 1 / sampleRate;
         this.send = send;

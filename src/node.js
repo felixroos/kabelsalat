@@ -1,22 +1,8 @@
 export class Node {
-  constructor(type, value, id = s4()) {
+  constructor(type, value) {
     this.type = type;
     value !== undefined && (this.value = value);
     this.ins = [];
-    this._id = id;
-    this.params = { minVal: -1, maxVal: 1 }; // TODO: how to handle this?
-  }
-  get id() {
-    return `${this._id}`; //:${this.type}`;
-  }
-  prop(name) {
-    return this.value[name];
-  }
-  get isNode() {
-    return true;
-  }
-  isConnectedTo(node) {
-    return this.ins.find((n) => n.id === node.id);
   }
   withIns(...ins) {
     this.ins = ins;
@@ -25,19 +11,6 @@ export class Node {
   connect(node) {
     node.ins.push(this);
     return node;
-  }
-  show(parent) {
-    //const connections = this.connections.filter(
-    const connections = this.ins.filter((to) => !parent || parent.id !== to.id);
-    let str = this.label;
-    if (!connections.length) {
-      return str;
-    }
-    str += " <->";
-    if (connections.length === 1) {
-      return `${str} ${connections[0].show(this)}`;
-    }
-    return `${str} [${connections.map((node) => node.show(this)).join(", ")}]`;
   }
   flatten() {
     return flatten(this);
@@ -49,13 +22,6 @@ export class Node {
     // clock(10).seq(51,52,0,53).apply2(hold).midinote().sine().out()
     return fn(this, this);
   }
-}
-
-// helper function to generate repl ids
-function s4() {
-  return Math.floor((1 + Math.random()) * 0x10000)
-    .toString(16)
-    .substring(1);
 }
 
 function visit(node, visited = []) {
@@ -89,7 +55,7 @@ function flatten(node) {
 export const node = (type, value) => new Node(type, value /* , ++index */);
 
 export function n(value) {
-  if (value.isNode) {
+  if (typeof value === "object") {
     return value;
   }
   return node("n", value);
