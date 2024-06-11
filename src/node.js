@@ -8,10 +8,6 @@ export class Node {
     this.ins = ins;
     return this;
   }
-  connect(node) {
-    node.ins.push(this);
-    return node;
-  }
   flatten() {
     return flatten(this);
   }
