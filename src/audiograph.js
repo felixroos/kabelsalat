@@ -347,7 +347,7 @@ class SawOsc extends AudioNode {
 
   update(freq) {
     this.phase += this.sampleTime * freq;
-    return this.phase % 1;
+    return (this.phase % 1) * 2 - 1;
   }
 }
 
