@@ -117,7 +117,7 @@ export let sub = makeNode("sub");
 export let mod = makeNode("mod"); // untested
 export let range = makeNode("range");
 export let midinote = makeNode("midinote");
-export let out = makeNode("out");
+export let dac = makeNode("dac");
 
 Node.prototype.perc = function (decay) {
   return this.adsr(0, decay, 0, 0);

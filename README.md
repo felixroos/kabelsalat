@@ -6,14 +6,14 @@ compilation strategy / graph format very much inspired by and adapted from <http
 
 ## examples
 
-- [acid machine + drum thing](https://felixroos.github.io/kabelsalat/#KCgpID0+IHsKLy8gbWF4aW1lY2IgLSB0aGUgbGl0dGxlIGFjaWQgbWFjaGluZSB0aGF0IGNvdWxkCi8vICsgbWF4aW1lY2IgZHJ1bSBtYWNoaW5lCi8vIGNvZGUgYnkgZnJvb3MKLy8gbm9pc2VjcmFmdCAtPiBrYWJlbHNhbGF0Ci8vIGh0dHBzOi8vbm9pc2VjcmFmdC5hcHAvNDcKCmxldCBraWNrID0gZ2F0ZSA9PiBnYXRlLmFkc3IoMCwuMTEsMCwuMTEpCiAgLmFwcGx5KGVudiA9PiBlbnYubXVsKGVudikKICAgIC5tdWwoMTU4KSAvLyBmcmVxdWVuY3kgcmFuZ2UKICAgIC5zaW5lKGVudikKICAgIC5kaXN0b3J0KC44NSkKICApCgpsZXQgc25hcmUgPSBnYXRlID0+IGdhdGUuYWRzcigwLC4xMSwuMSwuMSkKICAubXVsKG5vaXNlKCkpLmZpbHRlciguNzgsLjI5KQoKbGV0IGMgPSBjbG9jaygxNjApCmxldCBub3RlcyA9IGMuY2xvY2tkaXYoOCkKLnNlcSgyNywyNywzOSw1MSwwLDAsMjcsMjcsNDIsMjcsNDAsMCwzMSwzMSw1Niw1MSkKCmxldCBlbnYgPSBub3Rlcy5hZHNyKDAsLjMsLjM0LC41OSkKCnJldHVybiBub3RlcwouYXBwbHkyKGhvbGQpIC8vIGhvbGQgZnJlcSBhYm92ZSAwcwoubWlkaW5vdGUoKQouc2xpZGUoCiAgc2luZSguMjEpLnJhbmdlKDAsMSkKKQoucHVsc2UoLjQ4KQoubXVsKGVudikKLmZpbHRlcigKICBlbnYubXVsKHNpbmUoLjA5KS5yYW5nZSguNTUsMSkpLCAvLyBjdXRvZmYKICBzaW5lKC4yMikucmFuZ2UoMCwuMzUpIC8vIHJlcwopCi5kaXN0b3J0KAogIHNpbmUoLjE4KS5yYW5nZSgwLC44NSkKKQoubXVsKDAuNSkKLm11bChjLmNsb2NrZGl2KDE2KS5zZXEoLjI1LDEpKSAvLyBzaWRlY2hhaW4KLmFkZChjLmNsb2NrZGl2KDMyKS5zZXEoMSwxKS5hcHBseShraWNrKSkKLmFkZChjLmNsb2NrZGl2KDMyKS5zZXEoMCwxKS5hcHBseShzbmFyZSkpCi5vdXQoKQoKfSkoKQ==)
+- [acid machine + drum thing](https://felixroos.github.io/kabelsalat/#Ly8gbWF4aW1lY2IgLSB0aGUgbGl0dGxlIGFjaWQgbWFjaGluZSB0aGF0IGNvdWxkCi8vICsgbWF4aW1lY2IgZHJ1bSBtYWNoaW5lCi8vIGNvZGUgYnkgZnJvb3MKLy8gbm9pc2VjcmFmdCAtPiBrYWJlbHNhbGF0Ci8vIGh0dHBzOi8vbm9pc2VjcmFmdC5hcHAvNDcKCmxldCBraWNrID0gZ2F0ZSA9PiBnYXRlLmFkc3IoMCwuMTEsMCwuMTEpCiAgLmFwcGx5KGVudiA9PiBlbnYubXVsKGVudikKICAgIC5tdWwoMTU4KSAvLyBmcmVxdWVuY3kgcmFuZ2UKICAgIC5zaW5lKGVudikKICAgIC5kaXN0b3J0KC44NSkKICApCgpsZXQgc25hcmUgPSBnYXRlID0+IGdhdGUuYWRzcigwLC4xMSwuMSwuMSkKICAubXVsKG5vaXNlKCkpLmZpbHRlciguNzgsLjI5KQoKbGV0IGMgPSBjbG9jaygxNjApCmxldCBub3RlcyA9IGMuY2xvY2tkaXYoOCkKLnNlcSgyNywyNywzOSw1MSwwLDAsMjcsMjcsNDIsMjcsNDAsMCwzMSwzMSw1Niw1MSkKCmxldCBlbnYgPSBub3Rlcy5hZHNyKDAsLjMsLjM0LC41OSkKCm5vdGVzCi5hcHBseTIoaG9sZCkgLy8gaG9sZCBmcmVxIGFib3ZlIDBzCi5taWRpbm90ZSgpCi5zbGlkZSgKICBzaW5lKC4yMSkucmFuZ2UoMCwxKQopCi5wdWxzZSguNDgpCi5tdWwoZW52KQouZmlsdGVyKAogIGVudi5tdWwoc2luZSguMDkpLnJhbmdlKC41NSwxKSksIC8vIGN1dG9mZgogIHNpbmUoLjIyKS5yYW5nZSgwLC4zNSkgLy8gcmVzCikKLmRpc3RvcnQoCiAgc2luZSguMTgpLnJhbmdlKDAsLjg1KQopCi5tdWwoMC41KQoubXVsKGMuY2xvY2tkaXYoMTYpLnNlcSguMjUsMSkpIC8vIHNpZGVjaGFpbgouYWRkKGMuY2xvY2tkaXYoMzIpLnNlcSgxLDEpLmFwcGx5KGtpY2spKQouYWRkKGMuY2xvY2tkaXYoMzIpLnNlcSgwLDEpLmFwcGx5KHNuYXJlKSkKLm91dCgpCg==)
 - [insect buzzing by luiiuuuiiiii](https://felixroos.github.io/kabelsalat/#c2luZSgxMjExMSkKLmZvbGQoc2luZSguNTEpLnJhbmdlKDAsIC4zKSkKLm11bCgKICBzaW5lKAogICAgbig3KS5tdWwoCiAgICAgIHNpbmUoMC41KS5yYW5nZSgxLDMpCiAgICApCiAgKS5yYW5nZSguMCwuMSkKKQoub3V0KCk=)
 - [Da Wubs](https://felixroos.github.io/kabelsalat/#c2F3KC4zNSkKLm11bCg0LjcpCi5hZGQoLjM1KQouc2luZSgpCi5tdWwoMzkxLjk5NSkKLm11bCh0cmkoNTApKQouc2luZSgpCi5tdWwoMSkKLm91dCgpCgovLyBEYSBXdWJzCi8vIGh0dHBzOi8vbm9pc2VjcmFmdC5hcHAvNTEK)
 - [weird noise thing](https://felixroos.github.io/kabelsalat/#bm9pc2UoMikucmFuZ2UoNTUsMjIwKS5tdWwoc2luZSguMikucmFuZ2UoMSwxLjEpKS5ub2lzZSgpCi5maWx0ZXIobm9pc2UoKS5yYW5nZSguNywuNCkuc2xpZGUoMSksIG5vaXNlKC42KS5yYW5nZSgyLDQpKQouZmlsdGVyKGNsb2NrKDEyKS5zZXEoLjEsLjIsLjUsLjIsLjcpKQoubXVsKDQpLmZvbGQoKQoub3V0KCk=)
 - [am thing](https://felixroos.github.io/kabelsalat/#c2luZSgxMTApCi5tdWwoCiAgc2luZSgKICAgIG4oMzMyKS5tdWwoCiAgICAgIHNpbmUoLjAxKS5yYW5nZSguMjUsMikKICAgICkKICApCiAgLnJhbmdlKC4wNSwxKQopCi5tdWwoLjEpCi5vdXQoKQ==)
 - [fm thing](https://felixroos.github.io/kabelsalat/#c2luZSgKbigxMTApLm11bCgKICBzaW5lKAogICAgbig2MzIpLm11bCgKICAgICAgc2F3KC4wMikucmFuZ2UoLjI1LDIpCiAgICApCiAgKQogIC5yYW5nZSguMDUsMSkKKSkKLm11bCguMSkKLm91dCgp)
 - [fm thing 2](https://felixroos.github.io/kabelsalat/#c2luZSgKbigxMTApLm11bCgKICBzaW5lKAogICAgbigxMTUpLm11bCgKICAgICAgc2luZSgyNTApCiAgICAgIC5yYW5nZSguMTI1LCBzaW5lKC4wMikucmFuZ2UoMSwyMCkpCiAgICApCiAgKQogIC5yYW5nZSguMDUsMSkKKSkKLm11bCguMSkKLm91dCgp)
-- [additive](https://felixroos.github.io/kabelsalat/#KCgpID0+IHsKbGV0IG9yZ2FuID0gKGZyZXEsIHBhcnRpYWxzKSA9PiB7CmxldCBzb3VuZCA9IG4oMCk7CmZvcihsZXQgaSA9IDE7aTw9cGFydGlhbHM7aSsrKSB7CmNvbnN0IHBhcnRpYWwgPSBzaW5lKGkqZnJlcSkubXVsKDEvaSkKc291bmQgPSBzb3VuZC5hZGQocGFydGlhbCkKfQpyZXR1cm4gc291bmQKfQoKcmV0dXJuIG9yZ2FuKDExMCwzKS5hZGQob3JnYW4oMTExLDUpKQoubXVsKC4xMjUpLm91dCgpCn0pKCk=)
+- [additive](https://felixroos.github.io/kabelsalat/#bGV0IG9yZ2FuID0gKGZyZXEsIHBhcnRpYWxzKSA9PiB7CmxldCBzb3VuZCA9IG4oMCk7CmZvcihsZXQgaSA9IDE7aTw9cGFydGlhbHM7aSsrKSB7CmNvbnN0IHBhcnRpYWwgPSBzaW5lKGkqZnJlcSkubXVsKDEvaSkKc291bmQgPSBzb3VuZC5hZGQocGFydGlhbCkKfQpyZXR1cm4gc291bmQKfQoKb3JnYW4oMTEwLDMpLmFkZChvcmdhbigxMTEsNSkpCi5tdWwoLjEyNSkub3V0KCk=)
 
 ## api
 
@@ -145,20 +145,19 @@ noise()
 ## fm feedback
 
 ```js
-(() => {
-  let fm = (freqs, gate = freqs, c2m = 1, index = 3, fb = 0.05) =>
-    feedback((out) => {
-      const modulator = mul(freqs, c2m)
-        .add(out.mul(fb))
-        .sine()
-        .mul(mul(freqs, index))
-        .add(out)
-        .mul(0.5);
-      const carrier = modulator.add(freqs).sine();
-      const env = gate.adsr(0.001, 0.5, 0, 0).apply2(mul).apply2(mul);
-      return [modulator.mul(env), carrier.mul(env)];
-    });
-  const freqs = pulse(4).range(1, 0).seq(55, 110, 165, 220, 275, 330, 385, 440);
-  return fm(freqs, freqs, 1, 3, 0.05).mul(2).out();
-})();
+let fm = (freqs, gate = freqs, c2m = 1, index = 3, fb = 0.05) =>
+  feedback((out) => {
+    const modulator = mul(freqs, c2m)
+      .add(out.mul(fb))
+      .sine()
+      .mul(mul(freqs, index))
+      .add(out)
+      .mul(0.5);
+    const carrier = modulator.add(freqs).sine();
+    const env = gate.adsr(0.001, 0.5, 0, 0).apply2(mul).apply2(mul);
+    return [modulator.mul(env), carrier.mul(env)];
+  });
+
+const freqs = pulse(4).range(1, 0).seq(55, 110, 165, 220, 275, 330, 385, 440);
+fm(freqs, freqs, 1, 3, 0.05).mul(2).out();
 ```

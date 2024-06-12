@@ -7,9 +7,34 @@ import * as api from "./node.js";
 
 Object.assign(globalThis, api);
 
-const audio = new AudioView();
+class SalatRepl {
+  constructor() {
+    this.audio = new AudioView();
+  }
+  evaluate(code) {
+    let nodes = [];
+    api.Node.prototype.out = function () {
+      nodes.push(this);
+    };
+    Function(code)();
+    const node = api.dac(...nodes);
+    console.log("node", node);
+    return node;
+  }
+  async play(node) {
+    if (!this.audio.isRunning) {
+      await this.audio.init();
+    }
+    this.audio.updateGraph(node);
+  }
+  stop() {
+    this.audio.stop();
+  }
+}
 
 function App() {
+  const repl = new SalatRepl();
+
   let urlCode = window.location.hash.slice(1);
   if (urlCode) {
     urlCode = atob(urlCode);
@@ -19,16 +44,10 @@ function App() {
   let [code, setCode] = createSignal(initialCode);
   let container;
   async function run() {
-    const body = `return ${code()}`;
-
-    console.log("run", body);
-    const node = Function(body)();
-    if (!audio.isRunning) {
-      await audio.init();
-    }
+    const node = repl.evaluate(code());
     node.render(container); // update viz
-    audio.updateGraph(node); // update dsp
     window.location.hash = "#" + btoa(code());
+    repl.play(node);
   }
   return (
     <div className="flex flex-col  h-full max-h-full justify-stretch text-teal-600 font-mono ">
@@ -49,7 +68,7 @@ function App() {
             if (e.key === "Enter" && e.ctrlKey) {
               run();
             } else if (e.key === "." && e.ctrlKey) {
-              audio.stop();
+              repl.stop();
             }
           }}
           className="bg-stone-900 shrink-0 p-4 focus:ring-0 outline-0 border-r border-teal-500"

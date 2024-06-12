@@ -23,18 +23,18 @@ Node.prototype.compile = function () {
     mod: "%",
   };
   const audioThreadNodes = [];
-  let out;
+  let dac;
   for (let id of sorted) {
     const node = nodes[id];
     const vars = nodes[id].ins.map((inlet) => v(inlet));
     // is infix operator node?
     if (infixOperators[node.type]) {
       const op = infixOperators[node.type];
-      // TODO: support variable args
-      const [a, b] = vars;
-      const ins = nodes[id].ins;
-      const comment = infix(nodes[ins[0]].type, op, nodes[ins[1]].type);
-      pushVar(id, infix(a, op, b), comment);
+      const calc = vars.join(` ${op} `);
+      const comment = nodes[id].ins
+        .map((inlet) => nodes[inlet].type)
+        .join(` ${op} `);
+      pushVar(id, calc, comment);
       continue;
     }
     // is audio node?
@@ -83,8 +83,16 @@ Node.prototype.compile = function () {
         pushVar(id, calc, "midinote");
         break;
       }
-      case "out": {
-        out = vars[0];
+      case "dac": {
+        if (!vars.length) {
+          console.warn(`no input.. call .out() to play`);
+          dac = 0;
+          break;
+        }
+        if (dac) {
+          console.warn(`multiple use of dac node.. using last call`);
+        }
+        dac = `(${vars.join(" + ")})*0.3`;
         break;
       }
       case "feedback_write": {
@@ -97,12 +105,11 @@ Node.prototype.compile = function () {
       }
     }
   }
-  if (out === undefined) {
-    console.log("no .out() node used...");
+  if (dac === undefined) {
+    console.log("no .dac() node used...");
     return { src: `return [0,0]`, nodes, audioThreadNodes };
   }
-  const lvl = 0.3;
-  lines.push(`return [${out}*${lvl}, ${out}*${lvl}]`);
+  lines.push(`return [${dac}, ${dac}]`);
 
   const src = lines.join("\n");
   console.log("code");
