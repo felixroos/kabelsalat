@@ -1,6 +1,6 @@
-import { assert } from './utils.js';
+import { assert } from "./utils.js";
 // import { NODE_SCHEMA } from './model.js';
-import * as synth from './synth.js';
+import * as synth from "./synth.js";
 
 /**
 MIDI clock pulses per quarter note
@@ -15,312 +15,278 @@ export const CLOCK_PPS = CLOCK_PPQ / 4;
 /**
  * Stateful graph that generates audio samples
  */
-export class AudioGraph
-{
-    constructor(sampleRate, send)
-    {
-        assert (sampleRate == 44100);
-        this.sampleRate = sampleRate;
+export class AudioGraph {
+  constructor(sampleRate, send) {
+    assert(sampleRate == 44100);
+    this.sampleRate = sampleRate;
 
-        // Current playback position in seconds
-        this.playPos = 0;
+    // Current playback position in seconds
+    this.playPos = 0;
 
-        // Compiled code to generate audio samples
-        this._genSample = null;
+    // Compiled code to generate audio samples
+    this._genSample = null;
 
-        // Method to send messages to the main thread
-        this.send = send;
+    // Method to send messages to the main thread
+    this.send = send;
 
-        // Stateful audio processing nodes, indexed by nodeId
-        this.nodes = [];
-    }
+    // Stateful audio processing nodes, indexed by nodeId
+    this.nodes = [];
+  }
 
-    /**
-     * Update the audio graph given a new compiled unit
-     */
-    newUnit(unit) {
-      // Note that we don't delete any nodes, even if existing nodes are
-      // currently not listed in the compiled unit, because currently
-      // disconnected nodes may get reconnected, and deleting things like
-      // delay lines would lose their current state.
-      // All nodes get garbage collected when the playback is stopped.
-  
-      const types = unit.audioThreadNodes;
-      for (let i in types) {
-        if (types[i] in NODE_CLASSES) {
-          const nodeClass = NODE_CLASSES[types[i]];
-          // TODO node reuse / graph diffing whatever / only create nodes that are not already created..
-          this.nodes[i] = new nodeClass(i, {}, this.sampleRate, this.send);
-          // console.log("node", this.nodes[i]);
-        } else {
-          console.warn(`unknown audio node type "${types[i]}"`);
-        }
+  /**
+   * Update the audio graph given a new compiled unit
+   */
+  newUnit(unit) {
+    // Note that we don't delete any nodes, even if existing nodes are
+    // currently not listed in the compiled unit, because currently
+    // disconnected nodes may get reconnected, and deleting things like
+    // delay lines would lose their current state.
+    // All nodes get garbage collected when the playback is stopped.
+
+    const types = unit.audioThreadNodes;
+    for (let i in types) {
+      if (types[i] in NODE_CLASSES) {
+        const nodeClass = NODE_CLASSES[types[i]];
+        // TODO node reuse / graph diffing whatever / only create nodes that are not already created..
+        this.nodes[i] = new nodeClass(i, {}, this.sampleRate, this.send);
+        // console.log("node", this.nodes[i]);
+      } else {
+        console.warn(`unknown audio node type "${types[i]}"`);
       }
-      console.log(
-        `${types.length} ugens spawned, ${Object.keys(this.nodes).length} total`
-      );
-  
-      // Create the sample generation function
-      this._genSample = new Function("time", "nodes", unit.src);
     }
+    console.log(
+      `${types.length} ugens spawned, ${Object.keys(this.nodes).length} total`
+    );
 
-    /**
-     * Parse a message from the main thread
-     */
-    parseMsg(msg)
-    {
-        let node = ('nodeId' in msg)? this.nodes[msg.nodeId]:null;
+    // Create the sample generation function
+    this._genSample = new Function("time", "nodes", unit.src);
+  }
 
-        switch (msg.type)
-        {
-            case 'NEW_UNIT':
-            this.newUnit(msg.unit);
-            break;
+  /**
+   * Parse a message from the main thread
+   */
+  parseMsg(msg) {
+    let node = "nodeId" in msg ? this.nodes[msg.nodeId] : null;
 
-            case 'SET_STATE':
-            node.setState(msg.state);
-            break;
+    switch (msg.type) {
+      case "NEW_UNIT":
+        this.newUnit(msg.unit);
+        break;
 
-            case 'NOTE_ON':
-            node.noteOn(msg.noteNo, msg.velocity);
-            break;
+      case "SET_STATE":
+        node.setState(msg.state);
+        break;
 
-            default:
-            throw new TypeError('unknown message type');
-        }
+      case "NOTE_ON":
+        node.noteOn(msg.noteNo, msg.velocity);
+        break;
+
+      default:
+        throw new TypeError("unknown message type");
     }
+  }
 
-    /**
-     * Generate one [left, right] pair of audio samples
-     */
-    genSample()
-    {
-        if (!this._genSample)
-            return [0, 0];
+  /**
+   * Generate one [left, right] pair of audio samples
+   */
+  genSample() {
+    if (!this._genSample) return [0, 0];
 
-        this.playPos += 1 / 44100;
-        return this._genSample(this.playPos, this.nodes);
-    }
+    this.playPos += 1 / 44100;
+    return this._genSample(this.playPos, this.nodes);
+  }
 }
 
 /**
  * Base class for stateful audio processing nodes
  */
-class AudioNode
-{
-    constructor(id, state, sampleRate, send)
-    {
-        this.nodeId = id;
-        this.state = state;
-        this.sampleRate = sampleRate;
-        this.sampleTime = 1 / sampleRate;
-        this.send = send;
-    }
+class AudioNode {
+  constructor(id, state, sampleRate, send) {
+    this.nodeId = id;
+    this.state = state;
+    this.sampleRate = sampleRate;
+    this.sampleTime = 1 / sampleRate;
+    this.send = send;
+  }
 
-    /**
-     * Set/update the entire state for this node
-     */
-    setState(state)
-    {
-        this.state = state;
-    }
+  /**
+   * Set/update the entire state for this node
+   */
+  setState(state) {
+    this.state = state;
+  }
 }
 
 /**
  * ADSR envelope
  */
-class ADSRNode extends AudioNode
-{
-    constructor(id, state, sampleRate, send)
-    {
-        super(id, state, sampleRate, send);
-        this.env = new synth.ADSREnv();
-    }
+class ADSRNode extends AudioNode {
+  constructor(id, state, sampleRate, send) {
+    super(id, state, sampleRate, send);
+    this.env = new synth.ADSREnv();
+  }
 
-    update(time, gate, attack, decay, susVal, release)
-    {
-        return this.env.eval(time, gate, attack, decay, susVal, release)
-    }
+  update(time, gate, attack, decay, susVal, release) {
+    return this.env.eval(time, gate, attack, decay, susVal, release);
+  }
 }
 
 /**
  * Clock source, with tempo in BPM
  */
-class Clock extends AudioNode
-{
-    constructor(id, state, sampleRate, send)
-    {
-        super(id, state, sampleRate, send);
-        this.phase = 0;
-    }
+class Clock extends AudioNode {
+  constructor(id, state, sampleRate, send) {
+    super(id, state, sampleRate, send);
+    this.phase = 0;
+  }
 
-    update(bpm)
-    {
-        let freq = CLOCK_PPQ * bpm / 60; 
-        let duty = 0.5;
-        this.phase += this.sampleTime * freq;
-        let cyclePos = this.phase % 1;
+  update(bpm) {
+    let freq = (CLOCK_PPQ * bpm) / 60;
+    let duty = 0.5;
+    this.phase += this.sampleTime * freq;
+    let cyclePos = this.phase % 1;
 
-        // Note that the clock starts high so that it will
-        // trigger immediately upon starting
-        return (cyclePos < duty)? 1:-1;
-    }
+    // Note that the clock starts high so that it will
+    // trigger immediately upon starting
+    return cyclePos < duty ? 1 : -1;
+  }
 }
 
 /**
  * Clock signal divider
  */
-class ClockDiv extends AudioNode
-{
-    constructor(id, state, sampleRate, send)
-    {
-        super(id, state, sampleRate, send);
+class ClockDiv extends AudioNode {
+  constructor(id, state, sampleRate, send) {
+    super(id, state, sampleRate, send);
 
-        // Last clock sign at the input (positive/negative)
-        this.inSgn = true;
+    // Last clock sign at the input (positive/negative)
+    this.inSgn = true;
 
-        // Current clock sign at the output (positive/negative)
-        // We start high to trigger immediately upon starting,
-        // just like the Clock node
-        this.outSgn = true;
+    // Current clock sign at the output (positive/negative)
+    // We start high to trigger immediately upon starting,
+    // just like the Clock node
+    this.outSgn = true;
 
-        // Number of input ticks since the last output tick
+    // Number of input ticks since the last output tick
+    this.clockCnt = 0;
+  }
+
+  // update(clock) // <- og
+  update(clock, factor) {
+    // Current clock sign at the input
+    let curSgn = clock > 0;
+
+    // If the input clock sign just flipped
+    if (this.inSgn != curSgn) {
+      // Count all edges, both rising and falling
+      this.clockCnt++;
+
+      // If we've reached the division factor
+      // if (this.clockCnt >= factor) // <- og
+      if (this.clockCnt >= factor) {
+        // Reset the clock count
         this.clockCnt = 0;
+
+        // Flip the output clock sign
+        this.outSgn = !this.outSgn;
+      }
     }
 
-    // update(clock) // <- og
-    update(clock, factor)
-    {
-        // Current clock sign at the input
-        let curSgn = (clock > 0);
+    this.inSgn = curSgn;
 
-        // If the input clock sign just flipped
-        if (this.inSgn != curSgn)
-        {
-            // Count all edges, both rising and falling
-            this.clockCnt++;
-
-            // If we've reached the division factor
-            // if (this.clockCnt >= factor) // <- og
-            if (this.clockCnt >= factor)
-            {
-                // Reset the clock count
-                this.clockCnt = 0;
-
-                // Flip the output clock sign
-                this.outSgn = !this.outSgn;
-            }
-        }
-
-        this.inSgn = curSgn;
-
-        return this.outSgn? 1:-1;
-    }
+    return this.outSgn ? 1 : -1;
+  }
 }
 
 /**
  * Clock output node
  */
-class ClockOut extends AudioNode
-{
-    constructor(id, state, sampleRate, send)
-    {
-        super(id, state, sampleRate, send);
+class ClockOut extends AudioNode {
+  constructor(id, state, sampleRate, send) {
+    super(id, state, sampleRate, send);
 
-        // Last clock sign at the input (positive/negative)
-        this.inSgn = false;
+    // Last clock sign at the input (positive/negative)
+    this.inSgn = false;
+  }
+
+  update(time, clock) {
+    // Current clock sign at the input
+    let curSgn = clock > 0;
+
+    // If the input clock sign just went positive (rising edge)
+    if (curSgn && this.inSgn != curSgn) {
+      // Send a clock pulse back to the main thread
+      this.send({
+        type: "CLOCK_PULSE",
+        nodeId: this.nodeId,
+        time: time,
+      });
     }
 
-    update(time, clock)
-    {
-        // Current clock sign at the input
-        let curSgn = (clock > 0);
-
-        // If the input clock sign just went positive (rising edge)
-        if (curSgn && this.inSgn != curSgn)
-        {
-            // Send a clock pulse back to the main thread
-            this.send({
-                type: 'CLOCK_PULSE',
-                nodeId: this.nodeId,
-                time: time
-            });
-        }
-
-        this.inSgn = curSgn;
-        return 0; // <-- added this
-    }
+    this.inSgn = curSgn;
+    return 0; // <-- added this
+  }
 }
 
 /**
  * Delay line node
  */
-class Delay extends AudioNode
-{
-    constructor(id, state, sampleRate, send)
-    {
-        super(id, state, sampleRate, send);
+class Delay extends AudioNode {
+  constructor(id, state, sampleRate, send) {
+    super(id, state, sampleRate, send);
 
-        // Stateful delay line object
-        this.delay = new synth.Delay(sampleRate);
-    }
-    // og noisecraft splits nodes here, but it seems to work..
-    update(input, time) {
-      this.delay.write(input, time);
-      return this.delay.read()
-    }
+    // Stateful delay line object
+    this.delay = new synth.Delay(sampleRate);
+  }
+  // og noisecraft splits nodes here, but it seems to work..
+  update(input, time) {
+    this.delay.write(input, time);
+    return this.delay.read();
+  }
 }
 
 /**
  * Overdrive-style distortion
  */
-class Distort extends AudioNode
-{
-    constructor(id, state, sampleRate, send)
-    {
-        super(id, state, sampleRate, send);
-    }
+class Distort extends AudioNode {
+  constructor(id, state, sampleRate, send) {
+    super(id, state, sampleRate, send);
+  }
 
-    update(input, amount)
-    {
-        return synth.distort(input, amount);
-    }
+  update(input, amount) {
+    return synth.distort(input, amount);
+  }
 }
 
 /**
  * Sample and hold
  */
-class Hold extends AudioNode
-{
-    constructor(id, state, sampleRate, send)
-    {
-        super(id, state, sampleRate, send);
+class Hold extends AudioNode {
+  constructor(id, state, sampleRate, send) {
+    super(id, state, sampleRate, send);
 
-        // Value currently being held
-        this.value = 0;
+    // Value currently being held
+    this.value = 0;
 
-        // Current trig input sign (positive/negative)
-        this.trigSgn = false;
-    }
+    // Current trig input sign (positive/negative)
+    this.trigSgn = false;
+  }
 
-    write(value, trig)
-    {
-        if (!this.trigSgn && trig > 0)
-            this.value = value;
+  write(value, trig) {
+    if (!this.trigSgn && trig > 0) this.value = value;
 
-        this.trigSgn = (trig > 0);
-    }
+    this.trigSgn = trig > 0;
+  }
 
-    read()
-    {
-        return this.value;
-    }
+  read() {
+    return this.value;
+  }
 
-    update(input, trig)
-    { // in the oh noisecraft, hold is split into 2 intermediate nodes, not sure why.. (same as delay)
-        this.write(input, trig);
-        return this.read()
-    }
+  update(input, trig) {
+    // in the oh noisecraft, hold is split into 2 intermediate nodes, not sure why.. (same as delay)
+    this.write(input, trig);
+    return this.read();
+  }
 }
 
 class Feedback extends AudioNode {
@@ -427,7 +393,7 @@ class TriOsc extends AudioNode {
     let cyclePos = this.phase % 1;
 
     // Compute a value between 0 and 1
-    let normVal = (cyclePos < 0.5)? (2 * cyclePos):(1 - 2 * (cyclePos - 0.5));
+    let normVal = cyclePos < 0.5 ? 2 * cyclePos : 1 - 2 * (cyclePos - 0.5);
 
     return normVal * 2 - 1;
   }
@@ -486,95 +452,88 @@ class TriOsc extends AudioNode {
 /**
  * Slide/portamento node
  */
-class Slide extends AudioNode
-{
-    constructor(id, state, sampleRate, send)
-    {
-        super(id, state, sampleRate, send);
+class Slide extends AudioNode {
+  constructor(id, state, sampleRate, send) {
+    super(id, state, sampleRate, send);
 
-        // Current state
-        this.s = 0;
-    }
+    // Current state
+    this.s = 0;
+  }
 
-    update(input, rate)
-    {
-        // Remap so the useful range is around [0, 1]
-        rate = rate * 1000;
+  update(input, rate) {
+    // Remap so the useful range is around [0, 1]
+    rate = rate * 1000;
 
-        if (rate < 1)
-            rate = 1;
+    if (rate < 1) rate = 1;
 
-        this.s += (1 / rate) * (input - this.s);
+    this.s += (1 / rate) * (input - this.s);
 
-        return this.s;
-    }
+    return this.s;
+  }
 }
 
 /**
  * Two-pole low-pass filter
  */
-class Filter extends AudioNode
-{
-    constructor(id, state, sampleRate, send)
-    {
-        super(id, state, sampleRate, send);
+class Filter extends AudioNode {
+  constructor(id, state, sampleRate, send) {
+    super(id, state, sampleRate, send);
 
-        this.filter = new synth.TwoPoleFilter();
-    }
+    this.filter = new synth.TwoPoleFilter();
+  }
 
-    update(input, cutoff, reso)
-    {
-        return this.filter.apply(input, cutoff, reso);
-    }
+  update(input, cutoff, reso) {
+    return this.filter.apply(input, cutoff, reso);
+  }
 }
 
 /**
  * Wavefolder
  */
-class Fold extends AudioNode
-{
-    /**
-     * I create a new Wavefold node.
-     *
-     * @param  {Number}  id - id of this node
-     * @param  {Object}  state - initial state
-     * @param  {Number}  sampleRate - audio sample rate
-     * @param  {Function}  send - event handler
-     */
-    constructor(id, state, sampleRate, send)
-    {
-        super(id, state, sampleRate, send);
-        // redundant ctor
-    }
+class Fold extends AudioNode {
+  /**
+   * I create a new Wavefold node.
+   *
+   * @param  {Number}  id - id of this node
+   * @param  {Object}  state - initial state
+   * @param  {Number}  sampleRate - audio sample rate
+   * @param  {Function}  send - event handler
+   */
+  constructor(id, state, sampleRate, send) {
+    super(id, state, sampleRate, send);
+    // redundant ctor
+  }
 
-    /**
-     * Distort incoming audio signal by "folding".
-     *
-     * <blockquote style="background-color:whitesmoke">
-     *  assume x is <em>[input]</em> and amp is <em>[rate]</em>
-     *  <pre>
-     *    f(x) = x * amp
-     *    g(x) = 4(abs(0.25x+0.25-round(0.25x+0.25))-0.25)
-     *    g(f(x)) => out
-     *  </pre>
-     * </blockquote>
-     * See {@link  https://www.keithmcmillen.com/blog/simple-synthesis-part-8-wavefolding/}
-     * and {@link https://jatinchowdhury18.medium.com/complex-nonlinearities-episode-6-wavefolding-9529b5fe4102}
-     *
-     * @param  {Sample}  input - signal
-     * @param  {PositiveReal}  rate - amplitude of fold
-     * @returns  {Sample}
-     */
-    update(input, rate)
-    {
-        // Make it so rate 0 means input unaltered because
-        // NoiseCraft knobs default to the [0, 1] range
-        if (rate < 0) rate = 0;
-        rate = rate + 1;
+  /**
+   * Distort incoming audio signal by "folding".
+   *
+   * <blockquote style="background-color:whitesmoke">
+   *  assume x is <em>[input]</em> and amp is <em>[rate]</em>
+   *  <pre>
+   *    f(x) = x * amp
+   *    g(x) = 4(abs(0.25x+0.25-round(0.25x+0.25))-0.25)
+   *    g(f(x)) => out
+   *  </pre>
+   * </blockquote>
+   * See {@link  https://www.keithmcmillen.com/blog/simple-synthesis-part-8-wavefolding/}
+   * and {@link https://jatinchowdhury18.medium.com/complex-nonlinearities-episode-6-wavefolding-9529b5fe4102}
+   *
+   * @param  {Sample}  input - signal
+   * @param  {PositiveReal}  rate - amplitude of fold
+   * @returns  {Sample}
+   */
+  update(input, rate) {
+    // Make it so rate 0 means input unaltered because
+    // NoiseCraft knobs default to the [0, 1] range
+    if (rate < 0) rate = 0;
+    rate = rate + 1;
 
-        input = input * rate;
-        return 4 * (Math.abs(0.25 * input + 0.25 - Math.round(0.25 * input + 0.25)) - 0.25);
-    }
+    input = input * rate;
+    return (
+      4 *
+      (Math.abs(0.25 * input + 0.25 - Math.round(0.25 * input + 0.25)) - 0.25)
+    );
+  }
 }
 
 /**
@@ -648,7 +607,7 @@ export class Sequence extends AudioNode {
     super(id, state, sampleRate, send);
     this.clockSgn = true;
     this.step = 0;
-    this.first= true
+    this.first = true;
   }
   // TODO: use CLOCK_PPS to get correct tempo...
   update(clock, ...ins) {
@@ -662,29 +621,27 @@ export class Sequence extends AudioNode {
   }
 }
 
-
 /**
  * Map of node types to classes
  */
-export let NODE_CLASSES =
-{
-    ADSR: ADSRNode,
-    Clock: Clock,
-    ClockDiv: ClockDiv,
-    ClockOut: ClockOut,
-    Delay: Delay,
-    Distort: Distort,
-    Hold: Hold,
-    Noise: NoiseOsc,
-    Pulse: PulseOsc,
-    Saw: SawOsc,
-    Sine: SineOsc,
-    Tri: TriOsc,
-    // Scope: Scope,
-    Slide: Slide,
-    Filter: Filter,
-    Fold: Fold,
-    // MidiIn: MidiIn,
-    Seq: Sequence,
-    feedback: Feedback,
+export let NODE_CLASSES = {
+  ADSR: ADSRNode,
+  Clock: Clock,
+  ClockDiv: ClockDiv,
+  ClockOut: ClockOut,
+  Delay: Delay,
+  Distort: Distort,
+  Hold: Hold,
+  Noise: NoiseOsc,
+  Pulse: PulseOsc,
+  Saw: SawOsc,
+  Sine: SineOsc,
+  Tri: TriOsc,
+  // Scope: Scope,
+  Slide: Slide,
+  Filter: Filter,
+  Fold: Fold,
+  // MidiIn: MidiIn,
+  Seq: Sequence,
+  feedback: Feedback,
 };
