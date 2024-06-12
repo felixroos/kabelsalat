@@ -32,6 +32,10 @@ class SalatRepl {
   }
 }
 
+const tremoloSine = `sine(220)
+.mul(sine(4).range(.5,1))
+.out()`;
+
 function App() {
   const repl = new SalatRepl();
 
@@ -40,7 +44,7 @@ function App() {
     urlCode = atob(urlCode);
     console.log("loaded code from url!");
   }
-  const initialCode = urlCode || `sine(n(200).mul(sine(154))).mul(.25).out()`;
+  const initialCode = urlCode || tremoloSine;
   let [code, setCode] = createSignal(initialCode);
   let container;
   async function run() {
