@@ -38,54 +38,30 @@ export class AudioGraph
     /**
      * Update the audio graph given a new compiled unit
      */
-    newUnit(unit)
-    {
-        // Note that we don't delete any nodes, even if existing nodes are
-        // currently not listed in the compiled unit, because currently
-        // disconnected nodes may get reconnected, and deleting things like
-        // delay lines would lose their current state.
-        // All nodes get garbage collected when the playback is stopped.
-
-        // For each audio node
-        for (let nodeId in unit.nodes)
-        {
-            let nodeState = unit.nodes[nodeId];
-
-            let nodeClass = (
-                nodeState.type in NODE_CLASSES?
-                NODE_CLASSES[nodeState.type]:
-                AudioNode
-            );
-
-            // If a node with this nodeId is already mapped
-            if (this.nodes[nodeId])
-            {
-                let node = this.nodes[nodeId];
-
-                // The existing node must have the same type
-                assert (node instanceof nodeClass);
-
-                // Update the node's state
-                node.setState(nodeState);
-            }
-            else
-            {
-                // Create a new audio node
-                this.nodes[nodeId] = new nodeClass(
-                    nodeId,
-                    nodeState,
-                    this.sampleRate,
-                    this.send
-                );
-            }
+    newUnit(unit) {
+      // Note that we don't delete any nodes, even if existing nodes are
+      // currently not listed in the compiled unit, because currently
+      // disconnected nodes may get reconnected, and deleting things like
+      // delay lines would lose their current state.
+      // All nodes get garbage collected when the playback is stopped.
+  
+      const types = unit.audioThreadNodes;
+      for (let i in types) {
+        if (types[i] in NODE_CLASSES) {
+          const nodeClass = NODE_CLASSES[types[i]];
+          // TODO node reuse / graph diffing whatever / only create nodes that are not already created..
+          this.nodes[i] = new nodeClass(i, {}, this.sampleRate, this.send);
+          // console.log("node", this.nodes[i]);
+        } else {
+          console.warn(`unknown audio node type "${types[i]}"`);
         }
-
-        // Create the sample generation function
-        this._genSample = new Function(
-            'time',
-            'nodes',
-            unit.src
-        );
+      }
+      console.log(
+        `${types.length} ugens spawned, ${Object.keys(this.nodes).length} total`
+      );
+  
+      // Create the sample generation function
+      this._genSample = new Function("time", "nodes", unit.src);
     }
 
     /**
@@ -101,20 +77,8 @@ export class AudioGraph
             this.newUnit(msg.unit);
             break;
 
-            case 'SET_PARAM':
-            node.setParam(msg.paramName, msg.value);
-            break;
-
             case 'SET_STATE':
             node.setState(msg.state);
-            break;
-
-            case 'SET_CELL':
-            node.setCell(msg.patIdx, msg.stepIdx, msg.rowIdx, msg.value);
-            break;
-
-            case 'QUEUE_PATTERN':
-            node.queuePattern(msg.patIdx, msg.patData);
             break;
 
             case 'NOTE_ON':
@@ -148,19 +112,9 @@ class AudioNode
     {
         this.nodeId = id;
         this.state = state;
-        this.params = { minVal:-1, maxVal:1 };
         this.sampleRate = sampleRate;
         this.sampleTime = 1 / sampleRate;
         this.send = send;
-    }
-
-    /**
-     * Set a parameter value on a given node
-     */
-    setParam(paramName, value)
-    {
-        assert (paramName in this.params);
-        this.params[paramName] = value;
     }
 
     /**
@@ -169,7 +123,6 @@ class AudioNode
     setState(state)
     {
         this.state = state;
-        this.params = state.params;
     }
 }
 
@@ -203,7 +156,6 @@ class Clock extends AudioNode
 
     update(bpm)
     {
-        // let freq = music.CLOCK_PPQ * this.params.value / 60; // <-- og
         let freq = CLOCK_PPQ * bpm / 60; 
         let duty = 0.5;
         this.phase += this.sampleTime * freq;
@@ -237,7 +189,7 @@ class ClockDiv extends AudioNode
     }
 
     // update(clock) // <- og
-    update(clock, factor = this.params.factor)
+    update(clock, factor)
     {
         // Current clock sign at the input
         let curSgn = (clock > 0);
@@ -371,134 +323,112 @@ class Hold extends AudioNode
     }
 }
 
+class Feedback extends AudioNode {
+  constructor(id, state, sampleRate, send) {
+    super(id, state, sampleRate, send);
+    this.value = 0;
+  }
+  write(value) {
+    this.value = value;
+  }
+
+  update() {
+    return this.value;
+  }
+}
+
 /**
  * White noise source
  */
-class NoiseOsc extends AudioNode
-{
-    constructor(id, state, sampleRate, send)
-    {
-        super(id, state, sampleRate, send);
-    }
 
-    update()
-    {
-        let minVal = this.params.minVal;
-        let maxVal = this.params.maxVal;
-        let range = maxVal - minVal;
-        return minVal + range * Math.random();
-    }
+class NoiseOsc extends AudioNode {
+  constructor(id, state, sampleRate, send) {
+    super(id, state, sampleRate, send);
+  }
+
+  update() {
+    return Math.random();
+  }
 }
 
 /**
  * Pulse wave oscillator
  */
-class PulseOsc extends AudioNode
-{
-    constructor(id, state, sampleRate, send)
-    {
-        super(id, state, sampleRate, send);
+class PulseOsc extends AudioNode {
+  constructor(id, state, sampleRate, send) {
+    super(id, state, sampleRate, send);
 
-        this.phase = 0;
-    }
+    this.phase = 0;
+  }
 
-    update(freq, duty)
-    {
-        let minVal = this.params.minVal;
-        let maxVal = this.params.maxVal;
-
-        this.phase += this.sampleTime * freq;
-        let cyclePos = this.phase % 1;
-        return (cyclePos < duty)? minVal:maxVal;
-    }
+  update(freq, duty) {
+    this.phase += this.sampleTime * freq;
+    let cyclePos = this.phase % 1;
+    return cyclePos < duty ? -1 : 1;
+  }
 }
 
 /**
  * Sawtooth wave oscillator
  */
-class SawOsc extends AudioNode
-{
-    constructor(id, state, sampleRate, send)
-    {
-        super(id, state, sampleRate, send);
+class SawOsc extends AudioNode {
+  constructor(id, state, sampleRate, send) {
+    super(id, state, sampleRate, send);
 
-        // Current time position
-        this.phase = 0;
-    }
+    // Current time position
+    this.phase = 0;
+  }
 
-    update(freq)
-    {
-        let minVal = this.params.minVal;
-        let maxVal = this.params.maxVal;
-
-        this.phase += this.sampleTime * freq;
-        let cyclePos = this.phase % 1;
-        return minVal + cyclePos * (maxVal - minVal);
-    }
+  update(freq) {
+    this.phase += this.sampleTime * freq;
+    return this.phase % 1;
+  }
 }
 
 /**
  * Sine wave oscillator
  */
-class SineOsc extends AudioNode
-{
-    constructor(id, state, sampleRate, send)
-    {
-        super(id, state, sampleRate, send);
+class SineOsc extends AudioNode {
+  constructor(id, state, sampleRate, send) {
+    super(id, state, sampleRate, send);
 
-        // Current time position
-        this.phase = 0;
+    // Current time position
+    this.phase = 0;
 
-        // Current sync input sign (positive/negative)
-        this.syncSgn = false;
-    }
+    // Current sync input sign (positive/negative)
+    this.syncSgn = false;
+  }
 
-    update(freq, sync)
-    {
-        let minVal = this.params.minVal;
-        let maxVal = this.params.maxVal;
+  update(freq, sync) {
+    if (!this.syncSgn && sync > 0) this.phase = 0;
 
-        if (!this.syncSgn && sync > 0)
-            this.phase = 0;
+    this.syncSgn = sync > 0;
 
-        this.syncSgn = (sync > 0);
+    let cyclePos = this.phase % 1;
+    this.phase += this.sampleTime * freq;
 
-        let cyclePos = this.phase % 1;
-        this.phase += this.sampleTime * freq;
-
-        let v = Math.sin(cyclePos * 2 * Math.PI);
-        let normVal = (v + 1) / 2;
-
-        return minVal + normVal * (maxVal - minVal);
-    }
+    return Math.sin(cyclePos * 2 * Math.PI);
+  }
 }
 
 /**
  * Triangle wave oscillator
  */
-class TriOsc extends AudioNode
-{
-    constructor(id, state, sampleRate, send)
-    {
-        super(id, state, sampleRate, send);
+class TriOsc extends AudioNode {
+  constructor(id, state, sampleRate, send) {
+    super(id, state, sampleRate, send);
 
-        // Current time position
-        this.phase = 0;
-    }
+    // Current time position
+    this.phase = 0;
+  }
 
-    update(freq)
-    {
-        let minVal = this.params.minVal;
-        let maxVal = this.params.maxVal;
+  update(freq) {
+    this.phase += this.sampleTime * freq;
+    let cyclePos = this.phase % 1;
 
-        this.phase += this.sampleTime * freq;
-        let cyclePos = this.phase % 1;
-
-        // Compute a value between 0 and 1
-        let normVal = (cyclePos < 0.5)? (2 * cyclePos):(1 - 2 * (cyclePos - 0.5));
-
-        return minVal + normVal * (maxVal - minVal);
-    }
+    // Compute a value between 0 and 1
+    return cyclePos < 0.5 ? 2 * cyclePos : 1 - 2 * (cyclePos - 0.5);
+  }
 }
 
 /**
@@ -754,4 +684,5 @@ export let NODE_CLASSES =
     Fold: Fold,
     // MidiIn: MidiIn,
     Seq: Sequence,
+    feedback: Feedback,
 };

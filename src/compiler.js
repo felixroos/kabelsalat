@@ -3,7 +3,7 @@ import { Node, NODE_SCHEMA } from "./node.js";
 // this compiler is actually not from noisecraft :)
 
 Node.prototype.compile = function () {
-  const nodes = this.flatten();
+  const nodes = this.flatten(true);
   const sorted = topoSort(nodes);
   let lines = [];
   let v = (id) => (nodes[id].type === "n" ? nodes[id].value : `n${id}`);
@@ -14,7 +14,6 @@ Node.prototype.compile = function () {
   let u = (id, ...ins) => `nodes[${id}].update(${ins.join(", ")})`;
   let ut = (id, ...ins) => `nodes[${id}].update(time, ${ins.join(", ")})`; // some functions want time as first arg (without being an inlet)
   let infix = (a, op, b) => `(${a} ${op} ${b})`;
-  let inlets = (id) => nodes[id].ins;
   let thru = (id) => pushVar(id, v(nodes[id].ins[0]));
   const infixOperators = {
     add: "+",
@@ -23,22 +22,19 @@ Node.prototype.compile = function () {
     div: "/",
     mod: "%",
   };
+  const audioThreadNodes = [];
+  let out;
   for (let id of sorted) {
     const node = nodes[id];
     const vars = nodes[id].ins.map((inlet) => v(inlet));
     // is infix operator node?
     if (infixOperators[node.type]) {
       const op = infixOperators[node.type];
-      const ins = inlets(id);
       // TODO: support variable args
-      const a = v(ins[0]);
-      const b = v(ins[1]);
-
-      pushVar(
-        id,
-        infix(a, op, b),
-        infix(nodes[ins[0]].type, op, nodes[ins[1]].type)
-      );
+      const [a, b] = vars;
+      const ins = nodes[id].ins;
+      const comment = infix(nodes[ins[0]].type, op, nodes[ins[1]].type);
+      pushVar(id, infix(a, op, b), comment);
       continue;
     }
     // is audio node?
@@ -47,16 +43,22 @@ Node.prototype.compile = function () {
       const addTime = NODE_SCHEMA[node.type].time;
       const dynamic = NODE_SCHEMA[node.type].dynamic;
       const ufn = addTime ? ut : u;
-      if (dynamic) {
-        pushVar(id, ufn(id, ...vars), comment);
-      } else {
+      let passedVars = vars;
+      if (!dynamic) {
         // defaults could theoretically also be set inside update function
         // but that might be bad for the jit compiler, as it needs to check for undefined values?
-        const varsWithDefaults = NODE_SCHEMA[node.type].ins.map(
+        passedVars = NODE_SCHEMA[node.type].ins.map(
           (inlet, i) => vars[i] ?? inlet.default
         );
-        pushVar(id, ufn(id, ...varsWithDefaults), comment);
       }
+      const index = audioThreadNodes.length;
+      audioThreadNodes.push(node.type);
+      if (node.type === "feedback") {
+        nodes.find(
+          (node) => node.type === "feedback_write" && node.to === id
+        ).to = index;
+      }
+      pushVar(id, ufn(index, ...passedVars), comment);
       continue;
     }
     switch (node.type) {
@@ -82,9 +84,11 @@ Node.prototype.compile = function () {
         break;
       }
       case "out": {
-        const [sum] = vars;
-        const lvl = 0.3; // turn down to avoid clipping
-        lines.push(`return [${sum}*${lvl}, ${sum}*${lvl}]`);
+        out = vars[0];
+        break;
+      }
+      case "feedback_write": {
+        lines.push(`nodes[${node.to}].write(${vars[0]}); // feedback_write`);
         break;
       }
       default: {
@@ -93,10 +97,17 @@ Node.prototype.compile = function () {
       }
     }
   }
+  if (out === undefined) {
+    console.log("no .out() node used...");
+    return { src: `return [0,0]`, nodes, audioThreadNodes };
+  }
+  const lvl = 0.3;
+  lines.push(`return [${out}*${lvl}, ${out}*${lvl}]`);
+
   const src = lines.join("\n");
   console.log("code");
   console.log(src);
-  return { src, nodes };
+  return { src, nodes, audioThreadNodes };
 };
 
 // taken from noisecraft

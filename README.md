@@ -115,6 +115,50 @@ sine(220)
 noise().range(55, 880).hold(pulse(2)).sine().out();
 ```
 
-## notable noisecraft changes
+## feedback
 
-added `time` flag to `NODE_SCHEMA`, to denote that time should be passed as first arg to `update`.
+```js
+feedback((x) => x.add(0.0025).mod(1)).out();
+```
+
+```js
+feedback((x) => x.mul(300).add(440).sine()).out();
+```
+
+```js
+sine(220)
+  .mul(pulse(1, 0.1).range(1, 0))
+  .feedback((x) => x.delay(0.2).mul(0.5))
+  .out();
+```
+
+```js
+noise()
+  .range(220, 1100)
+  .hold(noise().range(-1, 0.00002))
+  .sine()
+  .mul(0.4)
+  .feedback((x) => x.delay(0.25).mul(0.75))
+  .out();
+```
+
+## fm feedback
+
+```js
+(() => {
+  let fm = (freqs, gate = freqs, c2m = 1, index = 3, fb = 0.05) =>
+    feedback((out) => {
+      const modulator = mul(freqs, c2m)
+        .add(out.mul(fb))
+        .sine()
+        .mul(mul(freqs, index))
+        .add(out)
+        .mul(0.5);
+      const carrier = modulator.add(freqs).sine();
+      const env = gate.adsr(0.001, 0.5, 0, 0).apply2(mul).apply2(mul);
+      return [modulator.mul(env), carrier.mul(env)];
+    });
+  const freqs = pulse(4).range(1, 0).seq(55, 110, 165, 220, 275, 330, 385, 440);
+  return fm(freqs, freqs, 1, 3, 0.05).mul(2).out();
+})();
+```

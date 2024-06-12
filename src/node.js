@@ -8,8 +8,19 @@ export class Node {
     this.ins = ins;
     return this;
   }
-  flatten() {
-    return flatten(this);
+  flatten(feedback = true) {
+    const nodes = flatten(this);
+    if (feedback) {
+      for (let id in nodes) {
+        if (nodes[id].type === "feedback") {
+          const [lastSample] = nodes[id].ins;
+          // remove cycle
+          nodes[id].ins = [];
+          nodes.push({ type: "feedback_write", to: id, ins: [lastSample] });
+        }
+      }
+    }
+    return nodes;
   }
   apply(fn) {
     return fn(this);
@@ -35,7 +46,6 @@ function flatten(node) {
   return flat.map((node) => {
     let clone = {
       type: node.type,
-      params: node.params,
       ins: node.ins.map((child) => flat.indexOf(child) + ""),
     };
     node.value !== undefined && (clone.value = node.value);
@@ -79,6 +89,25 @@ export let fold = makeNode("Fold");
 export let seq = makeNode("Seq");
 export let delay = makeNode("Delay");
 export let hold = makeNode("Hold");
+export let feedback_write = makeNode("feedback_write");
+
+// feedback has no input but itself!!!!
+export let feedback = (fn) => {
+  const fb = node("feedback");
+  const out = fn(fb);
+  if (!Array.isArray(out)) {
+    return fb.withIns(out);
+  }
+  // when an array is returned, the first thing is looped back and the second thing gets out
+  const [feed, play = feed] = out;
+  fb.withIns(feed);
+  return play;
+};
+
+// source + feedback
+Node.prototype.feedback = function (fn) {
+  return feedback((x) => fn(this.add(x)));
+};
 
 // non-audio nodes
 export let mul = makeNode("mul");
@@ -111,7 +140,7 @@ export function getInletName(type, index) {
 // Different Names:
 // Add (=add), AudioOut (=out), Const (=n)
 // WONT DO:
-// delay_read, delay_write, GateSeq, MonoSeq, hold_read, hold_write, Knob, MonoSeq, Nop, Notes (text note), Module
+// GateSeq, MonoSeq, Knob, MonoSeq, Nop, Notes (text note), Module
 
 // this schema is currently only relevant for audio nodes, using, flags dynamic & time, + ins[].default
 // TODO: compress format?
@@ -126,9 +155,6 @@ export const NODE_SCHEMA = {
       { name: "rel", default: 0.1 },
     ],
     time: true, // if set, the update function will get time as first param
-    outs: ["out"],
-    params: [],
-    description: "ADSR envelope generator",
   },
   range: {
     audio: false,
@@ -136,44 +162,24 @@ export const NODE_SCHEMA = {
   },
   Clock: {
     ins: [{ name: "bpm", default: 120 }],
-    outs: [""],
-    params: [
-      { name: "minVal", default: 60 },
-      { name: "maxVal", default: 240 },
-      { name: "value", default: 120 },
-      { name: "deviceId", default: null },
-      { name: "controlId", default: null },
-    ],
-    description: "MIDI clock signal source with tempo in BPM",
   },
   ClockDiv: {
     ins: [
       { name: "clock", default: 0 },
       { name: "divisor", default: 2 },
     ],
-    outs: [""],
-    params: [],
-    description: "clock signal divider",
   },
   Delay: {
     ins: [
       { name: "in", default: 0 },
       { name: "time", default: 0 },
     ],
-    outs: ["out"],
-    params: [],
-    state: [],
-    description: "delay line",
   },
   Distort: {
     ins: [
       { name: "in", default: 0 },
       { name: "amt", default: 0 },
     ],
-    outs: ["out"],
-    params: [],
-    state: [],
-    description: "overdrive-style distortion",
   },
   Filter: {
     ins: [
@@ -181,20 +187,12 @@ export const NODE_SCHEMA = {
       { name: "cutoff", default: 1 },
       { name: "reso", default: 0 },
     ],
-    outs: ["out"],
-    params: [],
-    state: [],
-    description: "classic two-pole low-pass filter",
   },
   Fold: {
     ins: [
       { name: "in", default: 0 },
       { name: "rate", default: 0 },
     ],
-    outs: ["out"],
-    params: [],
-    state: [],
-    description: "wavefolder",
   },
   Seq: {
     dynamic: true, // dynamic number of inlets
@@ -202,95 +200,48 @@ export const NODE_SCHEMA = {
       { name: "clock", default: 0 },
       // 1-Infinity of steps
     ],
-    outs: [],
-    params: [],
-    state: [],
-    description: "step sequencer",
   },
   Hold: {
     ins: [
       { name: "in", default: 0 },
       { name: "trig", default: 0 },
     ],
-    outs: ["out"],
-    params: [],
-    state: [],
-    description: "sample and hold",
+  },
+  feedback: {
+    ins: [{ name: "∞", default: 0 }],
   },
   // MIDI input node
   // chanNo is the channel to accept input from (null means any channel)
   MidiIn: {
     ins: [],
-    outs: ["freq", "gate"],
-    params: [
-      { name: "octaveNo", default: 3 },
-      { name: "chanNo", default: null },
-    ],
-    state: [],
-    description: "MIDI note input (cv/gate)",
   },
   Mod: {
     ins: [
       { name: "in0", default: 0 },
       { name: "in1", default: 1 },
     ],
-    outs: ["out"],
-    params: [],
-    state: [],
-    description: "floating-point modulo",
   },
   Mul: {
     ins: [
       { name: "in0", default: 1 },
       { name: "in1", default: 1 },
     ],
-    outs: ["out"],
-    params: [],
-    state: [],
-    description: "multiply input waveforms",
   },
   Noise: {
     ins: [],
-    outs: ["out"],
-    params: [
-      { name: "minVal", default: -1 },
-      { name: "maxVal", default: 1 },
-    ],
-    state: [],
-    description: "white noise source",
   },
   Pulse: {
     ins: [
       { name: "freq", default: 0 },
       { name: "pw", default: 0.5 },
     ],
-    outs: ["out"],
-    params: [
-      { name: "minVal", default: -1 },
-      { name: "maxVal", default: 1 },
-    ],
-    state: [],
-    description: "pulse/square oscillator",
   },
   Saw: {
     ins: [{ name: "freq", default: 0 }],
-    outs: ["out"],
-    params: [
-      { name: "minVal", default: -1 },
-      { name: "maxVal", default: 1 },
-    ],
-    state: [],
-    description: "sawtooth oscillator",
   },
   /*   Scope: {
     ins: [{ name: "", default: 0 }],
     outs: [],
-    params: [
-      { name: "minVal", default: -1 },
-      { name: "maxVal", default: 1 },
-    ],
-    state: [],
-    description: "scope to plot incoming signals",
     sendRate: 20,
     sendSize: 5,
     historyLen: 150,
@@ -300,32 +251,14 @@ export const NODE_SCHEMA = {
       { name: "freq", default: 0 },
       { name: "sync", default: 0 },
     ],
-    outs: ["out"],
-    params: [
-      { name: "minVal", default: -1 },
-      { name: "maxVal", default: 1 },
-    ],
-    state: [],
-    description: "sine wave oscillator",
   },
   Slide: {
     ins: [
       { name: "in", default: 0 },
       { name: "rate", default: 1 },
     ],
-    outs: ["out"],
-    params: [],
-    state: [],
-    description: "simple slew-rate limiter using a running average",
   },
   Tri: {
     ins: [{ name: "freq", default: 0 }],
-    outs: ["out"],
-    params: [
-      { name: "minVal", default: -1 },
-      { name: "maxVal", default: 1 },
-    ],
-    state: [],
-    description: "triangle wave oscillator",
   },
 };
