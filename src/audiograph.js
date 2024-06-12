@@ -427,7 +427,9 @@ class TriOsc extends AudioNode {
     let cyclePos = this.phase % 1;
 
     // Compute a value between 0 and 1
-    return cyclePos < 0.5 ? 2 * cyclePos : 1 - 2 * (cyclePos - 0.5);
+    let normVal = (cyclePos < 0.5)? (2 * cyclePos):(1 - 2 * (cyclePos - 0.5));
+
+    return normVal * 2 - 1;
   }
 }
 
