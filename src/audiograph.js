@@ -546,42 +546,7 @@ class Fold extends AudioNode {
   }
 }
 
-/**
- * Midi input node with freq and gate outputs
- */
-class MidiGate extends AudioNode {
-  constructor(id, state, sampleRate, send) {
-    super(id, state, sampleRate, send);
-    // Frequency of the note being held
-    this.gate = 0;
-    this.type = "MidiGate";
-  }
-  noteOn(noteNo, velocity) {
-    // this.freq = music.Note(noteNo).getFreq(); // <- og
-    this.gate = velocity > 0 ? 1 : 0;
-  }
-  update() {
-    return this.gate;
-  }
-}
-
-class MidiFreq extends AudioNode {
-  constructor(id, state, sampleRate, send) {
-    super(id, state, sampleRate, send);
-    // Frequency of the note being held
-    this.freq = 0;
-    this.type = "MidiFreq";
-  }
-  noteOn(noteNo) {
-    // this.freq = music.Note(noteNo).getFreq(); // <- og
-    this.freq = 2 ** ((noteNo - 69) / 12) * 440;
-  }
-  update() {
-    return this.freq;
-  }
-}
-
-/* class MidiIn extends AudioNode {
+class MidiIn extends AudioNode {
   constructor(id, state, sampleRate, send) {
     super(id, state, sampleRate, send);
 
@@ -611,7 +576,7 @@ class MidiFreq extends AudioNode {
     }
   }
 
-  update() {
+  getGate() {
     // The pretrig state serves to force the gate to go to
     // zero for at least one cycle so that ADSR envelopes
     // can be retriggered if already active.
@@ -619,21 +584,50 @@ class MidiFreq extends AudioNode {
       case "pretrig":
         this.gateState = "on";
         return 0;
-      //return [0, 0];
 
       case "on":
-        return this.freq;
-      //return [this.freq, 1];
+        return 1;
 
       case "off":
         return 0;
-      //return [this.freq, 0];
 
       default:
         assert(false);
     }
   }
-} */
+
+  getFreq() {
+    switch (this.gateState) {
+      case "pretrig":
+        this.gateState = "on";
+        return 0;
+
+      case "on":
+        return this.freq;
+
+      case "off":
+        return this.freq;
+
+      default:
+        assert(false);
+    }
+  }
+}
+
+/**
+ * Midi input node with freq and gate outputs
+ */
+class MidiGate extends MidiIn {
+  update() {
+    return this.getGate();
+  }
+}
+
+class MidiFreq extends MidiIn {
+  update() {
+    return this.getFreq();
+  }
+}
 
 // removed: Sequencer, MonoSeq, GateSeq
 
