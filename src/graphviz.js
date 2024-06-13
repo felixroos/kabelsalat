@@ -4,11 +4,15 @@ import { Graphviz } from "@hpcc-js/wasm";
 
 const graphvizLoaded = Graphviz.load();
 
-Node.prototype.render = async function (container) {
+Node.prototype.render = async function (container, dagify = false) {
+  if (dagify) {
+    this.dagify();
+  }
   let nodes = this.flatten(false);
   let edges = [];
   const color = "teal";
   const fontcolor = "teal";
+
   for (let id in nodes) {
     nodes[id].ins.forEach((parent, i) => {
       edges.push({

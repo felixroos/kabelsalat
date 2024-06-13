@@ -296,6 +296,7 @@ class Feedback extends AudioNode {
   }
   write(value) {
     this.value = value;
+    return 0;
   }
 
   update() {
@@ -644,4 +645,5 @@ export let NODE_CLASSES = {
   // MidiIn: MidiIn,
   Seq: Sequence,
   feedback: Feedback,
+  feedback_read: Feedback,
 };

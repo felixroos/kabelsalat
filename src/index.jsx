@@ -18,13 +18,13 @@ class SalatRepl {
     };
     Function(code)();
     const node = api.dac(...nodes);
-    console.log("node", node);
     return node;
   }
   async play(node) {
     if (!this.audio.isRunning) {
       await this.audio.init();
     }
+    node.dagify();
     this.audio.updateGraph(node);
   }
   stop() {

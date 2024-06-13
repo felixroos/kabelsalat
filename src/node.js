@@ -4,23 +4,20 @@ export class Node {
     value !== undefined && (this.value = value);
     this.ins = [];
   }
+  // connect nodes to input node(s), return this node
   withIns(...ins) {
     this.ins = ins;
     return this;
   }
-  flatten(feedback = true) {
-    const nodes = flatten(this);
-    if (feedback) {
-      for (let id in nodes) {
-        if (nodes[id].type === "feedback") {
-          const [lastSample] = nodes[id].ins;
-          // remove cycle
-          nodes[id].ins = [];
-          nodes.push({ type: "feedback_write", to: id, ins: [lastSample] });
-        }
-      }
-    }
-    return nodes;
+  addInput(node) {
+    this.ins.push(node);
+    return this;
+  }
+  flatten() {
+    return flatten(this);
+  }
+  dagify() {
+    return dagify(this);
   }
   apply(fn) {
     return fn(this);
@@ -29,6 +26,58 @@ export class Node {
     // clock(10).seq(51,52,0,53).apply2(hold).midinote().sine().out()
     return fn(this, this);
   }
+}
+
+// returns true if the given node forms a cycle with "me" (or is me)
+function loopsToMe(node, me) {
+  if (node === me) {
+    return true;
+  }
+  if (node.ins.length === 0) {
+    return false;
+  }
+  for (let neighbor of node.ins) {
+    if (neighbor.ins.includes(me)) {
+      return true;
+    }
+    return loopsToMe(neighbor, me);
+  }
+}
+
+// transforms the graph into a dag, where cycles are broken into feedback_read and feedback_write nodes
+function dagify(node) {
+  let visitedNodes = [];
+  function dfs(currentNode) {
+    if (visitedNodes.includes(currentNode)) {
+      // currentNode has one or more cycles, find them...
+      const feedbackSources = currentNode.ins.filter((input) =>
+        loopsToMe(input, currentNode)
+      );
+      if (!feedbackSources.length) {
+        // it might happen that we end up here again after dagification..
+        return;
+      }
+      feedbackSources.forEach((feedbackSource) => {
+        const feedbackInlet = currentNode.ins.indexOf(feedbackSource);
+        const feedbackReader = new Node("feedback_read");
+        currentNode.ins[feedbackInlet] = feedbackReader;
+        const feedbackWriter = new Node("feedback_write");
+        feedbackWriter.ins = [feedbackSource];
+        feedbackWriter.to = feedbackReader;
+        node.ins.push(feedbackWriter);
+      });
+      return;
+    }
+    visitedNodes.push(currentNode);
+    if (!currentNode.ins.length) {
+      return;
+    }
+    for (const neighbor of currentNode.ins) {
+      dfs(neighbor);
+    }
+  }
+  dfs(node);
+  return node;
 }
 
 function visit(node, visited = []) {
@@ -49,6 +98,7 @@ function flatten(node) {
       ins: node.ins.map((child) => flat.indexOf(child) + ""),
     };
     node.value !== undefined && (clone.value = node.value);
+    node.to !== undefined && (clone.to = flat.indexOf(node.to));
     return clone;
   });
 }
@@ -67,11 +117,37 @@ export function n(value) {
   return node("n", value);
 }
 
+let reifyInputs = (inputs, node) => {
+  return inputs.map((v) => {
+    if (typeof v === "function") {
+      return node.apply(v);
+    }
+    if (typeof v === "object") {
+      // is node
+      return v;
+    }
+    if (typeof v === "number" && !isNaN(v)) {
+      return n(v);
+    }
+    console.log(
+      `invalid input type "${typeof v}" for node of type "${
+        node.type
+      }". Fallback to 0. The input was:`,
+      v
+    );
+    return 0;
+  });
+};
+
 export let makeNode = (type, name = type.toLowerCase()) => {
   Node.prototype[name] = function (...args) {
-    return node(type).withIns(this, ...args.map((v) => n(v)));
+    const next = node(type);
+    return next.withIns(this, ...reifyInputs(args, next));
   };
-  return (...args) => node(type).withIns(...args.map((v) => n(v)));
+  return (...args) => {
+    const next = node(type);
+    return next.withIns(...reifyInputs(args, next));
+  };
 };
 
 export let adsr = makeNode("ADSR");
@@ -89,25 +165,6 @@ export let fold = makeNode("Fold");
 export let seq = makeNode("Seq");
 export let delay = makeNode("Delay");
 export let hold = makeNode("Hold");
-export let feedback_write = makeNode("feedback_write");
-
-// feedback has no input but itself!!!!
-export let feedback = (fn) => {
-  const fb = node("feedback");
-  const out = fn(fb);
-  if (!Array.isArray(out)) {
-    return fb.withIns(out);
-  }
-  // when an array is returned, the first thing is looped back and the second thing gets out
-  const [feed, play = feed] = out;
-  fb.withIns(feed);
-  return play;
-};
-
-// source + feedback
-Node.prototype.feedback = function (fn) {
-  return feedback((x) => fn(this.add(x)));
-};
 
 // non-audio nodes
 export let mul = makeNode("mul");
@@ -207,9 +264,10 @@ export const NODE_SCHEMA = {
       { name: "trig", default: 0 },
     ],
   },
-  feedback: {
-    ins: [{ name: "∞", default: 0 }],
+  feedback_read: {
+    ins: [],
   },
+  // feedback_write is a special case in the compiler, so it won't appear here..
   // MIDI input node
   // chanNo is the channel to accept input from (null means any channel)
   MidiIn: {

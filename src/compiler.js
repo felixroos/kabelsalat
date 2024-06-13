@@ -3,7 +3,9 @@ import { Node, NODE_SCHEMA } from "./node.js";
 // this compiler is actually not from noisecraft :)
 
 Node.prototype.compile = function () {
+  console.log("compile", this);
   const nodes = this.flatten(true);
+  // console.log("flat", nodes);
   const sorted = topoSort(nodes);
   let lines = [];
   let v = (id) => (nodes[id].type === "n" ? nodes[id].value : `n${id}`);
@@ -53,10 +55,13 @@ Node.prototype.compile = function () {
       }
       const index = audioThreadNodes.length;
       audioThreadNodes.push(node.type);
-      if (node.type === "feedback") {
-        nodes.find(
-          (node) => node.type === "feedback_write" && node.to === id
-        ).to = index;
+      if (node.type === "feedback_read") {
+        // remap indices
+        // we need to rewrite the "to" value to the audio node index (instead of flat node index)
+        const writer = nodes.find(
+          (node) => node.type === "feedback_write" && String(node.to) === id
+        );
+        writer.to = index;
       }
       pushVar(id, ufn(index, ...passedVars), comment);
       continue;
@@ -96,7 +101,12 @@ Node.prototype.compile = function () {
         break;
       }
       case "feedback_write": {
-        lines.push(`nodes[${node.to}].write(${vars[0]}); // feedback_write`);
+        // write to var because it's an input to dac (because otherwise the write node would not be part of the graph)
+        lines.push(
+          `const ${v(id)} = nodes[${node.to}].write(${
+            vars[0]
+          }); // feedback_write`
+        );
         break;
       }
       default: {
@@ -112,7 +122,7 @@ Node.prototype.compile = function () {
   lines.push(`return [${dac}, ${dac}]`);
 
   const src = lines.join("\n");
-  console.log("code");
+  console.log("compiled code:");
   console.log(src);
   return { src, nodes, audioThreadNodes };
 };
