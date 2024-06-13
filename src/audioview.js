@@ -11,6 +11,15 @@ export class AudioView {
     });
   }
 
+  midiNoteOn(channel, note, velocity) {
+    this.send({
+      type: "NOTE_ON",
+      channel,
+      note,
+      velocity,
+    });
+  }
+
   /**
    * Send a message to the audio thread (audio worket)
    */

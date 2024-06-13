@@ -165,6 +165,9 @@ export let fold = makeNode("Fold");
 export let seq = makeNode("Seq");
 export let delay = makeNode("Delay");
 export let hold = makeNode("Hold");
+// export let midin = makeNode("MidiIn");
+export let midifreq = makeNode("MidiFreq");
+export let midigate = makeNode("MidiGate");
 
 // non-audio nodes
 export let mul = makeNode("mul");
@@ -277,6 +280,12 @@ export const NODE_SCHEMA = {
   // MIDI input node
   // chanNo is the channel to accept input from (null means any channel)
   MidiIn: {
+    ins: [],
+  },
+  MidiGate: {
+    ins: [],
+  },
+  MidiFreq: {
     ins: [],
   },
   Mod: {

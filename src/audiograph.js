@@ -78,12 +78,21 @@ export class AudioGraph {
         break;
 
       case "NOTE_ON":
-        node.noteOn(msg.noteNo, msg.velocity);
+        this.noteOn(msg);
         break;
 
       default:
         throw new TypeError("unknown message type");
     }
+  }
+
+  noteOn(msg) {
+    const midinodes = this.nodes.filter((node) =>
+      node.type?.startsWith("Midi")
+    );
+    midinodes.forEach((node) => {
+      node.noteOn(msg.note, msg.velocity);
+    });
   }
 
   /**
@@ -540,62 +549,90 @@ class Fold extends AudioNode {
 /**
  * Midi input node with freq and gate outputs
  */
-/* class MidiIn extends AudioNode
-{
-    constructor(id, state, sampleRate, send)
-    {
-        super(id, state, sampleRate, send);
+class MidiGate extends AudioNode {
+  constructor(id, state, sampleRate, send) {
+    super(id, state, sampleRate, send);
+    // Frequency of the note being held
+    this.gate = 0;
+    this.type = "MidiGate";
+  }
+  noteOn(noteNo, velocity) {
+    // this.freq = music.Note(noteNo).getFreq(); // <- og
+    this.gate = velocity > 0 ? 1 : 0;
+  }
+  update() {
+    return this.gate;
+  }
+}
 
-        // Current note being held
+class MidiFreq extends AudioNode {
+  constructor(id, state, sampleRate, send) {
+    super(id, state, sampleRate, send);
+    // Frequency of the note being held
+    this.freq = 0;
+    this.type = "MidiFreq";
+  }
+  noteOn(noteNo) {
+    // this.freq = music.Note(noteNo).getFreq(); // <- og
+    this.freq = 2 ** ((noteNo - 69) / 12) * 440;
+  }
+  update() {
+    return this.freq;
+  }
+}
+
+/* class MidiIn extends AudioNode {
+  constructor(id, state, sampleRate, send) {
+    super(id, state, sampleRate, send);
+
+    // Current note being held
+    this.noteNo = 0;
+
+    // Frequency of the note being held
+    this.freq = 0;
+
+    // Current gate state
+    this.gateState = "off";
+    this.type = "MidiIn";
+  }
+
+  noteOn(noteNo, velocity) {
+    if (velocity > 0) {
+      this.noteNo = noteNo;
+      // this.freq = music.Note(noteNo).getFreq(); // <- og
+      this.freq = 2 ** ((noteNo - 69) / 12) * 440;
+      // this.freq = midi2freq(noteNo);
+      this.gateState = "pretrig";
+    } else {
+      if (noteNo == this.noteNo) {
         this.noteNo = 0;
-
-        // Frequency of the note being held
-        this.freq = 0;
-
-        // Current gate state
-        this.gateState = 'off';
+        this.gateState = "off";
+      }
     }
+  }
 
-    noteOn(noteNo, velocity)
-    {
-        if (velocity > 0)
-        {
-            this.noteNo = noteNo;
-            // this.freq = music.Note(noteNo).getFreq(); // <- og
-            this.freq = midi2freq(noteNo);
-            this.gateState = 'pretrig';
-        }
-        else
-        {
-            if (noteNo == this.noteNo)
-            {
-                this.noteNo = 0;
-                this.gateState = 'off';
-            }
-        }
+  update() {
+    // The pretrig state serves to force the gate to go to
+    // zero for at least one cycle so that ADSR envelopes
+    // can be retriggered if already active.
+    switch (this.gateState) {
+      case "pretrig":
+        this.gateState = "on";
+        return 0;
+      //return [0, 0];
+
+      case "on":
+        return this.freq;
+      //return [this.freq, 1];
+
+      case "off":
+        return 0;
+      //return [this.freq, 0];
+
+      default:
+        assert(false);
     }
-
-    update()
-    {
-        // The pretrig state serves to force the gate to go to
-        // zero for at least one cycle so that ADSR envelopes
-        // can be retriggered if already active.
-        switch (this.gateState)
-        {
-            case 'pretrig':
-            this.gateState = 'on';
-            return [0, 0];
-
-            case 'on':
-            return [this.freq, 1];
-
-            case 'off':
-            return [this.freq, 0];
-
-            default:
-            assert (false);
-        }
-    }
+  }
 } */
 
 // removed: Sequencer, MonoSeq, GateSeq
@@ -642,7 +679,9 @@ export let NODE_CLASSES = {
   Slide: Slide,
   Filter: Filter,
   Fold: Fold,
-  // MidiIn: MidiIn,
+  //MidiIn: MidiIn,
+  MidiGate: MidiGate,
+  MidiFreq: MidiFreq,
   Seq: Sequence,
   feedback: Feedback,
   feedback_read: Feedback,

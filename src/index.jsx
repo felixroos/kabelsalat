@@ -4,12 +4,14 @@ import { AudioView } from "./audioview.js";
 import "./graphviz";
 import "./index.css";
 import * as api from "./node.js";
+import { midi, parseMidiMessage } from "./midi.js";
 
 Object.assign(globalThis, api);
 
 class SalatRepl {
   constructor() {
     this.audio = new AudioView();
+    this.initMidi();
   }
   evaluate(code) {
     let nodes = [];
@@ -29,6 +31,12 @@ class SalatRepl {
   }
   stop() {
     this.audio.stop();
+  }
+  initMidi() {
+    midi.on("midimessage", (_, message) => {
+      const msg = parseMidiMessage(message);
+      this.audio.midiNoteOn(...msg);
+    });
   }
 }
 
