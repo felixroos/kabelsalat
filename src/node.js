@@ -203,7 +203,7 @@ export function getInletName(type, index) {
 
 // not implemented noisecraft nodes
 // TODO:
-// Greater, Scope, ClockOut, MidiIn, Scope, BitCrush?
+// Greater, ClockOut, Scope, BitCrush?
 // Different Names:
 // Add (=add), AudioOut (=out), Const (=n)
 // WONT DO:
@@ -315,9 +315,8 @@ export const NODE_SCHEMA = {
   Saw: {
     ins: [{ name: "freq", default: 0 }],
   },
-  /*   Scope: {
+  /* Scope: {
     ins: [{ name: "", default: 0 }],
-    outs: [],
     sendRate: 20,
     sendSize: 5,
     historyLen: 150,
