@@ -83,8 +83,9 @@ function App() {
         <div
           class="bg-stone-900 overflow-auto text-gray-500 p-4 grow-0"
           ref={container}
+          onClick={() => run()}
         >
-          run the code to see graph...
+          run the code to see graph... (tap somewhere here on mobile)
         </div>
       </div>
       <div className="px-4 py-2 border-t border-teal-500 grow-0">
