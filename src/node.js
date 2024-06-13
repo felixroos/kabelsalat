@@ -176,6 +176,12 @@ export let range = makeNode("range");
 export let midinote = makeNode("midinote");
 export let dac = makeNode("dac");
 
+// legacy...
+Node.prototype.feedback = function (fn) {
+  return this.add(fn);
+};
+export let feedback = (fn) => add(fn);
+
 Node.prototype.perc = function (decay) {
   return this.adsr(0, decay, 0, 0);
 };
