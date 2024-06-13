@@ -59,7 +59,7 @@ export class AudioGraph {
     );
 
     // Create the sample generation function
-    this._genSample = new Function("time", "nodes", unit.src);
+    this._genSample = new Function("time", "nodes", "input", unit.src);
   }
 
   /**
@@ -98,11 +98,10 @@ export class AudioGraph {
   /**
    * Generate one [left, right] pair of audio samples
    */
-  genSample() {
+  genSample(inputs) {
     if (!this._genSample) return [0, 0];
-
     this.playPos += 1 / 44100;
-    return this._genSample(this.playPos, this.nodes);
+    return this._genSample(this.playPos, this.nodes, inputs);
   }
 }
 
@@ -546,6 +545,12 @@ class Fold extends AudioNode {
   }
 }
 
+class AudioIn extends AudioNode {
+  update(input) {
+    return input;
+  }
+}
+
 class MidiIn extends AudioNode {
   constructor(id, state, sampleRate, send) {
     super(id, state, sampleRate, send);
@@ -673,7 +678,7 @@ export let NODE_CLASSES = {
   Slide: Slide,
   Filter: Filter,
   Fold: Fold,
-  //MidiIn: MidiIn,
+  AudioIn: AudioIn,
   MidiGate: MidiGate,
   MidiFreq: MidiFreq,
   Seq: Sequence,

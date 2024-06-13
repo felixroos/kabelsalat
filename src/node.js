@@ -168,6 +168,7 @@ export let hold = makeNode("Hold");
 // export let midin = makeNode("MidiIn");
 export let midifreq = makeNode("MidiFreq");
 export let midigate = makeNode("MidiGate");
+export let audioin = makeNode("AudioIn");
 
 // non-audio nodes
 export let mul = makeNode("mul");
@@ -220,7 +221,7 @@ export const NODE_SCHEMA = {
       { name: "sus", default: 0.2 },
       { name: "rel", default: 0.1 },
     ],
-    time: true, // if set, the update function will get time as first param
+    args: ["time"], // if set, the update function will get time as first param
   },
   range: {
     audio: false,
@@ -277,8 +278,10 @@ export const NODE_SCHEMA = {
     ins: [],
   },
   // feedback_write is a special case in the compiler, so it won't appear here..
-  // MIDI input node
-  // chanNo is the channel to accept input from (null means any channel)
+  AudioIn: {
+    ins: [],
+    args: ["input"],
+  },
   MidiIn: {
     ins: [],
   },

@@ -26,12 +26,12 @@ class GraphWorklet extends AudioWorkletProcessor {
 
   process(inputs, outputs, parameters) {
     const output = outputs[0];
+    const input = inputs[0][0];
     const outChannel0 = output[0];
     const outChannel1 = output[1];
-
     // For each sample to generate
     for (let i = 0; i < outChannel0.length; i++) {
-      let [leftVal, rightVal] = this.audioGraph.genSample();
+      let [leftVal, rightVal] = this.audioGraph.genSample(input ? input[i] : 0);
       outChannel0[i] = leftVal;
       outChannel1[i] = rightVal;
     }

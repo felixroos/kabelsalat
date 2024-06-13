@@ -4,7 +4,7 @@ import workletUrl from "./worklet.js?worker&url";
 import { MIDI, parseMidiMessage } from "./midi.js";
 
 export class AudioView {
-  updateGraph(node) {
+  async updateGraph(node) {
     const { src, audioThreadNodes } = node.compile();
     if (
       !this.midiInited &&
@@ -12,13 +12,26 @@ export class AudioView {
     ) {
       this.initMidi();
     }
+    if (!this.audioIn && audioThreadNodes.some((node) => node === "AudioIn")) {
+      await this.initAudioIn();
+    }
     this.send({
       type: "NEW_UNIT",
       unit: { src, audioThreadNodes },
     });
   }
 
+  async initAudioIn() {
+    console.log("init audio input...");
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: false,
+      audio: true,
+    });
+    const inputNode = this.audioCtx.createMediaStreamSource(stream);
+    inputNode.connect(this.audioWorklet);
+  }
   initMidi() {
+    console.log("init midi input...");
     this.midiInited = true;
     const midi = new MIDI();
     midi.on("midimessage", (_, message) => {

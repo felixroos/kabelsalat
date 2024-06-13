@@ -13,8 +13,6 @@ Node.prototype.compile = function () {
     lines.push(
       `const ${v(id)} = ${value};${comment ? ` /* ${comment} */` : ""}`
     );
-  let u = (id, ...ins) => `nodes[${id}].update(${ins.join(", ")})`;
-  let ut = (id, ...ins) => `nodes[${id}].update(time, ${ins.join(", ")})`; // some functions want time as first arg (without being an inlet)
   let infix = (a, op, b) => `(${a} ${op} ${b})`;
   let thru = (id) => pushVar(id, v(nodes[id].ins[0]));
   const infixOperators = {
@@ -42,9 +40,7 @@ Node.prototype.compile = function () {
     // is audio node?
     if (NODE_SCHEMA[node.type] && NODE_SCHEMA[node.type].audio !== false) {
       const comment = node.type;
-      const addTime = NODE_SCHEMA[node.type].time;
       const dynamic = NODE_SCHEMA[node.type].dynamic;
-      const ufn = addTime ? ut : u;
       let passedVars = vars;
       if (!dynamic) {
         // defaults could theoretically also be set inside update function
@@ -63,7 +59,10 @@ Node.prototype.compile = function () {
         );
         writer.to = index;
       }
-      pushVar(id, ufn(index, ...passedVars), comment);
+      const args = NODE_SCHEMA[node.type].args || []; // some nodes want time or inputs
+      const params = args.concat(passedVars);
+      const call = `nodes[${index}].update(${params.join(", ")});`;
+      pushVar(id, call, comment);
       continue;
     }
     switch (node.type) {
