@@ -1,13 +1,29 @@
 import "./compiler"; // Node.prototype.compile
 import { assert } from "./utils";
 import workletUrl from "./worklet.js?worker&url";
+import { MIDI, parseMidiMessage } from "./midi.js";
 
 export class AudioView {
   updateGraph(node) {
     const { src, audioThreadNodes } = node.compile();
+    if (
+      !this.midiInited &&
+      audioThreadNodes.some((node) => node.startsWith("Midi"))
+    ) {
+      this.initMidi();
+    }
     this.send({
       type: "NEW_UNIT",
       unit: { src, audioThreadNodes },
+    });
+  }
+
+  initMidi() {
+    this.midiInited = true;
+    const midi = new MIDI();
+    midi.on("midimessage", (_, message) => {
+      const msg = parseMidiMessage(message);
+      this.midiNoteOn(...msg);
     });
   }
 

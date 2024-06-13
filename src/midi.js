@@ -35,7 +35,7 @@ export class Eventable {
   }
 }
 
-class MIDI extends Eventable {
+export class MIDI extends Eventable {
   constructor() {
     super();
 
@@ -103,8 +103,6 @@ class MIDI extends Eventable {
       output.send(msg, timestamp);
   }
 }
-
-export const midi = new MIDI();
 
 export function parseMidiMessage(msg) {
   let msgType = msg[0] & 0xf0;
