@@ -17,6 +17,9 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    defaults:
+       run:
+         working-directory: ./repl/
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -30,11 +33,9 @@ jobs:
           node-version: 20
           cache: "pnpm"
       - name: Install Dependencies
-        working-directory: ./repl
         run: cd repl && pnpm install
 
       - name: Build
-        working-directory: ./repl
         run: pnpm build
 
       - name: Setup Pages
