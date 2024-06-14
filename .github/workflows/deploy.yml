@@ -30,9 +30,11 @@ jobs:
           node-version: 20
           cache: "pnpm"
       - name: Install Dependencies
+        working-directory: ./repl
         run: cd repl && pnpm install
 
       - name: Build
+        working-directory: ./repl
         run: pnpm build
 
       - name: Setup Pages
@@ -42,7 +44,7 @@ jobs:
         uses: actions/upload-pages-artifact@v1
         with:
           # Upload entire repository
-          path: "./dist"
+          path: "./repl/dist"
 
       - name: Deploy to GitHub Pages
         id: deployment
