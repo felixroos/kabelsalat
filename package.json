@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "cd repl && pnpm dev",
-    "build": "cd repl && pnpm dev",
+    "build": "cd repl && pnpm build",
     "preview": "cd repl && pnpm preview"
   },
   "dependencies": {
