@@ -45,6 +45,7 @@ function App() {
   }
   const initialCode = urlCode || defaultPatch;
   let [code, setCode] = createSignal(initialCode);
+  let [inited, setInited] = createSignal(false);
   let container;
   async function run() {
     const node = repl.evaluate(code());
@@ -52,25 +53,21 @@ function App() {
     window.location.hash = "#" + btoa(code());
     repl.play(node);
   }
-  let init = false;
   return (
     <div
       className="flex flex-col  h-full max-h-full justify-stretch text-teal-600 font-mono"
       onClick={() => {
-        !init && run();
-        init = true;
+        !inited() && run();
+        setInited(true);
       }}
     >
-      <div className="px-4 py-2  font-bold border-b border-teal-500 flex">
-        <marquee className="text-teal-100">KABƎL.SALAT</marquee>
-        <marquee className="text-teal-200">KABƎL.SALAT</marquee>
-        <marquee className="text-teal-300">KABƎL.SALAT</marquee>
-        <marquee className="text-teal-400">KABƎL.SALAT</marquee>
-        <marquee className="text-teal-500">KABƎL.SALAT</marquee>
-        <marquee className="text-teal-600">KABƎL.SALAT</marquee>
-        <marquee className="text-teal-700">KABƎL.SALAT</marquee>
-        <marquee className="text-teal-800">KABƎL.SALAT</marquee>
-        <marquee className="text-teal-900">KABƎL.SALAT</marquee>
+      <div className="px-4 py-2 space-x-8 font-bold border-b border-teal-500 flex">
+        <marquee className="text-teal-100 w-32">
+          KABƎL.SALAT.KABƎL.SALAT.KABƎL.SALAT.KABƎL.SALAT.KABƎL.SALAT
+        </marquee>
+        <div class="text-yellow-400">
+          {!inited() && "click somewhere to play"}
+        </div>
       </div>
       <div className="grid grid-cols-2 flex-auto">
         <textarea
