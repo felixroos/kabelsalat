@@ -24,7 +24,7 @@ note
 .pulse(.2) // pulse wave with .2 width
 .filter(
   sine(.1).range(.7,.8).mul(env), // modulated cutoff
-  env.mul(.5) // resonance with envelope
+  // env.mul(.5) // resonance with envelope
 )
 .mul(env) // amplitude envelope
 .add(
@@ -52,8 +52,15 @@ function App() {
     window.location.hash = "#" + btoa(code());
     repl.play(node);
   }
+  let init = false;
   return (
-    <div className="flex flex-col  h-full max-h-full justify-stretch text-teal-600 font-mono ">
+    <div
+      className="flex flex-col  h-full max-h-full justify-stretch text-teal-600 font-mono"
+      onClick={() => {
+        !init && run();
+        init = true;
+      }}
+    >
       <div className="px-4 py-2  font-bold border-b border-teal-500 flex">
         <marquee className="text-teal-100">KABƎL.SALAT</marquee>
         <marquee className="text-teal-200">KABƎL.SALAT</marquee>
@@ -81,11 +88,11 @@ function App() {
         ></textarea>
         <div
           class="bg-stone-900 overflow-auto text-gray-500 p-4 grow-0"
-          ref={container}
-          onClick={() => run()}
-        >
-          run the code to see graph... (tap somewhere here on mobile)
-        </div>
+          ref={(el) => {
+            container = el;
+            repl.evaluate(code()).render(container);
+          }}
+        ></div>
       </div>
       <div className="px-4 py-2 border-t border-teal-500 grow-0">
         <div className="float-right">
