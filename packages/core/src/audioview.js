@@ -1,7 +1,9 @@
 import "./compiler.js"; // Node.prototype.compile
 import { assert } from "./utils.js";
-import workletUrl from "./worklet.js?worker&url";
+// import workletUrl from "./worklet.js?worker&url";
 import { MIDI, parseMidiMessage } from "./midi.js";
+
+const workletUrl = new URL("./worklet.js", import.meta.url);
 
 export class AudioView {
   async updateGraph(node) {
