@@ -1,2 +1,2 @@
-export * from "./node.js";
-export * from "./repl.js";
+export * from "./src/node.js";
+export * from "./src/repl.js";

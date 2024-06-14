@@ -8,6 +8,8 @@
     "build": "cd repl && pnpm build",
     "preview": "cd repl && pnpm preview"
   },
+  "author": "Felix Roos <flix91@gmail.com>",
+  "license": "AGPL-3.0-or-later",
   "dependencies": {
     "@hpcc-js/wasm": "^2.16.2",
     "graphviz": "link:@hpcc-js/wasm/graphviz",
