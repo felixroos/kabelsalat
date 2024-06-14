@@ -55,21 +55,21 @@ function App() {
   }
   return (
     <div
-      className="flex flex-col  h-full max-h-full justify-stretch text-teal-600 font-mono"
+      class="flex flex-col  h-full max-h-full justify-stretch text-teal-600 font-mono"
       onClick={() => {
         !inited() && run();
         setInited(true);
       }}
     >
-      <div className="px-4 py-2 space-x-8 font-bold border-b border-teal-500 flex">
-        <marquee className="text-teal-100 w-32">
+      <div class="px-4 py-2 space-x-8 font-bold border-b border-teal-500 flex">
+        <marquee class="text-teal-100 w-32">
           KABƎL.SALAT.KABƎL.SALAT.KABƎL.SALAT.KABƎL.SALAT.KABƎL.SALAT
         </marquee>
         <div class="text-yellow-400">
           {!inited() && "click somewhere to play"}
         </div>
       </div>
-      <div className="grid grid-cols-2 flex-auto">
+      <div class="grid grid-cols-2 flex-auto">
         <textarea
           onKeyDown={(e) => {
             if (e.key === "Enter" && e.ctrlKey) {
@@ -78,7 +78,7 @@ function App() {
               repl.stop();
             }
           }}
-          className="bg-stone-900 shrink-0 p-4 focus:ring-0 outline-0 border-r border-teal-500"
+          class="bg-stone-900 shrink-0 p-4 focus:ring-0 outline-0 border-r border-teal-500"
           spellcheck="false"
           value={code()}
           onInput={(e) => setCode(e.target.value)}
@@ -91,8 +91,8 @@ function App() {
           }}
         ></div>
       </div>
-      <div className="px-4 py-2 border-t border-teal-500 grow-0">
-        <div className="float-right">
+      <div class="px-4 py-2 border-t border-teal-500 grow-0">
+        <div class="float-right">
           <a href="https://github.com/felixroos/kabelsalat" target="_blank">
             code on github
           </a>
