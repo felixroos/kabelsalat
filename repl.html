@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <script src="https://unpkg.com/@kabelsalat/core@latest"></script>
+  </head>
+  <body style="background: #222">
+    <button id="run">run</button>
+    <button id="stop">stop</button>
+    <textarea id="editor"></textarea>
+    <script>
+      const { SalatRepl } = kabelsalat;
+      const repl = new SalatRepl();
+      console.log("repl", repl);
+      const editor = document.getElementById("editor");
+      document.getElementById("run").addEventListener("click", () => {
+        const node = repl.evaluate(editor.value);
+        repl.play(node);
+      });
+      document
+        .getElementById("stop")
+        .addEventListener("click", () => repl.stop());
+    </script>
+  </body>
+</html>
