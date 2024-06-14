@@ -2,35 +2,7 @@ import { createSignal } from "solid-js";
 import { render } from "solid-js/web";
 import "./graphviz";
 import "./index.css";
-import { AudioView } from "@kabelsalat/core";
-import * as api from "@kabelsalat/core/node.js";
-
-Object.assign(globalThis, api);
-
-class SalatRepl {
-  constructor() {
-    this.audio = new AudioView();
-  }
-  evaluate(code) {
-    let nodes = [];
-    api.Node.prototype.out = function () {
-      nodes.push(this);
-    };
-    Function(code)();
-    const node = api.dac(...nodes);
-    return node;
-  }
-  async play(node) {
-    if (!this.audio.isRunning) {
-      await this.audio.init();
-    }
-    node.dagify();
-    this.audio.updateGraph(node);
-  }
-  stop() {
-    this.audio.stop();
-  }
-}
+import { SalatRepl } from "@kabelsalat/core";
 
 const tremoloSine = `sine(220)
 .mul(sine(4).range(.5,1))

@@ -1,9 +1,12 @@
 {
   "name": "@kabelsalat/core",
-  "private": true,
   "version": "0.0.1",
   "type": "module",
-  "main": "index.js",
+  "module": "index.js",
+  "publishConfig": {
+    "main": "dist/index.js",
+    "module": "dist/index.mjs"
+  },
   "scripts": {
     "build": "vite build"
   },
