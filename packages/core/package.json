@@ -1,6 +1,6 @@
 {
   "name": "@kabelsalat/core",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "type": "module",
   "module": "src/index.js",
   "publishConfig": {
