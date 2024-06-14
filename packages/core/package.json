@@ -2,7 +2,7 @@
   "name": "@kabelsalat/core",
   "version": "0.0.1",
   "type": "module",
-  "module": "index.js",
+  "module": "src/index.js",
   "publishConfig": {
     "main": "dist/index.js",
     "module": "dist/index.mjs"
