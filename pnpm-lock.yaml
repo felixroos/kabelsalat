@@ -6,6 +6,37 @@ settings:
 
 importers:
 
+  .:
+    dependencies:
+      '@hpcc-js/wasm':
+        specifier: ^2.16.2
+        version: 2.16.2
+      graphviz:
+        specifier: link:@hpcc-js/wasm/graphviz
+        version: link:@hpcc-js/wasm/graphviz
+      jgf-dot:
+        specifier: ^1.1.1
+        version: 1.1.1
+      solid-js:
+        specifier: ^1.8.15
+        version: 1.8.17
+    devDependencies:
+      autoprefixer:
+        specifier: ^10.4.19
+        version: 10.4.19(postcss@8.4.38)
+      postcss:
+        specifier: ^8.4.38
+        version: 8.4.38
+      tailwindcss:
+        specifier: ^3.4.4
+        version: 3.4.4
+      vite:
+        specifier: ^5.2.0
+        version: 5.3.0
+      vite-plugin-solid:
+        specifier: ^2.10.2
+        version: 2.10.2(solid-js@1.8.17)(vite@5.3.0)
+
   repl:
     dependencies:
       '@hpcc-js/wasm':
