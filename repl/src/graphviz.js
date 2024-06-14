@@ -1,4 +1,4 @@
-import { Node, getInletName } from "./node.js";
+import { Node, getInletName } from "@kabelsalat/core";
 import toDot from "jgf-dot";
 import { Graphviz } from "@hpcc-js/wasm";
 

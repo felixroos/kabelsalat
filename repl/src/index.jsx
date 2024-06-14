@@ -1,9 +1,9 @@
 import { createSignal } from "solid-js";
 import { render } from "solid-js/web";
-import { AudioView } from "./audioview.js";
 import "./graphviz";
 import "./index.css";
-import * as api from "./node.js";
+import { AudioView } from "@kabelsalat/core";
+import * as api from "@kabelsalat/core/node.js";
 
 Object.assign(globalThis, api);
 
