@@ -93,7 +93,7 @@ Node.prototype.compile = function () {
         break;
       }
       case "mix": {
-        const calc = `(${vars.join(" + ")}) / ${vars.length}`;
+        const calc = `(${vars.join(" + ")})`;
         pushVar(id, calc, "mix");
         break;
       }
