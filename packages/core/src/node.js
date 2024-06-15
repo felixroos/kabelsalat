@@ -140,7 +140,6 @@ function getNode(type, ...args) {
   args = args.map((arg) => {
     // desugar array input to expand node
     if (Array.isArray(arg)) {
-      console.log("arr", arg);
       return new Node(expansionType).withIns(...arg);
     }
     if (typeof arg === "function") {
