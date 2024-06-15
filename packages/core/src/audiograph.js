@@ -93,8 +93,11 @@ export class AudioGraph {
     const midigates = this.nodes.filter((node) => node.type === "MidiGate");
 
     if (velocity > 0) {
-      midifreqs.find((node) => node.isFree())?.noteOn(note, velocity);
-      midigates.find((node) => node.isFree())?.noteOn(note, velocity);
+      // get free voice or steal one
+      let freqNode = midifreqs.find((node) => node.isFree()) || midifreqs[0];
+      let gateNode = midigates.find((node) => node.isFree()) || midigates[0];
+      freqNode?.noteOn(note, velocity);
+      gateNode?.noteOn(note, velocity);
     } else {
       midifreqs.find((node) => node.note === note)?.noteOff();
       midigates.find((node) => node.note === note)?.noteOff();
