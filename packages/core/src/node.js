@@ -117,36 +117,85 @@ export function n(value) {
   return node("n", value);
 }
 
-let reifyInputs = (inputs, node) => {
-  return inputs.map((v) => {
-    if (typeof v === "function") {
-      return node.apply(v);
+const expansionType = "zip";
+const outputType = "dac";
+
+function parseInput(input) {
+  if (typeof input === "object") {
+    // is node
+    return input;
+  }
+  if (typeof input === "number" && !isNaN(input)) {
+    return n(input);
+  }
+  console.log(
+    `invalid input type "${typeof input}" for node of type, falling back to 0. The input was:`,
+    input
+  );
+  return 0;
+}
+
+function getNode(type, ...args) {
+  const next = node(type);
+  args = args.map((arg) => {
+    // desugar array input to expand node
+    if (Array.isArray(arg)) {
+      console.log("arr", arg);
+      return new Node(expansionType).withIns(...arg);
     }
-    if (typeof v === "object") {
-      // is node
-      return v;
+    if (typeof arg === "function") {
+      return next.apply(arg);
     }
-    if (typeof v === "number" && !isNaN(v)) {
-      return n(v);
-    }
-    console.log(
-      `invalid input type "${typeof v}" for node of type "${
-        node.type
-      }". Fallback to 0. The input was:`,
-      v
-    );
-    return 0;
+    return arg;
   });
-};
+
+  // gets channels per arg
+  const expansions = args.map((arg) => {
+    if (arg.type === expansionType) {
+      return arg.ins.length;
+    }
+    return 1;
+  });
+  // max channels to expand. the 1 is to make sure empty args won't break!
+  const maxExpansions = Math.max(1, ...expansions);
+
+  // no expansion early exit
+  if (maxExpansions === 1) {
+    return next.withIns(...args.map(parseInput));
+  }
+  // dont expand dac node, but instead input all channels
+  if (type === outputType) {
+    const inputs = args
+      .map((arg) => {
+        if (arg.type === expansionType) {
+          return arg.ins;
+        }
+        return arg;
+      })
+      .flat();
+    return node(outputType).withIns(...inputs);
+  }
+
+  // multichannel expansion:
+  // node([a,b,c], [x,y]) => expand(node(a,x), node(b,y), node(c,x))
+  const expanded = Array.from({ length: maxExpansions }, (_, i) => {
+    const inputs = args.map((arg) => {
+      if (arg.type === expansionType) {
+        return parseInput(arg.ins[i % arg.ins.length]);
+      }
+      return parseInput(arg);
+    });
+    return new Node(type).withIns(...inputs);
+  });
+  return new Node(expansionType).withIns(...expanded);
+}
 
 export let makeNode = (type, name = type.toLowerCase()) => {
   Node.prototype[name] = function (...args) {
-    const next = node(type);
-    return next.withIns(this, ...reifyInputs(args, next));
+    return getNode(type, this, ...args);
   };
   return (...args) => {
-    const next = node(type);
-    return next.withIns(...reifyInputs(args, next));
+    return getNode(type, ...args);
   };
 };
 
@@ -171,6 +220,8 @@ export let midigate = makeNode("MidiGate");
 export let audioin = makeNode("AudioIn");
 
 // non-audio nodes
+export let sin = makeNode("sin");
+export let cos = makeNode("cos");
 export let mul = makeNode("mul");
 export let add = makeNode("add");
 export let div = makeNode("div");
@@ -179,6 +230,8 @@ export let mod = makeNode("mod"); // untested
 export let range = makeNode("range");
 export let midinote = makeNode("midinote");
 export let dac = makeNode("dac");
+export let exit = makeNode("exit");
+export let zip = makeNode("zip");
 
 // legacy...
 Node.prototype.feedback = function (fn) {

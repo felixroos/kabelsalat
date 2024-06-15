@@ -11,9 +11,14 @@ export class SalatRepl {
     api.Node.prototype.out = function () {
       nodes.push(this);
     };
-    Function(code)();
-    const node = api.dac(...nodes);
-    return node;
+    try {
+      Function(code)();
+      const node = api.dac(...nodes).exit();
+      return node;
+    } catch (err) {
+      console.error(err);
+      return api.n(0);
+    }
   }
   async play(node) {
     if (!this.audio.isRunning) {

@@ -146,3 +146,12 @@ noise()
   .add((x) => x.delay(0.25).mul(0.75))
   .out();
 ```
+
+sine wave with only feedback and math:
+
+```js
+add((x) => x.add(0.004).mod(1))
+  .mul(2, Math.PI)
+  .sin() // sin = mathematical sine, sine = sine oscillator!
+  .out();
+```

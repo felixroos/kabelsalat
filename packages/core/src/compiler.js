@@ -22,8 +22,12 @@ Node.prototype.compile = function () {
     div: "/",
     mod: "%",
   };
+  const mathFunctions = {
+    sin: "sin",
+    cos: "cos",
+  };
   const audioThreadNodes = [];
-  let dac;
+  let channels;
   for (let id of sorted) {
     const node = nodes[id];
     const vars = nodes[id].ins.map((inlet) => v(inlet));
@@ -34,6 +38,14 @@ Node.prototype.compile = function () {
       const comment = nodes[id].ins
         .map((inlet) => nodes[inlet].type)
         .join(` ${op} `);
+      pushVar(id, calc, comment);
+      continue;
+    }
+    // is math function?
+    if (mathFunctions[node.type]) {
+      const fn = mathFunctions[node.type];
+      const calc = `Math.${fn}(${vars.join(", ")})`;
+      const comment = fn;
       pushVar(id, calc, comment);
       continue;
     }
@@ -61,16 +73,15 @@ Node.prototype.compile = function () {
       }
       const args = NODE_SCHEMA[node.type].args || []; // some nodes want time or inputs
       const params = args.concat(passedVars);
-      const call = `nodes[${index}].update(${params.join(", ")});`;
+      const call = `nodes[${index}].update(${params.join(", ")})`;
       pushVar(id, call, comment);
       continue;
     }
+    if (["n", "exit"].includes(node.type)) {
+      // do nothing: n is handled directly, exit just joins dac and feedback targets
+      continue;
+    }
     switch (node.type) {
-      case "n": {
-        // do nothing, n values are written directly
-        // pushVar(id, node.value, "n");
-        break;
-      }
       case "range": {
         const [bipolar, min, max] = vars;
         // bipolar [-1,1] to unipolar [0,1] => (v+1)/2
@@ -88,15 +99,16 @@ Node.prototype.compile = function () {
         break;
       }
       case "dac": {
-        if (!vars.length) {
-          console.warn(`no input.. call .out() to play`);
-          dac = 0;
+        if (channels) {
+          console.log("multiple uses of dac not allowed");
           break;
         }
-        if (dac) {
-          console.warn(`multiple use of dac node.. using last call`);
+        if (!vars.length) {
+          console.warn(`no input.. call .out() to play`);
+          channels = [0, 0];
+          break;
         }
-        dac = `(${vars.join(" + ")})*0.3`;
+        channels = vars;
         break;
       }
       case "feedback_write": {
@@ -114,11 +126,17 @@ Node.prototype.compile = function () {
       }
     }
   }
-  if (dac === undefined) {
+  if (channels === undefined) {
     console.log("no .dac() node used...");
-    return { src: `return [0,0]`, nodes, audioThreadNodes };
+    channels = [0, 0];
+  } else if (channels.length === 1) {
+    // make mono if only one channel
+    channels = [channels[0], channels[0]];
+  } else if (channels.length > 2) {
+    console.warn("returned more than 2 channels.. using first 2");
+    channels = channels.slice(0, 2);
   }
-  lines.push(`return [${dac}, ${dac}]`);
+  lines.push(`return [${channels.map((chan) => `(${chan}*0.3)`).join(", ")}]`);
 
   const src = lines.join("\n");
   console.log("compiled code:");

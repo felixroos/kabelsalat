@@ -5,10 +5,14 @@ import { Graphviz } from "@hpcc-js/wasm";
 const graphvizLoaded = Graphviz.load();
 
 Node.prototype.render = async function (container, dagify = false) {
+  let node = this;
   if (dagify) {
     this.dagify();
+  } else if (node.type === "exit") {
+    node = node.ins[0]; // don't render exit helper node
   }
-  let nodes = this.flatten(false);
+
+  let nodes = node.flatten(false);
   let edges = [];
   const color = "teal";
   const fontcolor = "teal";
