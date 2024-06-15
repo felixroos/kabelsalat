@@ -30,6 +30,9 @@ export class Node {
     // clock(10).seq(51,52,0,53).apply2(hold).midinote().sine().out()
     return fn(this, this);
   }
+  clone() {
+    return new Node(this.type, this.value).withIns(...this.ins);
+  }
 }
 
 // returns true if the given node forms a cycle with "me" (or is me)
@@ -189,12 +192,7 @@ function getNode(type, ...args) {
     });
     return new Node(type).withIns(...inputs);
   });
-  // poly = expand till end, poly.add = merge with add immediately
-  const mergeType = args.find((arg) => arg.type === polyType).value || polyType;
-  // example: poly.add(110,220).sine().filter(.5).out()
-  // edge case: using different merge types within arguments...
-  // the first poly call wins..
-  return new Node(mergeType).withIns(...expanded);
+  return new Node(polyType).withIns(...expanded);
 }
 
 export let makeNode = (type, name = type.toLowerCase()) => {
@@ -239,33 +237,38 @@ export let midinote = makeNode("midinote");
 export let dac = makeNode("dac");
 export let exit = makeNode("exit");
 export let poly = makeNode("poly");
-["add", "mul", "sub", "div", "mix"].forEach((op) => {
-  poly[op] = (...args) => poly(...args).withValue(op);
+
+export let register = (name, fn) => {
+  Node.prototype[name] = function (...args) {
+    return fn(this, ...args);
+  };
+  return fn;
+};
+
+export let fork = register("fork", (input, times = 1) =>
+  poly(...Array.from({ length: times }, () => input.clone()))
+);
+
+export let perc = register("perc", (gate, decay) => {
+  return gate.adsr(0, decay, 0, 0);
 });
+
+export let mix = register("mix", (input) => {
+  if (input.type !== "poly") {
+    return input;
+  }
+  return node("mix").withIns(...input.ins);
+});
+
+Node.prototype.over = function (fn) {
+  return this.apply((x) => add(x, fn(x)));
+};
 
 // legacy...
 Node.prototype.feedback = function (fn) {
   return this.add(fn);
 };
 export let feedback = (fn) => add(fn);
-
-Node.prototype.perc = function (decay) {
-  return this.adsr(0, decay, 0, 0);
-};
-
-Node.prototype.mix = function () {
-  return mix(this);
-};
-export let mix = (input) => {
-  if (input.type !== "poly") {
-    return input;
-  }
-  return node("mix").withIns(...input.ins);
-};
-
-Node.prototype.over = function (fn) {
-  return this.apply((x) => add(x, fn(x)));
-};
 
 export function getInletName(type, index) {
   if (!NODE_SCHEMA[type]?.ins?.[index]) {
