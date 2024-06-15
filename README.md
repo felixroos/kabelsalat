@@ -118,6 +118,19 @@ sine(220)
 noise().range(55, 880).hold(pulse(2)).sine().out();
 ```
 
+### midi
+
+```js
+let env = midigate().fork(8).adsr(0.01, 0.4, 0.5, 0.1);
+
+saw(midifreq().fork(8)) // 8 saw voices
+  .mul(env) // amp envelope
+  .filter(env.range(0.2, 0.8).mul(env)) // filter envelope
+  .mix() // mix together
+  .add((x) => x.delay(0.2).mul(0.4)) // feedback delay
+  .out();
+```
+
 ## feedback
 
 to get feedback, simply pass a function instead of a node. The input of the function is the return value of its previous iteration! The snake bites its tail:

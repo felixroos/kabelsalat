@@ -87,12 +87,18 @@ export class AudioGraph {
   }
 
   noteOn(msg) {
-    const midinodes = this.nodes.filter((node) =>
-      node.type?.startsWith("Midi")
-    );
-    midinodes.forEach((node) => {
-      node.noteOn(msg.note, msg.velocity);
-    });
+    const { note, velocity } = msg;
+
+    const midifreqs = this.nodes.filter((node) => node.type === "MidiFreq");
+    const midigates = this.nodes.filter((node) => node.type === "MidiGate");
+
+    if (velocity > 0) {
+      midifreqs.find((node) => node.isFree())?.noteOn(note, velocity);
+      midigates.find((node) => node.isFree())?.noteOn(note, velocity);
+    } else {
+      midifreqs.find((node) => node.note === note)?.noteOff();
+      midigates.find((node) => node.note === note)?.noteOff();
+    }
   }
 
   /**
@@ -556,7 +562,7 @@ class MidiIn extends AudioNode {
     super(id, state, sampleRate, send);
 
     // Current note being held
-    this.noteNo = 0;
+    this.note = 0;
 
     // Frequency of the note being held
     this.freq = 0;
@@ -566,19 +572,22 @@ class MidiIn extends AudioNode {
     this.type = "MidiIn";
   }
 
-  noteOn(noteNo, velocity) {
+  isFree() {
+    return this.gateState === "off";
+  }
+
+  noteOn(note, velocity) {
     if (velocity > 0) {
-      this.noteNo = noteNo;
-      // this.freq = music.Note(noteNo).getFreq(); // <- og
-      this.freq = 2 ** ((noteNo - 69) / 12) * 440;
-      // this.freq = midi2freq(noteNo);
+      this.note = note;
+      this.freq = 2 ** ((note - 69) / 12) * 440;
       this.gateState = "pretrig";
     } else {
-      if (noteNo == this.noteNo) {
-        this.noteNo = 0;
-        this.gateState = "off";
-      }
+      this.noteOff();
     }
+  }
+  noteOff() {
+    this.note = 0;
+    this.gateState = "off";
   }
 
   getGate() {
@@ -623,12 +632,20 @@ class MidiIn extends AudioNode {
  * Midi input node with freq and gate outputs
  */
 class MidiGate extends MidiIn {
+  constructor(id, state, sampleRate, send) {
+    super(id, state, sampleRate, send);
+    this.type = "MidiGate";
+  }
   update() {
     return this.getGate();
   }
 }
 
 class MidiFreq extends MidiIn {
+  constructor(id, state, sampleRate, send) {
+    super(id, state, sampleRate, send);
+    this.type = "MidiFreq";
+  }
   update() {
     return this.getFreq();
   }
