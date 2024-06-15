@@ -121,7 +121,7 @@ export function n(value) {
   return node("n", value);
 }
 
-const zipType = "zip";
+const polyType = "poly";
 const outputType = "dac";
 
 function parseInput(input) {
@@ -144,7 +144,7 @@ function getNode(type, ...args) {
   args = args.map((arg) => {
     // desugar array input to expand node
     if (Array.isArray(arg)) {
-      return new Node(zipType).withIns(...arg);
+      return new Node(polyType).withIns(...arg);
     }
     if (typeof arg === "function") {
       return next.apply(arg);
@@ -154,7 +154,7 @@ function getNode(type, ...args) {
 
   // gets channels per arg
   const expansions = args.map((arg) => {
-    if (arg.type === zipType) {
+    if (arg.type === polyType) {
       return arg.ins.length;
     }
     return 1;
@@ -170,7 +170,7 @@ function getNode(type, ...args) {
   if (type === outputType) {
     const inputs = args
       .map((arg) => {
-        if (arg.type === zipType) {
+        if (arg.type === polyType) {
           return arg.ins;
         }
         return arg;
@@ -183,18 +183,18 @@ function getNode(type, ...args) {
   // node([a,b,c], [x,y]) => expand(node(a,x), node(b,y), node(c,x))
   const expanded = Array.from({ length: maxExpansions }, (_, i) => {
     const inputs = args.map((arg) => {
-      if (arg.type === zipType) {
+      if (arg.type === polyType) {
         return parseInput(arg.ins[i % arg.ins.length]);
       }
       return parseInput(arg);
     });
     return new Node(type).withIns(...inputs);
   });
-  // zip = expand till end, zip.add = merge with add immediately
-  const mergeType = args.find((arg) => arg.type === zipType).value || zipType;
-  // example: zip.add(110,220).sine().filter(.5).out()
+  // poly = expand till end, poly.add = merge with add immediately
+  const mergeType = args.find((arg) => arg.type === polyType).value || polyType;
+  // example: poly.add(110,220).sine().filter(.5).out()
   // edge case: using different merge types within arguments...
-  // the first zip call wins..
+  // the first poly call wins..
   return new Node(mergeType).withIns(...expanded);
 }
 
@@ -240,9 +240,9 @@ export let range = makeNode("range");
 export let midinote = makeNode("midinote");
 export let dac = makeNode("dac");
 export let exit = makeNode("exit");
-export let zip = makeNode("zip");
+export let poly = makeNode("poly");
 ["add", "mul", "sub", "div", "mix"].forEach((op) => {
-  zip[op] = (...args) => zip(...args).withValue(op);
+  poly[op] = (...args) => poly(...args).withValue(op);
 });
 
 // legacy...
