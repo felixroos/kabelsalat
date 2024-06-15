@@ -92,6 +92,11 @@ Node.prototype.compile = function () {
         pushVar(id, calc, "range");
         break;
       }
+      case "mix": {
+        const calc = `(${vars.join(" + ")}) / ${vars.length}`;
+        pushVar(id, calc, "mix");
+        break;
+      }
       case "midinote": {
         const [note] = vars;
         const calc = `(2 ** ((${note} - 69) / 12) * 440)`;
