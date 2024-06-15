@@ -118,10 +118,14 @@ function flatten(node) {
 export const node = (type, value) => new Node(type, value /* , ++index */);
 
 export function n(value) {
+  if (Array.isArray(value)) {
+    return poly(...value.map((v) => n(v)));
+  }
   if (typeof value === "object") {
     return value;
   }
   return node("n", value);
+  //return parseInput(value);
 }
 
 const polyType = "poly";
@@ -210,6 +214,7 @@ export let clockdiv = makeNode("ClockDiv");
 export let distort = makeNode("Distort");
 export let noise = makeNode("Noise");
 export let pulse = makeNode("Pulse");
+export let impulse = makeNode("Impulse");
 export let saw = makeNode("Saw");
 export let sine = makeNode("Sine");
 export let tri = makeNode("Tri");
@@ -249,8 +254,8 @@ export let fork = register("fork", (input, times = 1) =>
   poly(...Array.from({ length: times }, () => input.clone()))
 );
 
-export let perc = register("perc", (gate, decay) => {
-  return gate.adsr(0, decay, 0, 0);
+export let perc = register("perc", (gate, release) => {
+  return gate.adsr(0, 0, 1, release);
 });
 
 export let mix = register("mix", (input) => {
@@ -386,6 +391,12 @@ export const NODE_SCHEMA = {
     ins: [
       { name: "freq", default: 0 },
       { name: "pw", default: 0.5 },
+    ],
+  },
+  Impulse: {
+    ins: [
+      { name: "freq", default: 0 },
+      { name: "phase", default: 0 },
     ],
   },
   Saw: {

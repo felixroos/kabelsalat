@@ -326,12 +326,22 @@ class Feedback extends AudioNode {
  */
 
 class NoiseOsc extends AudioNode {
-  constructor(id, state, sampleRate, send) {
-    super(id, state, sampleRate, send);
-  }
-
   update() {
     return Math.random();
+  }
+}
+
+class ImpulseOsc extends AudioNode {
+  constructor(id, state, sampleRate, send) {
+    super(id, state, sampleRate, send);
+    this.phase = 1;
+  }
+
+  update(freq) {
+    this.phase += this.sampleTime * freq;
+    let v = this.phase >= 1 ? 1 : 0;
+    this.phase = this.phase % 1;
+    return v;
   }
 }
 
@@ -691,6 +701,7 @@ export let NODE_CLASSES = {
   Hold: Hold,
   Noise: NoiseOsc,
   Pulse: PulseOsc,
+  Impulse: ImpulseOsc,
   Saw: SawOsc,
   Sine: SineOsc,
   Tri: TriOsc,
