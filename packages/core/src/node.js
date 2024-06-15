@@ -124,7 +124,17 @@ export function n(value) {
 const polyType = "poly";
 const outputType = "dac";
 
-function parseInput(input) {
+function parseInput(input, node) {
+  if (Array.isArray(input)) {
+    input = new Node(polyType).withIns(...input);
+  }
+  if (input.type === polyType) {
+    // mind bending here we go
+    return input.withIns(...input.ins.map((arg) => parseInput(arg, input)));
+  }
+  if (typeof input === "function") {
+    return node.apply(input);
+  }
   if (typeof input === "object") {
     // is node
     return input;
@@ -141,17 +151,7 @@ function parseInput(input) {
 
 function getNode(type, ...args) {
   const next = node(type);
-  args = args.map((arg) => {
-    // desugar array input to expand node
-    if (Array.isArray(arg)) {
-      return new Node(polyType).withIns(...arg);
-    }
-    if (typeof arg === "function") {
-      return next.apply(arg);
-    }
-    return arg;
-  });
-
+  args = args.map((arg) => parseInput(arg, next));
   // gets channels per arg
   const expansions = args.map((arg) => {
     if (arg.type === polyType) {
@@ -161,7 +161,6 @@ function getNode(type, ...args) {
   });
   // max channels to expand. the 1 is to make sure empty args won't break!
   const maxExpansions = Math.max(1, ...expansions);
-
   // no expansion early exit
   if (maxExpansions === 1) {
     return next.withIns(...args.map(parseInput));
@@ -258,6 +257,9 @@ Node.prototype.mix = function () {
   return mix(this);
 };
 export let mix = (input) => {
+  if (input.type !== "poly") {
+    return input;
+  }
   return node("mix").withIns(...input.ins);
 };
 
