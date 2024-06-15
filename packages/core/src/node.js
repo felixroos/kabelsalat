@@ -232,7 +232,6 @@ export let sin = makeNode("sin");
 export let cos = makeNode("cos");
 export let mul = makeNode("mul");
 export let add = makeNode("add");
-export let mix = makeNode("mix");
 export let div = makeNode("div");
 export let sub = makeNode("sub");
 export let mod = makeNode("mod"); // untested
@@ -253,6 +252,13 @@ export let feedback = (fn) => add(fn);
 
 Node.prototype.perc = function (decay) {
   return this.adsr(0, decay, 0, 0);
+};
+
+Node.prototype.mix = function () {
+  return mix(this);
+};
+export let mix = (input) => {
+  return node("mix").withIns(...input.ins);
 };
 
 Node.prototype.over = function (fn) {
