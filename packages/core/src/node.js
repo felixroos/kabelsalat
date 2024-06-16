@@ -373,10 +373,10 @@ export const NODE_SCHEMA = {
     ins: [],
   },
   MidiGate: {
-    ins: [],
+    ins: [{ name: "channel", default: -1 }],
   },
   MidiFreq: {
-    ins: [],
+    ins: [{ name: "channel", default: -1 }],
   },
   Mod: {
     ins: [

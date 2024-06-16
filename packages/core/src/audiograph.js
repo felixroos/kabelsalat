@@ -87,10 +87,13 @@ export class AudioGraph {
   }
 
   noteOn(msg) {
-    const { note, velocity } = msg;
-
-    const midifreqs = this.nodes.filter((node) => node.type === "MidiFreq");
-    const midigates = this.nodes.filter((node) => node.type === "MidiGate");
+    const { channel, note, velocity } = msg;
+    const midifreqs = this.nodes.filter(
+      (node) => node.type === "MidiFreq" && [-1, channel].includes(node.channel)
+    );
+    const midigates = this.nodes.filter(
+      (node) => node.type === "MidiGate" && [-1, channel].includes(node.channel)
+    );
 
     if (velocity > 0) {
       // get free voice or steal one
@@ -583,6 +586,7 @@ class MidiIn extends AudioNode {
     // Current gate state
     this.gateState = "off";
     this.type = "MidiIn";
+    this.channel = -1;
   }
 
   isFree() {
@@ -649,7 +653,8 @@ class MidiGate extends MidiIn {
     super(id, state, sampleRate, send);
     this.type = "MidiGate";
   }
-  update() {
+  update(channel) {
+    this.channel = channel;
     return this.getGate();
   }
 }
@@ -659,7 +664,8 @@ class MidiFreq extends MidiIn {
     super(id, state, sampleRate, send);
     this.type = "MidiFreq";
   }
-  update() {
+  update(channel) {
+    this.channel = channel;
     return this.getFreq();
   }
 }
