@@ -33,6 +33,12 @@ export class Node {
   clone() {
     return new Node(this.type, this.value).withIns(...this.ins);
   }
+  map(fn) {
+    if (this.type !== "poly") {
+      return fn(this);
+    }
+    return poly(...this.ins.map((input) => fn(input)));
+  }
 }
 
 // returns true if the given node forms a cycle with "me" (or is me)
