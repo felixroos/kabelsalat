@@ -106,18 +106,34 @@ export class MIDI extends Eventable {
 
 export function parseMidiMessage(msg) {
   let msgType = msg[0] & 0xf0;
-  let inChan = (msg[0] & 0x0f) + 1;
+  let channel = (msg[0] & 0x0f) + 1;
 
+  // MIDI control change
+  if (msgType == 0xb0 && msg.length == 3) {
+    let cc = msg[1];
+    let val = msg[2];
+    let value = (val / 127) * 2 - 1; // to bipolar
+    return { type: "CC", channel, cc, value };
+  }
+
+  // MIDI pitch bend
+  if (msgType == 0xe0 && msg.length == 3) {
+    let lsb = msg[1];
+    let msb = msg[2];
+    let val = (msb << 7) | lsb;
+    let value = (val / 16383) * 2 - 1; // to bipolar
+    return { type: "PITCHBEND", channel, value };
+  }
   // Note on
   if (msgType == 0x90 && msg.length == 3) {
-    let noteNo = msg[1];
-    let vel = msg[2];
-    return [inChan, noteNo, vel];
+    let note = msg[1];
+    let velocity = msg[2];
+    return { type: "NOTE_ON", channel, note, velocity };
   }
 
   // Note off
   if (msgType == 0x80 && msg.length == 3) {
-    let noteNo = msg[1];
-    return [inChan, noteNo, 0];
+    let note = msg[1];
+    return { type: "NOTE_ON", channel, note, velocity: 0 };
   }
 }

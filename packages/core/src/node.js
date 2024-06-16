@@ -233,6 +233,7 @@ export let hold = makeNode("Hold");
 // export let midin = makeNode("MidiIn");
 export let midifreq = makeNode("MidiFreq");
 export let midigate = makeNode("MidiGate");
+export let midicc = makeNode("MidiCC");
 export let audioin = makeNode("AudioIn");
 
 // non-audio nodes
@@ -377,6 +378,12 @@ export const NODE_SCHEMA = {
   },
   MidiFreq: {
     ins: [{ name: "channel", default: -1 }],
+  },
+  MidiCC: {
+    ins: [
+      { name: "ccnumber", default: -1 },
+      { name: "channel", default: -1 },
+    ],
   },
   Mod: {
     ins: [

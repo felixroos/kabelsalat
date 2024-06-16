@@ -79,16 +79,7 @@ export class AudioView {
     const midi = new MIDI();
     midi.on("midimessage", (_, message) => {
       const msg = parseMidiMessage(message);
-      msg && this.midiNoteOn(...msg);
-    });
-  }
-
-  midiNoteOn(channel, note, velocity) {
-    this.send({
-      type: "NOTE_ON",
-      channel,
-      note,
-      velocity,
+      msg && this.send(msg);
     });
   }
 

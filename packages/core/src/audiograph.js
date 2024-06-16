@@ -81,18 +81,26 @@ export class AudioGraph {
         this.noteOn(msg);
         break;
 
+      case "CC":
+        this.midiCC(msg);
+        break;
+
       default:
-        throw new TypeError("unknown message type");
+        throw new TypeError(`unknown message type ${msg.type}`);
     }
   }
 
   noteOn(msg) {
     const { channel, note, velocity } = msg;
     const midifreqs = this.nodes.filter(
-      (node) => node.type === "MidiFreq" && [-1, channel].includes(node.channel)
+      (node) =>
+        node.type === "MidiFreq" &&
+        (node.channel === -1 || node.channel === channel)
     );
     const midigates = this.nodes.filter(
-      (node) => node.type === "MidiGate" && [-1, channel].includes(node.channel)
+      (node) =>
+        node.type === "MidiGate" &&
+        (node.channel === -1 || node.channel === channel)
     );
 
     if (velocity > 0) {
@@ -105,6 +113,19 @@ export class AudioGraph {
       midifreqs.find((node) => node.note === note)?.noteOff();
       midigates.find((node) => node.note === note)?.noteOff();
     }
+  }
+
+  midiCC(msg) {
+    const { channel, cc, value } = msg;
+    this.nodes.forEach((node) => {
+      if (
+        node.type === "MidiCC" &&
+        (node.channel === -1 || node.channel === channel) &&
+        node.ccnumber === cc
+      ) {
+        node.setValue(value);
+      }
+    });
   }
 
   /**
@@ -670,6 +691,24 @@ class MidiFreq extends MidiIn {
   }
 }
 
+class MidiCC extends AudioNode {
+  constructor(id, state, sampleRate, send) {
+    super(id, state, sampleRate, send);
+    this.type = "MidiCC";
+    this.value = 0;
+    this.channel = -1;
+    this.ccnumber = -1;
+  }
+  setValue(value) {
+    this.value = value;
+  }
+  update(ccnumber, channel) {
+    this.ccnumber = ccnumber;
+    this.channel = channel;
+    return this.value;
+  }
+}
+
 // removed: Sequencer, MonoSeq, GateSeq
 
 /**
@@ -718,6 +757,7 @@ export let NODE_CLASSES = {
   AudioIn: AudioIn,
   MidiGate: MidiGate,
   MidiFreq: MidiFreq,
+  MidiCC: MidiCC,
   Seq: Sequence,
   feedback: Feedback,
   feedback_read: Feedback,
