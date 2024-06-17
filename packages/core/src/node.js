@@ -37,7 +37,7 @@ export class Node {
     if (this.type !== "poly") {
       return fn(this);
     }
-    return poly(...this.ins.map((input) => fn(input)));
+    return poly(...this.ins.map(fn));
   }
 }
 

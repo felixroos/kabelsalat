@@ -695,7 +695,7 @@ class MidiCC extends AudioNode {
   constructor(id, state, sampleRate, send) {
     super(id, state, sampleRate, send);
     this.type = "MidiCC";
-    this.value = 0;
+    this.value = -1;
     this.channel = -1;
     this.ccnumber = -1;
   }
