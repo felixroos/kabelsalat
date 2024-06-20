@@ -1,4 +1,4 @@
-import { createSignal } from "solid-js";
+import { createSignal, onCleanup, onMount } from "solid-js";
 import { render } from "solid-js/web";
 import "./graphviz";
 import "./index.css";
@@ -38,14 +38,18 @@ note
 function App() {
   const repl = new SalatRepl();
 
-  let urlCode = window.location.hash.slice(1);
-  if (urlCode) {
-    urlCode = atob(urlCode);
-    console.log("loaded code from url!");
+  function getURLCode() {
+    let urlCode = window.location.hash.slice(1);
+    if (urlCode) {
+      urlCode = atob(urlCode);
+    }
+    return urlCode || "";
   }
-  const initialCode = urlCode || defaultPatch;
+
+  const initialCode = getURLCode() || defaultPatch;
   let [code, setCode] = createSignal(initialCode);
   let [inited, setInited] = createSignal(false);
+  let [hideCode, setHideCode] = createSignal(false);
   let container;
   async function run() {
     const node = repl.evaluate(code());
@@ -53,9 +57,31 @@ function App() {
     window.location.hash = "#" + btoa(code());
     repl.play(node);
   }
+  let handleKeydown = (e) => {
+    // console.log("key", e.code);
+    if (e.key === "Enter" && (e.ctrlKey || e.altKey)) {
+      run();
+    } else if (e.code === "Period" && (e.ctrlKey || e.altKey)) {
+      repl.stop();
+      e.preventDefault();
+    } else if (e.key === "l" && e.ctrlKey) {
+      setHideCode((hide) => !hide);
+    }
+  };
+  let handlePopState = () => setCode(getURLCode());
+  onMount(() => {
+    document.addEventListener("keydown", handleKeydown);
+    window.addEventListener("popstate", handlePopState);
+  });
+  onCleanup(() => {
+    document.removeEventListener("keydown", handleKeydown);
+    window.removeEventListener("popstate", handlePopState);
+  });
+
+  
   return (
     <div
-      class="flex flex-col  h-full max-h-full justify-stretch text-teal-600 font-mono"
+      class="flex flex-col h-full max-h-full justify-stretch text-teal-600 font-mono"
       onClick={() => {
         !inited() && run();
         setInited(true);
@@ -69,22 +95,19 @@ function App() {
           {!inited() && "click somewhere to play"}
         </div>
       </div>
-      <div class="grid grid-cols-2 flex-auto">
-        <textarea
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && e.ctrlKey) {
-              run();
-            } else if (e.key === "." && e.ctrlKey) {
-              repl.stop();
-            }
-          }}
-          class="bg-stone-900 shrink-0 p-4 focus:ring-0 outline-0 border-r border-teal-500"
-          spellcheck="false"
-          value={code()}
-          onInput={(e) => setCode(e.target.value)}
-        ></textarea>
+      <div class="grid grid-cols-2 flex-auto shrink grow overflow-hidden">
+        {!hideCode() && (
+          <textarea
+            class="bg-stone-900 shrink-0 p-4 focus:ring-0 outline-0 border-r border-teal-500"
+            spellcheck="false"
+            value={code()}
+            onInput={(e) => setCode(e.target.value)}
+          ></textarea>
+        )}
         <div
-          class="bg-stone-900 overflow-auto text-gray-500 p-4 grow-0"
+          class={`bg-stone-900 overflow-auto text-gray-500 p-4 grow-0${
+            hideCode() ? " col-span-2" : ""
+          }`}
           ref={(el) => {
             container = el;
             repl.evaluate(code()).render(container);
@@ -99,7 +122,7 @@ function App() {
         </div>
         <p>
           welcome to kabelsalat. this is a very experimental audio graph live
-          coding prototype..
+          coding prototype.
         </p>
         <pre>keyboard: ctrl+enter: start, ctrl+dot: stop</pre>
         <code>
@@ -120,5 +143,8 @@ function App() {
     </div>
   );
 }
+
+// make sure html is empy (for hot reloading)
+document.getElementById("root").innerHTML = "";
 
 render(() => <App />, document.getElementById("root"));
