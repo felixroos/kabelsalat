@@ -54,9 +54,9 @@ export class AudioGraph {
         console.warn(`unknown audio node type "${types[i]}"`);
       }
     }
-    console.log(
+    /* console.log(
       `${types.length} ugens spawned, ${Object.keys(this.nodes).length} total`
-    );
+    ); */
 
     // Create the sample generation function
     this._genSample = new Function("time", "nodes", "input", unit.src);

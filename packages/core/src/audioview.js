@@ -48,7 +48,7 @@ if (match) {
 
 export class AudioView {
   async updateGraph(node) {
-    const { src, audioThreadNodes } = node.compile();
+    const { src, audioThreadNodes } = node.compile({ log: true });
     if (
       !this.midiInited &&
       audioThreadNodes.some((node) => node.startsWith("Midi"))
