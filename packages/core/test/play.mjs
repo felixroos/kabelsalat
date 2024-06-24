@@ -6,6 +6,8 @@ import { AudioGraph } from "../src/audiograph.js";
 import fs from "node:fs";
 import * as api from "../src/node.js";
 
+const duration = process.argv[2] || 0;
+
 let code;
 try {
   code = fs.readFileSync("./patches/acidmachine.js", "utf8");
@@ -35,7 +37,7 @@ const unit = node.compile();
 const audioGraph = new AudioGraph(44100);
 audioGraph.parseMsg({ type: "NEW_UNIT", unit });
 
-const options = { sampleRate: 44100, bufferSize: 2048 };
+const options = { sampleRate: 44100, bufferSize: 2048, duration };
 const writer = new AudioWriter(() => audioGraph.genSample(0)[0], options);
 
 writer.start();
