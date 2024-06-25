@@ -4,8 +4,10 @@ import { Graphviz } from "@hpcc-js/wasm";
 
 const graphvizLoaded = Graphviz.load();
 
-Node.prototype.render = async function (container, dagify = false) {
+Node.prototype.render = async function (container, options = {}) {
+  const { dagify = false, resolveModules = false } = options;
   let node = this;
+  resolveModules && node.resolveModules();
   if (dagify) {
     this.dagify();
   } else if (node.type === "exit") {

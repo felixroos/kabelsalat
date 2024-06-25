@@ -35,6 +35,8 @@ note
 .mul(.5) // master level
 .out() // send to output`;
 
+let vizSettings = { resolveModules: false, dagify: false };
+
 function App() {
   const repl = new SalatRepl();
 
@@ -53,7 +55,7 @@ function App() {
   let container;
   async function run() {
     const node = repl.evaluate(code());
-    node.render(container); // update viz
+    node.render(container, vizSettings); // update viz
     window.location.hash = "#" + btoa(code());
     repl.play(node);
   }
@@ -78,7 +80,6 @@ function App() {
     window.removeEventListener("popstate", handlePopState);
   });
 
-  
   return (
     <div
       class="flex flex-col h-full max-h-full justify-stretch text-teal-600 font-mono"
@@ -110,7 +111,7 @@ function App() {
           }`}
           ref={(el) => {
             container = el;
-            repl.evaluate(code()).render(container);
+            repl.evaluate(code()).render(container, vizSettings);
           }}
         ></div>
       </div>

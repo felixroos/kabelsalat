@@ -39,7 +39,40 @@ export class Node {
     }
     return poly(...this.ins.map(fn));
   }
+  walk(fn) {
+    return this.map((node) => dfs(node, fn));
+  }
 }
+
+let dfs = (node, fn, visited = []) => {
+  node = fn(node);
+  visited.push(node);
+  node.ins = node.ins.map((input) =>
+    visited.includes(input) ? input : dfs(input, fn, visited)
+  );
+  return node;
+};
+
+let modules = new Map(); // module registry
+
+// user facing function to create modules
+export function module(name, fn) {
+  modules.set(name, fn);
+  return register(name, (...args) => getNode(name, ...args));
+}
+
+export function resolveModules(node) {
+  return node.walk((node) => {
+    if (modules.has(node.type)) {
+      const fn = modules.get(node.type);
+      node = fn(...node.ins);
+    }
+    return node;
+  });
+}
+Node.prototype.resolveModules = function () {
+  return resolveModules(this);
+};
 
 // returns true if the given node forms a cycle with "me" (or is me)
 function loopsToMe(node, me) {
@@ -261,9 +294,9 @@ export let fork = register("fork", (input, times = 1) =>
   poly(...Array.from({ length: times }, () => input.clone()))
 );
 
-export let perc = register("perc", (gate, release) => {
-  return gate.adsr(0, 0, 1, release);
-});
+export let perc = module("perc", (gate, release) =>
+  gate.adsr(0, 0, 1, release)
+);
 
 export let mix = register("mix", (input) => {
   if (input.type !== "poly") {

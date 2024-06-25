@@ -24,6 +24,7 @@ export class SalatRepl {
     if (!this.audio.isRunning) {
       await this.audio.init();
     }
+    node.resolveModules();
     node.dagify();
     this.audio.updateGraph(node);
   }
