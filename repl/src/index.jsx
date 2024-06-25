@@ -57,6 +57,9 @@ function App() {
     const node = repl.evaluate(code());
     node.render(container, vizSettings); // update viz
     window.location.hash = "#" + btoa(code());
+    if (code().startsWith("//")) {
+      document.title = "🔌🥗" + code().split("\n")[0].slice(2);
+    }
     repl.play(node);
   }
   let handleKeydown = (e) => {
