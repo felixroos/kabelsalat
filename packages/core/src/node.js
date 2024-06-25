@@ -65,7 +65,7 @@ export function resolveModules(node) {
   return node.walk((node) => {
     if (modules.has(node.type)) {
       const fn = modules.get(node.type);
-      node = fn(...node.ins);
+      node = fn(...node.ins).resolveModules(node);
     }
     return node;
   });
