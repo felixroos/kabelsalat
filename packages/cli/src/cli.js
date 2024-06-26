@@ -2,7 +2,8 @@
 
 import "@kabelsalat/core/src/compiler.js";
 import { AudioGraph } from "@kabelsalat/core/src/audiograph.js";
-import fs from "node:fs";
+import { existsSync } from "node:fs";
+import fs from "node:fs/promises";
 import path from "node:path";
 import * as api from "@kabelsalat/core/src/node.js";
 import { audiostream } from "./audiostream.js";
@@ -33,19 +34,22 @@ if (!file) {
   console.info("tip: you can also run `npx @kabelsalat/cli path/to/file.js`");
   file = "kabelsalat.js";
 }
-const fileExists = fs.existsSync(file);
+const fileExists = existsSync(file);
 if (!fileExists) {
   const shouldCreate = await yesno({
     question: `file "${file}" not found. Do you want to create it? [y/n]`,
   });
   if (shouldCreate) {
     let defaultPatch = "sine([220,331]).mul(sine(3).range(.5,1)).out()";
-    fs.writeFile(file, defaultPatch, (err) => {
+    try {
+      await fs.writeFile(file, defaultPatch);
+    } catch (err) {
       if (err) {
         console.error("Could not write file:");
         throw err;
       }
-    });
+    }
+    console.log(`file ${file} created!`);
   } else {
     console.log("ok, thx, bye..");
     process.exit();
@@ -61,19 +65,25 @@ const audioGraph = new AudioGraph(44100);
 
 Object.assign(globalThis, api);
 function update(code) {
-  const node = api.evaluate(code);
-  const unit = node.compile(node);
-  audioGraph.parseMsg({ type: "NEW_UNIT", unit });
+  try {
+    const node = api.evaluate(code);
+    const unit = node.compile(node);
+    audioGraph.parseMsg({ type: "NEW_UNIT", unit });
+  } catch (err) {
+    console.log("evaluation error:");
+    console.log(err);
+  }
 }
 
 async function evaluateFile() {
   try {
-    const code = fs.readFileSync(filePath, { encoding: "utf8" });
+    const code = await fs.readFile(filePath, { encoding: "utf8" });
     // console.log(code);
     const t = performance.now();
+    console.log("evaluating...");
     update(code);
     const took = performance.now() - t;
-    console.log(`evaluation took ${took.toFixed(1)}ms`);
+    console.log(`success! evaluation took ${took.toFixed(1)}ms`);
   } catch (err) {
     console.error(err);
   }
