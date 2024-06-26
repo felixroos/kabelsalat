@@ -37,6 +37,22 @@ importers:
         specifier: ^2.10.2
         version: 2.10.2(solid-js@1.8.17)(vite@5.3.1)
 
+  packages/cli:
+    dependencies:
+      '@kabelsalat/core':
+        specifier: workspace:*
+        version: link:../core
+      yesno:
+        specifier: ^0.4.0
+        version: 0.4.0
+    devDependencies:
+      chokidar:
+        specifier: ^3.6.0
+        version: 3.6.0
+      speaker:
+        specifier: ^0.5.5
+        version: 0.5.5
+
   packages/core:
     devDependencies:
       chokidar:
@@ -1922,4 +1938,8 @@ packages:
       string-width: 4.2.3
       y18n: 5.0.8
       yargs-parser: 21.1.1
+    dev: false
+
+  /yesno@0.4.0:
+    resolution: {integrity: sha512-tdBxmHvbXPBKYIg81bMCB7bVeDmHkRzk5rVJyYYXurwKkHq/MCd8rz4HSJUP7hW0H2NlXiq8IFiWvYKEHhlotA==}
     dev: false
