@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import "@kabelsalat/core/src/compiler.js";
 import { AudioGraph } from "@kabelsalat/core/src/audiograph.js";
 import fs from "node:fs";
