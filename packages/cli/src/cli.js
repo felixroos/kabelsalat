@@ -3,7 +3,7 @@ import { AudioGraph } from "@kabelsalat/core/src/audiograph.js";
 import fs from "node:fs";
 import path from "node:path";
 import * as api from "@kabelsalat/core/src/node.js";
-import { audiostream } from "./audiostream.mjs";
+import { audiostream } from "./audiostream.js";
 import chokidar from "chokidar";
 import Speaker from "speaker";
 import yesno from "yesno";

@@ -1,12 +1,12 @@
 {
   "name": "@kabelsalat/cli",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "type": "module",
-  "bin": "./src/cli.mjs",
+  "bin": "./src/cli.js",
   "author": "Felix Roos <flix91@gmail.com>",
   "license": "AGPL-3.0-or-later",
   "scripts": {
-    "test": "node src/cli.mjs"
+    "test": "node src/cli.js"
   },
   "dependencies": {
     "@kabelsalat/core": "workspace:*",
