@@ -21,8 +21,12 @@ if (major < minNodeVersion) {
 const __dirname = dirname(fileURLToPath(import.meta.url));
 // const __dirname = import.meta.dirname; // node 22..
 
-const duration = Number(process.argv[2] || 0);
-const file = process.argv[3] || "kabelsalat.js";
+const flags = process.argv.filter((arg) => arg.startsWith("-"));
+const args = process.argv.filter((arg) => !arg.startsWith("--"));
+const watchMode = flags.includes("-w");
+
+const duration = Number(args[2] || 0);
+const file = args[3] || "kabelsalat.js";
 
 const filePath = path.resolve(__dirname, file);
 // console.log("filePath", filePath);
@@ -50,7 +54,7 @@ async function evaluateFile() {
 
 evaluateFile();
 
-// watch(filePath, { recursive: true }, () => evaluateFile());
+watchMode && watch(filePath, { recursive: true }, () => evaluateFile());
 let dsp = () => audioGraph.genSample(0)[0];
 
 const options = { sampleRate: 44100, bufferSize: 2048, duration };
