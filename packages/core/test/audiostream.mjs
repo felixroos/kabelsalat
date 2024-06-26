@@ -1,6 +1,6 @@
 import { Readable } from "node:stream";
 
-export const audiogen = /* async  */ function* (dsp, options = {}) {
+export const audiogen = async function* (dsp, options = {}) {
   const { sampleRate = 44100, bufferSize = 128, duration = 0 } = options;
   let sample = 0;
   const bytes = 4; // 4 bytes per 32-bit float
@@ -15,7 +15,7 @@ export const audiogen = /* async  */ function* (dsp, options = {}) {
     sample += bufferSize;
     yield buffer;
 
-    //await new Promise((resolve) => setImmediate(resolve));
+    await new Promise((resolve) => setImmediate(resolve));
   }
   return null;
 };

@@ -14,7 +14,7 @@
     "prepublishOnly": "npm run build"
   },
   "devDependencies": {
-    "node-watch": "^0.7.4",
+    "chokidar": "^3.6.0",
     "vite": "^5.2.0"
   }
 }

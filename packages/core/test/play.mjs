@@ -9,6 +9,7 @@ import { audiostream } from "./audiostream.mjs";
 import watch from "node-watch";
 import { dirname } from "path";
 import { fileURLToPath } from "url";
+// import { spawn } from "child_process";
 
 // detect node version
 const minNodeVersion = 20;
@@ -57,8 +58,42 @@ evaluateFile();
 watchMode && watch(filePath, { recursive: true }, () => evaluateFile());
 let dsp = () => audioGraph.genSample(0)[0];
 
-const options = { sampleRate: 44100, bufferSize: 2048, duration };
+const options = { sampleRate: 44100, bufferSize: 256, duration };
 
-export const writer = audiostream(dsp, options);
+export const samples = audiostream(dsp, options);
 
-writer.pipe(process.stdout);
+samples.pipe(process.stdout);
+
+/* const fifoPath = "/tmp/soxpipe";
+const fifoStream = fs.createWriteStream(fifoPath);
+samples.pipe(fifoStream); */
+
+/* setTimeout(() => {
+  // samples.pipe(process.stdout);
+  const player = spawn("sox", [
+    "-traw",
+    "-r44100",
+    "-b32",
+    "-e",
+    "float",
+    // "-",
+    fifoPath,
+    "-tcoreaudio",
+    "--buffer",
+    "1024",
+  ]);
+  // Handle stderr data
+  player.stderr.pipe(process.stdout);
+}, 200); */
+
+/* const player = spawn("ffplay", [
+  "-f",
+  "f32le",
+  "-ar",
+  "44100",
+  "-nodisp",
+  "-autoexit",
+  "-",
+]); 
+samples.pipe(player.stdin);
+*/

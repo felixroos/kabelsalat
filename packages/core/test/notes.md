@@ -2,11 +2,11 @@
 
 ```sh
 # play samples rendered by node script
-node play.mjs | sox -traw -r44100 -b32 -e float - -tcoreaudio
-node play.mjs | ffplay -f f32le -ar 44100 -nodisp -autoexit -
+node play.mjs -w | sox -traw -r44100 -b32 -e float - -tcoreaudio --buffer 256
+node play.mjs -w | ffplay -f f32le -ar 44100 -nodisp -autoexit -
 # limit to 10 seconds
 node play.mjs 10 | sox -traw -r44100 -b32 -e float - -tcoreaudio
-node play.mjs | ffplay -f f32le -ar 44100 -nodisp -autoexit -
+node play.mjs 10 | ffplay -f f32le -ar 44100 -nodisp -autoexit -
 
 # dump 10s of audio to wav file
 rm output.wav && node play.mjs 10 | sox -traw -r44100 -b32 -e float - -t wav output.wav
