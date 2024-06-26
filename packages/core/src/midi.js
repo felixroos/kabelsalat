@@ -36,21 +36,21 @@ export class Eventable {
 }
 
 export class MIDI extends Eventable {
-  constructor() {
+  constructor(_navigator = navigator) {
     super();
 
     this.midiAccess = null;
 
     // Try to get MIDI access
-    this.getMIDIAccess();
+    this.getMIDIAccess(_navigator);
   }
 
   // Try to get MIDI access from the browser
-  async getMIDIAccess() {
+  async getMIDIAccess(_navigator) {
     // If MIDI is not supported by this browser
-    if (!("requestMIDIAccess" in navigator)) return;
+    if (!("requestMIDIAccess" in _navigator)) return;
 
-    this.midiAccess = await navigator.requestMIDIAccess({ sysex: false });
+    this.midiAccess = await _navigator.requestMIDIAccess({ sysex: false });
 
     console.log("got MIDI access");
 
@@ -58,41 +58,24 @@ export class MIDI extends Eventable {
     for (let input of this.midiAccess.inputs.values()) {
       if (input.state != "connected") continue;
 
-      console.log(input.name);
-
-      input.onmidimessage = this.makeMessageCb(input.id);
+      input.onmidimessage = (e) =>
+        this.trigger("midimessage", input.id, e.data);
     }
 
     // Detect new devices being connected
     this.midiAccess.onstatechange = (evt) => {
       if (evt.port.type == "input" && evt.port.state == "connected") {
         console.log(
-          "new device connected:",
+          "MIDI device connected:",
           evt.port.name,
           "PORT:",
           evt.port.id
         );
 
-        evt.port.onmidimessage = this.makeMessageCb(evt.port.id);
+        evt.port.onmidimessage = (e) =>
+          this.trigger("midimessage", evt.port.id, e.data);
       }
     };
-  }
-
-  // Create an onmidimessage callback for an input port
-  makeMessageCb(deviceId) {
-    // Callback when a MIDI message is received
-    function onMidiMessage(evt) {
-      var str = "";
-      for (var i = 0; i < evt.data.length; i++) {
-        str += "0x" + evt.data[i].toString(16) + " ";
-      }
-      // console.log(str);
-
-      // Send the device name and the data to callbacks
-      this.trigger("midimessage", deviceId, evt.data);
-    }
-
-    return onMidiMessage.bind(this);
   }
 
   // Send a message to all MIDI devices
