@@ -1,29 +1,42 @@
-// minimoog v1
-let tune = 0,
-glide = 0, 
-o1oct = 1,
-o2oct = 2,
-o3oct = 3,
-o1wav = 0,
-o2wav = 0,
-o3wav = 0;
+// maximecb - the little acid machine that could
+// + maximecb drum machine
+// code by froos
+// noisecraft -> kabelsalat
+// https://noisecraft.app/47
 
-// tri, shark, saw, square, rec1, rec2
-let shark = module('shark', (freq) => add(tri(freq).mul(.75),saw(freq).mul(.25)))
-let square = module('square', (freq) => pulse(freq,.5))
-let narrow = module('narrow', (freq) => pulse(freq,.1))
-let wide = module('wide', (freq) => pulse(freq,.3))
-let waves = [tri,shark,saw,square,wide,narrow]
+let kick = (gate) =>
+  gate.adsr(0, 0.11, 0, 0.11).apply((env) =>
+    env
+      .mul(env)
+      .mul(158) // frequency range
+      .sine(env)
+      .distort(0.85)
+  );
 
+let snare = (gate) =>
+  gate.adsr(0, 0.11, 0.1, 0.1).mul(noise()).filter(0.78, 0.29);
 
-let osc = module('osc', (type, freq, detune=1) => {
-freq = n(freq).mul(n(detune))
-return waves[type.value](freq)
-})
+let c = clock(160);
+let notes = c
+  .clockdiv(8)
+  .seq(27, 27, 39, 51, 0, 0, 27, 27, 42, 27, 40, 0, 31, 31, 56, 51);
 
+let env = notes.adsr(0, 0.3, 0.34, 0.59);
 
-osc([2,3,4,1], [55.1,110,220.2,440.9])
-.mix()
-.filter(impulse(4).perc(.25).slide(1).mul(sine(.2).range(.6,1)))
-.mul(.2)
-.out()
+notes
+  .apply2(hold) // hold freq above 0s
+  .midinote()
+  .slide(sine(0.21).range(0, 1))
+  .pulse(0.48)
+  .mul(env)
+  .filter(
+    env.mul(sine(0.09).range(0.55, 1)), // cutoff
+    sine(0.22).range(0, 0.35) // res
+  )
+  .distort(sine(0.18).range(0, 0.85))
+  .mul(0.5)
+  .mul(c.clockdiv(16).seq(0.25, 1)) // sidechain
+  .add(c.clockdiv(32).seq(1, 1).apply(kick))
+  .add(c.clockdiv(32).seq(0, 1).apply(snare))
+  .out();
+

@@ -7,7 +7,7 @@
     "dev": "cd repl && pnpm dev",
     "build": "cd repl && pnpm build",
     "preview": "cd repl && pnpm preview",
-    "test": "cd packages/core/test/ && node play.mjs | sox -traw -r44100 -b32 -e float - -tcoreaudio"
+    "test": "cd packages/core/test/ && node play.mjs -w | sox -traw -r44100 -b32 -e float - -tcoreaudio --buffer 256"
   },
   "author": "Felix Roos <flix91@gmail.com>",
   "license": "AGPL-3.0-or-later",

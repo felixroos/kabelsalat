@@ -6,7 +6,7 @@ import fs from "node:fs";
 import path from "node:path";
 import * as api from "../src/node.js";
 import { audiostream } from "./audiostream.mjs";
-import watch from "node-watch";
+import chokidar from "chokidar";
 import { dirname } from "path";
 import { fileURLToPath } from "url";
 // import { spawn } from "child_process";
@@ -44,7 +44,6 @@ function update(code) {
 
 async function evaluateFile() {
   try {
-    // console.log("// file evaluated", evt, filename);
     const code = fs.readFileSync(filePath, { encoding: "utf8" });
     //console.log(code);
     update(code);
@@ -55,7 +54,11 @@ async function evaluateFile() {
 
 evaluateFile();
 
-watchMode && watch(filePath, { recursive: true }, () => evaluateFile());
+if (watchMode) {
+  const watcher = chokidar.watch(filePath, { persistent: true });
+  watcher.on("change", () => evaluateFile());
+}
+
 let dsp = () => audioGraph.genSample(0)[0];
 
 const options = { sampleRate: 44100, bufferSize: 256, duration };
