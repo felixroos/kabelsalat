@@ -1,43 +1,60 @@
 // node play.mjs | sox -traw -r44100 -b32 -e float - -tcoreaudio
 
-import { AudioWriter } from "./audiowriter.mjs";
 import "../src/compiler.js";
 import { AudioGraph } from "../src/audiograph.js";
 import fs from "node:fs";
+import path from "node:path";
 import * as api from "../src/node.js";
+import { audiostream } from "./audiostream.mjs";
+import watch from "node-watch";
+import { dirname } from "path";
+import { fileURLToPath } from "url";
 
-const duration = process.argv[2] || 0;
-
-let code;
-try {
-  code = fs.readFileSync("./patches/acidmachine.js", "utf8");
-} catch (err) {
-  console.error(err);
+// detect node version
+const minNodeVersion = 20;
+const [major] = process.versions.node.split(".").map(Number);
+if (major < minNodeVersion) {
+  throw new Error(`You need Node.js >= ${minNodeVersion}`);
 }
 
-function evaluate(code) {
-  Object.assign(globalThis, api);
-  let nodes = [];
-  api.Node.prototype.out = function () {
-    nodes.push(this);
-  };
+// handle duration and file params
+const __dirname = dirname(fileURLToPath(import.meta.url));
+// const __dirname = import.meta.dirname; // node 22..
+
+const duration = Number(process.argv[2] || 0);
+const file = process.argv[3] || "kabelsalat.js";
+
+const filePath = path.resolve(__dirname, file);
+// console.log("filePath", filePath);
+
+// create audio graph
+const audioGraph = new AudioGraph(44100);
+
+Object.assign(globalThis, api);
+function update(code) {
+  const node = api.evaluate(code);
+  const unit = node.compile(node);
+  audioGraph.parseMsg({ type: "NEW_UNIT", unit });
+}
+
+async function evaluateFile() {
   try {
-    Function(code)();
-    const node = api.dac(...nodes).exit();
-    return node;
+    // console.log("// file evaluated", evt, filename);
+    const code = fs.readFileSync(filePath, { encoding: "utf8" });
+    //console.log(code);
+    update(code);
   } catch (err) {
     console.error(err);
-    return api.n(0);
   }
 }
 
-const node = evaluate(code).dagify();
+evaluateFile();
 
-const unit = node.compile();
-const audioGraph = new AudioGraph(44100);
-audioGraph.parseMsg({ type: "NEW_UNIT", unit });
+// watch(filePath, { recursive: true }, () => evaluateFile());
+let dsp = () => audioGraph.genSample(0)[0];
 
 const options = { sampleRate: 44100, bufferSize: 2048, duration };
-const writer = new AudioWriter(() => audioGraph.genSample(0)[0], options);
 
-writer.start();
+export const writer = audiostream(dsp, options);
+
+writer.pipe(process.stdout);
