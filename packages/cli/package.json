@@ -6,7 +6,7 @@
   "author": "Felix Roos <flix91@gmail.com>",
   "license": "AGPL-3.0-or-later",
   "scripts": {
-    "test": "node src/cli.mjs examples/delaymod.js"
+    "test": "node src/cli.mjs"
   },
   "dependencies": {
     "@kabelsalat/core": "workspace:*",
