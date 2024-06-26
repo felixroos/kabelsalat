@@ -2,10 +2,10 @@ import { Node, NODE_SCHEMA } from "./node.js";
 
 // this compiler is actually not from noisecraft :)
 
-Node.prototype.compile = function (options = {}) {
+function compile(node, options = {}) {
   const { log = false } = options;
-  log && console.log("compile", this);
-  const nodes = this.flatten(true);
+  log && console.log("compile", node);
+  const nodes = node.flatten(true);
   // log && console.log("flat", nodes);
   const sorted = topoSort(nodes);
   let lines = [];
@@ -150,6 +150,10 @@ Node.prototype.compile = function (options = {}) {
     console.log(src);
   }
   return { src, nodes, audioThreadNodes };
+}
+
+Node.prototype.compile = function (options) {
+  return compile(this.dagify().resolveModules(), options);
 };
 
 // taken from noisecraft

@@ -149,6 +149,22 @@ function flatten(node) {
   });
 }
 
+export function evaluate(code) {
+  // make sure to call Object.assign(globalThis, api);
+  let nodes = [];
+  Node.prototype.out = function () {
+    nodes.push(this);
+  };
+  try {
+    Function(code)();
+    const node = dac(...nodes).exit();
+    return node;
+  } catch (err) {
+    console.error(err);
+    return n(0);
+  }
+}
+
 // TODO: find a cool api to register functions (maybe similar to strudel's register)
 // so far, node types added here also have to be added to the compiler, as well as NODE_CLASSES (for audio nodes)
 // it would be nice if there was a way to define custom functions / nodes / dsp logic in a single place...

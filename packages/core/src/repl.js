@@ -7,25 +7,12 @@ export class SalatRepl {
     Object.assign(globalThis, api);
   }
   evaluate(code) {
-    let nodes = [];
-    api.Node.prototype.out = function () {
-      nodes.push(this);
-    };
-    try {
-      Function(code)();
-      const node = api.dac(...nodes).exit();
-      return node;
-    } catch (err) {
-      console.error(err);
-      return api.n(0);
-    }
+    return api.evaluate(code);
   }
   async play(node) {
     if (!this.audio.isRunning) {
       await this.audio.init();
     }
-    node.resolveModules();
-    node.dagify();
     this.audio.updateGraph(node);
   }
   stop() {
