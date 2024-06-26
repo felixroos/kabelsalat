@@ -45,6 +45,9 @@ importers:
       chokidar:
         specifier: ^3.6.0
         version: 3.6.0
+      jzz:
+        specifier: ^1.8.5
+        version: 1.8.5
       speaker:
         specifier: ^0.5.5
         version: 0.5.5
@@ -484,6 +487,9 @@ packages:
   '@types/estree@1.0.5':
     resolution: {integrity: sha512-/kYRxGDLWzHOB7q+wtSUQlFrtcdUccpfy+X+9iMBpHK8QLLhx2wIPYuS5DYtR9Wa/YlZAbIovy7qVdB1Aq6Lyw==}
 
+  '@types/webmidi@2.1.0':
+    resolution: {integrity: sha512-k898MjEUSHB+6rSeCPQk/kLgie0wgWZ2t78GlWj86HbTQ+XmtbBafYg5LNjn8bVHfItEhPGZPf579Xfc6keV6w==}
+
   ansi-regex@5.0.1:
     resolution: {integrity: sha512-quJQXlTSUGL2LH9SUXo8VwsY4soanhgo6LNSm84E1LBcE8s3O0wpdiRzyR9z/ZZJMlMWv37qOOb9pdJlMUEKFQ==}
     engines: {node: '>=8'}
@@ -771,6 +777,10 @@ packages:
     resolution: {integrity: sha512-JVYhQnN59LVPFCEcVa2C3CrEKYacvjRfqIQl+h8oi91aLYQVWRYbxjPcv1bUiUy/kLmQaANrYfNMCO3kuEDHfw==}
     engines: {node: '>=14'}
 
+  jazz-midi@1.7.9:
+    resolution: {integrity: sha512-c8c4BBgwxdsIr1iVm53nadCrtH7BUlnX3V95ciK/gbvXN/ndE5+POskBalXgqlc/r9p2XUbdLTrgrC6fou5p9w==}
+    engines: {node: '>=10.0.0'}
+
   jgf-dot@1.1.1:
     resolution: {integrity: sha512-/aw9bwVfn67A+lvjxtbocBuhB2rNdL5UY5rlHhKVh9ValvVJETU5lQ0jitDxiIjIPAEeuR4B1aFNA7E3wKNV1A==}
     hasBin: true
@@ -791,6 +801,9 @@ packages:
     resolution: {integrity: sha512-XmOWe7eyHYH14cLdVPoyg+GOH3rYX++KpzrylJwSW98t3Nk+U8XOl8FWKOgwtzdb8lXGf6zYwDUzeHMWfxasyg==}
     engines: {node: '>=6'}
     hasBin: true
+
+  jzz@1.8.5:
+    resolution: {integrity: sha512-/4suyf9d6/LhF6Hh2OOCI7FZfOcdwCqh/bXYe0nPJ0/0Zg4BiTMD1eiGacom1ZsvRKnLBURHrV0rJtiVjVlhpA==}
 
   lilconfig@2.1.0:
     resolution: {integrity: sha512-utWOt/GHzuUxnLKxB6dk81RoOeoNeHgbrXiuGk4yyF5qlRz+iIVWu56E2fqGHFrXz0QNUhLB/8nKqvRH66JKGQ==}
@@ -1502,6 +1515,8 @@ snapshots:
 
   '@types/estree@1.0.5': {}
 
+  '@types/webmidi@2.1.0': {}
+
   ansi-regex@5.0.1: {}
 
   ansi-regex@6.0.1: {}
@@ -1793,6 +1808,8 @@ snapshots:
     optionalDependencies:
       '@pkgjs/parseargs': 0.11.0
 
+  jazz-midi@1.7.9: {}
+
   jgf-dot@1.1.1:
     dependencies:
       graphlib-dot: 0.6.4
@@ -1806,6 +1823,11 @@ snapshots:
   jsesc@2.5.2: {}
 
   json5@2.2.3: {}
+
+  jzz@1.8.5:
+    dependencies:
+      '@types/webmidi': 2.1.0
+      jazz-midi: 1.7.9
 
   lilconfig@2.1.0: {}
 
@@ -1896,8 +1918,9 @@ snapshots:
   postcss-load-config@4.0.2(postcss@8.4.38):
     dependencies:
       lilconfig: 3.1.2
-      postcss: 8.4.38
       yaml: 2.4.5
+    optionalDependencies:
+      postcss: 8.4.38
 
   postcss-nested@6.0.1(postcss@8.4.38):
     dependencies:
@@ -2123,7 +2146,7 @@ snapshots:
       fsevents: 2.3.3
 
   vitefu@0.2.5(vite@5.3.1):
-    dependencies:
+    optionalDependencies:
       vite: 5.3.1
 
   which@2.0.2:

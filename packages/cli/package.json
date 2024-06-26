@@ -10,8 +10,9 @@
   },
   "dependencies": {
     "@kabelsalat/core": "workspace:*",
-    "yesno": "^0.4.0",
     "chokidar": "^3.6.0",
-    "speaker": "^0.5.5"
+    "jzz": "^1.8.5",
+    "speaker": "^0.5.5",
+    "yesno": "^0.4.0"
   }
 }

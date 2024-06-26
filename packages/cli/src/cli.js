@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import "@kabelsalat/core/src/compiler.js";
+import { MIDI, parseMidiMessage } from "@kabelsalat/core/src/midi.js";
 import { AudioGraph } from "@kabelsalat/core/src/audiograph.js";
 import { existsSync } from "node:fs";
 import fs from "node:fs/promises";
@@ -10,6 +11,7 @@ import { audiostream } from "./audiostream.js";
 import chokidar from "chokidar";
 import Speaker from "speaker";
 import yesno from "yesno";
+import navigator from "jzz";
 
 let logo = `
 ▄ •▄  ▄▄▄· ▄▄▄▄· ▄▄▄ .▄▄▌  .▄▄ ·  ▄▄▄· ▄▄▌   ▄▄▄· ▄▄▄▄▄
@@ -62,6 +64,13 @@ const filePath = path.resolve(process.cwd(), file);
 
 // create audio graph
 const audioGraph = new AudioGraph(44100);
+
+// init midi
+const midi = new MIDI(navigator);
+midi.on("midimessage", (_, message) => {
+  const msg = parseMidiMessage(message);
+  msg && audioGraph.parseMsg(msg);
+});
 
 Object.assign(globalThis, api);
 function update(code) {
