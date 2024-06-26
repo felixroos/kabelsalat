@@ -1,6 +1,6 @@
 {
   "name": "@kabelsalat/cli",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "type": "module",
   "bin": "./src/cli.mjs",
   "author": "Felix Roos <flix91@gmail.com>",
@@ -8,12 +8,10 @@
   "scripts": {
     "test": "node src/cli.mjs examples/delaymod.js"
   },
-  "devDependencies": {
-    "chokidar": "^3.6.0",
-    "speaker": "^0.5.5"
-  },
   "dependencies": {
     "@kabelsalat/core": "workspace:*",
-    "yesno": "^0.4.0"
+    "yesno": "^0.4.0",
+    "chokidar": "^3.6.0",
+    "speaker": "^0.5.5"
   }
 }
