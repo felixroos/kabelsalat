@@ -1,5 +1,5 @@
 import { defineConfig } from "vite";
-import { dependencies } from "./package.json";
+// import { dependencies } from "./package.json";
 import { resolve } from "path";
 
 // https://vitejs.dev/config/
@@ -13,7 +13,7 @@ export default defineConfig({
       fileName: (ext) => ({ es: "index.mjs", iife: "index.js" }[ext]),
     },
     rollupOptions: {
-      external: [...Object.keys(dependencies)],
+      // external: [...Object.keys(dependencies)],
     },
     target: "esnext",
   },
