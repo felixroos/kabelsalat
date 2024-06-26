@@ -8,13 +8,7 @@ import chokidar from "chokidar";
 import Speaker from "speaker";
 import yesno from "yesno";
 
-let logo = `
-▄ •▄  ▄▄▄· ▄▄▄▄· ▄▄▄ .▄▄▌  .▄▄ ·  ▄▄▄· ▄▄▌   ▄▄▄· ▄▄▄▄▄
-█▌▄▌▪▐█ ▀█ ▐█ ▀█▪▀▄.▀·██•  ▐█ ▀. ▐█ ▀█ ██•  ▐█ ▀█ •██  
-▐▀▀▄·▄█▀▀█ ▐█▀▀█▄▐▀▀▪▄██▪  ▄▀▀▀█▄▄█▀▀█ ██▪  ▄█▀▀█  ▐█.▪
-▐█.█▌▐█ ▪▐▌██▄▪▐█▐█▄▄▌▐█▌▐▌▐█▄▪▐█▐█ ▪▐▌▐█▌▐▌▐█ ▪▐▌ ▐█▌·
-·▀  ▀ ▀  ▀ ·▀▀▀▀  ▀▀▀ .▀▀▀  ▀▀▀▀  ▀  ▀ .▀▀▀  ▀  ▀  ▀▀▀ 
-`;
+let logo = `welcome to kabelsalat`;
 
 console.log(logo.trim());
 
