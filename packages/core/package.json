@@ -15,6 +15,7 @@
   },
   "devDependencies": {
     "chokidar": "^3.6.0",
+    "speaker": "^0.5.5",
     "vite": "^5.2.0"
   }
 }

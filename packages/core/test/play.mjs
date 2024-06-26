@@ -1,5 +1,3 @@
-// node play.mjs | sox -traw -r44100 -b32 -e float - -tcoreaudio
-
 import "../src/compiler.js";
 import { AudioGraph } from "../src/audiograph.js";
 import fs from "node:fs";
@@ -9,7 +7,7 @@ import { audiostream } from "./audiostream.mjs";
 import chokidar from "chokidar";
 import { dirname } from "path";
 import { fileURLToPath } from "url";
-// import { spawn } from "child_process";
+import Speaker from "speaker";
 
 // detect node version
 const minNodeVersion = 20;
@@ -22,12 +20,8 @@ if (major < minNodeVersion) {
 const __dirname = dirname(fileURLToPath(import.meta.url));
 // const __dirname = import.meta.dirname; // node 22..
 
-const flags = process.argv.filter((arg) => arg.startsWith("-"));
-const args = process.argv.filter((arg) => !arg.startsWith("--"));
-const watchMode = flags.includes("-w");
-
-const duration = Number(args[2] || 0);
-const file = args[3] || "kabelsalat.js";
+const duration = Number(process.argv[2] || 0);
+const file = process.argv[3] || "kabelsalat.js";
 
 const filePath = path.resolve(__dirname, file);
 // console.log("filePath", filePath);
@@ -54,49 +48,20 @@ async function evaluateFile() {
 
 evaluateFile();
 
-if (watchMode) {
-  const watcher = chokidar.watch(filePath, { persistent: true });
-  watcher.on("change", () => evaluateFile());
-}
+const watcher = chokidar.watch(filePath, { persistent: true });
+watcher.on("change", () => evaluateFile());
 
 let dsp = () => audioGraph.genSample(0)[0];
 
-const options = { sampleRate: 44100, bufferSize: 256, duration };
+const options = { sampleRate: 44100, bufferSize: 128, duration };
 
 export const samples = audiostream(dsp, options);
 
-samples.pipe(process.stdout);
+const speaker = new Speaker({
+  channels: 1,
+  bitDepth: 32,
+  sampleRate: 44100,
+  float: true,
+});
 
-/* const fifoPath = "/tmp/soxpipe";
-const fifoStream = fs.createWriteStream(fifoPath);
-samples.pipe(fifoStream); */
-
-/* setTimeout(() => {
-  // samples.pipe(process.stdout);
-  const player = spawn("sox", [
-    "-traw",
-    "-r44100",
-    "-b32",
-    "-e",
-    "float",
-    // "-",
-    fifoPath,
-    "-tcoreaudio",
-    "--buffer",
-    "1024",
-  ]);
-  // Handle stderr data
-  player.stderr.pipe(process.stdout);
-}, 200); */
-
-/* const player = spawn("ffplay", [
-  "-f",
-  "f32le",
-  "-ar",
-  "44100",
-  "-nodisp",
-  "-autoexit",
-  "-",
-]); 
-samples.pipe(player.stdin);
-*/
+samples.pipe(speaker);
