@@ -1,6 +1,6 @@
 {
   "name": "@kabelsalat/cli",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "type": "module",
   "bin": "./src/cli.js",
   "author": "Felix Roos <flix91@gmail.com>",
