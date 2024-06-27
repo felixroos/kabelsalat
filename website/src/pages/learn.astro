@@ -250,6 +250,33 @@ saw(midifreq().fork(8)) // 8 saw voices
   .out();`
         client:only="solid"
       />
+      <h2>Modules</h2>
+      The graph representation of the previous patch is very much cable salad at
+      this point. To improve things, you can define modules like this:
+      <MiniRepl
+        code=`let synth = module("synth", (freq, gate) => {
+  let env = gate.adsr(0.01, 0.4, 0.7, 0.1);
+  return saw(freq).mul(env)
+    .filter( env.range(0.2, 0.8).mul(env) );
+});
+
+let freq = impulse(4).seq(55,110,220,330)
+let gate = impulse(4).perc(.2)
+synth(freq, gate)
+.add((x) => x.delay(0.2).mul(0.4)) // feedback delay
+.out()`
+        client:only="solid"
+      />
+      <Box>
+        <p>
+          Note that in the graph above, the "synth" is a single node, hiding its
+          internal complexity.
+        </p>
+        <p>
+          Defining modules is a more advanced feature and requires you to know
+          how JS functions are written.
+        </p>
+      </Box>
     </main>
   </body>
 </html>

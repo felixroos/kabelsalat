@@ -53,7 +53,7 @@ let dfs = (node, fn, visited = []) => {
   return node;
 };
 
-let modules = new Map(); // module registry
+export let modules = new Map(); // module registry
 
 // user facing function to create modules
 export function module(name, fn) {
@@ -73,6 +73,16 @@ export function resolveModules(node) {
 Node.prototype.resolveModules = function () {
   return resolveModules(this);
 };
+
+// converts a registered module into a json string
+export function exportModule(name) {
+  const mod = modules.get(name);
+  const inputs = Array.from({ length: mod.length }, (_, i) =>
+    node(`$INPUT${i}`)
+  );
+  const exported = mod(...inputs);
+  return JSON.stringify(exported, null, 2);
+}
 
 // returns true if the given node forms a cycle with "me" (or is me)
 function loopsToMe(node, me) {
