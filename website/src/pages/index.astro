@@ -1,0 +1,16 @@
+---
+import { Repl } from "../components/Repl";
+---
+
+<html lang="en" class="h-full bg-stone-900">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+    <title>kabelsalat</title>
+  </head>
+  <body class="h-full">
+    <Repl client:only />
+  </body>
+</html>

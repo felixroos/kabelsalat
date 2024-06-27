@@ -1,0 +1,23 @@
+{
+  "name": "@kabelsalat/website",
+  "type": "module",
+  "private": true,
+  "version": "0.0.1",
+  "license": "AGPL-3.0-or-later",
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "@astrojs/solid-js": "^4.4.0",
+    "@astrojs/tailwind": "^5.1.0",
+    "astro": "^4.11.3",
+    "solid-js": "^1.8.17",
+    "tailwindcss": "^3.4.4",
+    "@kabelsalat/core": "workspace:*",
+    "@kabelsalat/graphviz": "workspace:*"
+  }
+}

@@ -1,7 +1,5 @@
 import { createSignal, onCleanup, onMount } from "solid-js";
-import { render } from "solid-js/web";
 import "@kabelsalat/graphviz";
-import "./index.css";
 import { SalatRepl } from "@kabelsalat/core";
 
 const defaultPatch = `// let's create some notes
@@ -37,7 +35,7 @@ note
 
 let vizSettings = { resolveModules: false, dagify: false };
 
-function App() {
+export function Repl() {
   const repl = new SalatRepl();
 
   function getURLCode() {
@@ -147,8 +145,3 @@ function App() {
     </div>
   );
 }
-
-// make sure html is empy (for hot reloading)
-document.getElementById("root").innerHTML = "";
-
-render(() => <App />, document.getElementById("root"));
