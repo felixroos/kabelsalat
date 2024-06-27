@@ -1,19 +1,16 @@
 {
-  "name": "@kabelsalat/core",
+  "name": "@kabelsalat/graphviz",
   "version": "0.0.4",
   "type": "module",
-  "module": "src/index.js",
-  "publishConfig": {
-    "main": "dist/index.js",
-    "module": "dist/index.mjs"
-  },
+  "module": "src/graphviz.js",
+  "private": true,
   "author": "Felix Roos <flix91@gmail.com>",
   "license": "AGPL-3.0-or-later",
   "scripts": {
     "build": "vite build",
     "prepublishOnly": "npm run build"
   },
-  "devDependencies": {
-    "vite": "^5.2.0"
+  "dependencies": {
+    "@kabelsalat/core": "workspace:*"
   }
 }
