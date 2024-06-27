@@ -42,6 +42,10 @@ export class Node {
   walk(fn) {
     return this.map((node) => dfs(node, fn));
   }
+  log(fn = (x) => x) {
+    console.log(fn(this));
+    return this;
+  }
 }
 
 let dfs = (node, fn, visited = []) => {
