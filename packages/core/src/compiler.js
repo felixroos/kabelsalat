@@ -2,7 +2,7 @@ import { Node, NODE_SCHEMA } from "./graph.js";
 
 // this compiler is actually not from noisecraft :)
 
-function compile(node, options = {}) {
+export function compile(node, options = {}) {
   const { log = false } = options;
   log && console.log("compile", node);
   const nodes = node.flatten(true);
