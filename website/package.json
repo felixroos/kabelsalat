@@ -14,10 +14,13 @@
   "dependencies": {
     "@astrojs/solid-js": "^4.4.0",
     "@astrojs/tailwind": "^5.1.0",
+    "@kabelsalat/core": "workspace:*",
+    "@kabelsalat/graphviz": "workspace:*",
     "astro": "^4.11.3",
     "solid-js": "^1.8.17",
-    "tailwindcss": "^3.4.4",
-    "@kabelsalat/core": "workspace:*",
-    "@kabelsalat/graphviz": "workspace:*"
+    "tailwindcss": "^3.4.4"
+  },
+  "devDependencies": {
+    "@tailwindcss/typography": "^0.5.13"
   }
 }

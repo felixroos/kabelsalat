@@ -52,6 +52,7 @@ export function Repl() {
   let [hideCode, setHideCode] = createSignal(false);
   let container;
   async function run() {
+    setInited(true);
     const node = repl.evaluate(code());
     node.render(container, vizSettings); // update viz
     window.location.hash = "#" + btoa(code());
@@ -84,18 +85,18 @@ export function Repl() {
   return (
     <div
       class="flex flex-col h-full max-h-full justify-stretch text-teal-600 font-mono"
-      onClick={() => {
-        !inited() && run();
-        setInited(true);
+      onClick={(e) => {
+        e.target.tagName !== "A" && !inited() && run();
       }}
     >
-      <div class="px-4 py-2 space-x-8 font-bold border-b border-teal-500 flex">
+      <div class="px-4 py-2 space-x-8 font-bold border-b border-teal-500 flex justify-between">
         <marquee class="text-teal-100 w-32">
           KABƎL.SALAT.KABƎL.SALAT.KABƎL.SALAT.KABƎL.SALAT.KABƎL.SALAT
         </marquee>
         <div class="text-yellow-400">
           {!inited() && "click somewhere to play"}
         </div>
+        <a href="/kabelsalat/learn">learn more</a>
       </div>
       <div class="grid grid-cols-2 flex-auto shrink grow overflow-hidden">
         {!hideCode() && (
@@ -126,20 +127,7 @@ export function Repl() {
           welcome to kabelsalat. this is a very experimental audio graph live
           coding prototype.
         </p>
-        <pre>keyboard: ctrl+enter: start, ctrl+dot: stop</pre>
-        <code>
-          utility functions:{" "}
-          {`n(number) .mul(n) .add(n) .range(min,max) .apply(fn)`}
-        </code>
-        <br />
-        <code>
-          audio functions:{" "}
-          {`adsr(gate, att, dec, sus, rel) clock(bpm) clockdiv(clock, divisor) distort(in, amt) noise() pulse(freq, pw) saw(freq) sine(freq, sync) tri(freq) slide(in, rate) filter(in, cutoff, reso) fold(in, rate) seq(clock, ...steps) delay(in, time) hold(in, trig)`}
-        </code>
-        {/* clockout(clock) */}
-        {/* midiin() */}
-        {/* monoseq(clock, gateT) */}
-        {/* gateseq(clock, gateT) */}
+        <pre>keyboard: ctrl+enter: run, ctrl+dot: stop</pre>
         <pre></pre>
       </div>
     </div>

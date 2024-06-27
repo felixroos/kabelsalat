@@ -5,7 +5,12 @@ import { Graphviz } from "@hpcc-js/wasm";
 const graphvizLoaded = Graphviz.load();
 
 Node.prototype.render = async function (container, options = {}) {
-  const { dagify = false, resolveModules = false } = options;
+  const {
+    dagify = false,
+    resolveModules = false,
+    rankdir = "TB",
+    size = 0,
+  } = options;
   let node = this;
   resolveModules && node.resolveModules();
   if (dagify) {
@@ -18,12 +23,16 @@ Node.prototype.render = async function (container, options = {}) {
   let edges = [];
   const color = "teal";
   const fontcolor = "teal";
+  const fontsize = 10;
+  const fontname = "monospace";
 
   for (let id in nodes) {
     nodes[id].ins.forEach((parent, i) => {
       edges.push({
         source: parent,
         target: id,
+        fontsize,
+        fontname,
         color,
         fontcolor,
         directed: true,
@@ -37,8 +46,12 @@ Node.prototype.render = async function (container, options = {}) {
     id,
     color,
     fontcolor,
+    fontsize,
+    fontname,
     label: node.value ?? node.type,
     ordering: "in",
+    width: 0.5,
+    height: 0.4,
   }));
 
   const graphviz = await graphvizLoaded;
@@ -50,6 +63,8 @@ Node.prototype.render = async function (container, options = {}) {
     },
   });
   dot = dot.split("\n");
+  dot.splice(1, 0, `rankdir="${rankdir}"`);
+  size && dot.splice(1, 0, `size="${size}"`);
   dot.splice(1, 0, 'bgcolor="transparent"');
   dot.splice(1, 0, 'color="white"');
   dot = dot.join("\n");

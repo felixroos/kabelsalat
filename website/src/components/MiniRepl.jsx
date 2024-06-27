@@ -1,0 +1,69 @@
+import { createSignal } from "solid-js";
+import "@kabelsalat/graphviz";
+import { SalatRepl } from "@kabelsalat/core";
+import { Icon } from "./Icon";
+
+let vizSettings = {
+  resolveModules: false,
+  dagify: false,
+  rankdir: "LR",
+  size: 12,
+};
+
+export function MiniRepl(props) {
+  const initialCode = props.code;
+  let [code, setCode] = createSignal(initialCode);
+  let [started, setStarted] = createSignal(false);
+  const repl = new SalatRepl({ onToggle: (_started) => setStarted(_started) });
+  let container;
+  async function run() {
+    const node = repl.evaluate(code());
+    node.render(container, vizSettings); // update viz
+    repl.play(node);
+  }
+  let handleKeydown = (e) => {
+    // console.log("key", e.code);
+    if (e.key === "Enter" && (e.ctrlKey || e.altKey)) {
+      run();
+    } else if (e.code === "Period" && (e.ctrlKey || e.altKey)) {
+      repl.stop();
+      e.preventDefault();
+    }
+  };
+
+  return (
+    <div class="flex flex-col overflow-hidden rounded-md my-4 border border-teal-500 text-teal-600 font-mono">
+      <div class="flex bg-teal-600 text-white">
+        <button
+          class="w-14 hover:bg-teal-700 flex justify-center p-1 border-r border-teal-500 "
+          onClick={() => (started() ? repl.stop() : run())}
+        >
+          {!started() ? <Icon type="play" /> : <Icon type="stop" />}
+        </button>
+        <button
+          class="w-14 hover:bg-teal-700 flex justify-center py-1"
+          onClick={() => run()}
+        >
+          <Icon type="refresh" />
+        </button>
+      </div>
+      <div class="flex border-b border-teal-500 overflow-hidden">
+        <textarea
+          rows={Math.min(code().split("\n").length, 10)}
+          class="bg-stone-900 shrink-0 p-4 focus:ring-0 outline-0 grow"
+          spellcheck="false"
+          value={code()}
+          onInput={(e) => setCode(e.target.value)}
+          onKeyDown={handleKeydown}
+        ></textarea>
+      </div>
+      <div
+        class={`bg-stone-900 overflow-auto text-gray-500 p-4 grow-0 text-center max-h-[400px]`}
+        ref={(el) => {
+          container = el;
+          repl.evaluate(code()).render(container, vizSettings);
+        }}
+      ></div>
+    </div>
+  );
+}
