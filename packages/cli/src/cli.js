@@ -6,7 +6,7 @@ import { AudioGraph } from "@kabelsalat/core/src/audiograph.js";
 import { existsSync } from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
-import * as api from "@kabelsalat/core/src/node.js";
+import * as api from "@kabelsalat/core/src/graph.js";
 import { audiostream } from "./audiostream.js";
 import chokidar from "chokidar";
 import Speaker from "speaker";

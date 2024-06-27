@@ -1,5 +1,5 @@
 import { AudioView } from "./audioview.js";
-import * as api from "./node.js";
+import * as api from "./graph.js";
 
 export class SalatRepl {
   constructor({ onToggle } = {}) {

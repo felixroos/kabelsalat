@@ -1,4 +1,4 @@
-import { Node, NODE_SCHEMA } from "./node.js";
+import { Node, NODE_SCHEMA } from "./graph.js";
 
 // this compiler is actually not from noisecraft :)
 
