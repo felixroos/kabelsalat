@@ -12,6 +12,7 @@
     "astro": "astro"
   },
   "dependencies": {
+    "@astrojs/mdx": "^3.1.2",
     "@astrojs/solid-js": "^4.4.0",
     "@astrojs/tailwind": "^5.1.0",
     "@kabelsalat/core": "workspace:*",
