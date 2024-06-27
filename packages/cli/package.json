@@ -9,7 +9,7 @@
     "test": "node src/cli.js"
   },
   "dependencies": {
-    "@kabelsalat/core": "workspace:*",
+    "@kabelsalat/core": "0.0.4",
     "chokidar": "^3.6.0",
     "jzz": "^1.8.5",
     "speaker": "^0.5.5",
