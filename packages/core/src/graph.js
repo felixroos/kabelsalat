@@ -39,7 +39,7 @@ export class Node {
     }
     return poly(...this.ins.map(fn));
   }
-  walk(fn) {
+  polymap(fn) {
     return this.map((node) => dfs(node, fn));
   }
   log(fn = (x) => x) {
@@ -60,13 +60,15 @@ let dfs = (node, fn, visited = []) => {
 export let modules = new Map(); // module registry
 
 // user facing function to create modules
-export function module(name, fn) {
+export function module(name, fn, options = {}) {
+  const { expand = true } = options;
+  let getter = expand ? getNode : getNodeUnexpanded;
   modules.set(name, fn);
-  return register(name, (...args) => getNode(name, ...args));
+  return register(name, (...args) => getter(name, ...args));
 }
 
 export function resolveModules(node) {
-  return node.walk((node) => {
+  return node.polymap((node) => {
     if (modules.has(node.type)) {
       const fn = modules.get(node.type);
       node = fn(...node.ins).resolveModules(node);
@@ -225,6 +227,13 @@ function parseInput(input, node) {
   return 0;
 }
 
+// like getNode, but skips multichannel expansion
+function getNodeUnexpanded(type, ...args) {
+  const next = node(type);
+  args = args.map((arg) => parseInput(arg, next));
+  return next.withIns(...args.map(parseInput));
+}
+
 function getNode(type, ...args) {
   const next = node(type);
   args = args.map((arg) => parseInput(arg, next));
@@ -318,6 +327,7 @@ export let midinote = makeNode("midinote");
 export let dac = makeNode("dac");
 export let exit = makeNode("exit");
 export let poly = makeNode("poly");
+export let PI = new Node("PI");
 
 export let register = (name, fn) => {
   Node.prototype[name] = function (...args) {
@@ -341,7 +351,41 @@ export let lpf = module("lpf", filter); // alias
 
 export let lfnoise = module("lfnoise", (freq) => noise().hold(impulse(freq)));
 
-export let mix = register("mix", (input) => {
+export let bipolar = module("bipolar", (unipolar) => n(unipolar).mul(2).sub(1));
+export let unipolar = module("unipolar", (bipolar) => n(bipolar).add(1).div(2));
+
+// changing module to register makes the viz worse but saves 3 lines in the callback..
+export let pan2deg = module("pan2deg", (pos) => n(pos).add(1).mul(PI, 0.25));
+// modules currently don't support returning a poly node because it won't get resolved (too late)
+export let pan2 = register("pan2", (input, pos) => {
+  // (pos+1)/2 * PI/2 = (pos+1) * PI * 0.25
+  // n(pos).unipolar().mul(PI).div(2)
+  // n(pos).add(1).div(2).mul(PI).div(2)
+  pos = pan2deg(pos);
+  return input.mul([cos(pos), sin(pos)]); // this returns a poly which doesn't work with module
+});
+
+export let mix2 = register("mix2", (input) => {
+  if (input.type !== "poly") {
+    return input;
+  }
+  const panned = input.ins.map((input, i, ins) => {
+    // we can do this at eval time: channels are fixed!
+    const pos = (i / (ins.length - 1)) * 2 - 1;
+    const deg = ((pos + 1) * Math.PI) / 4;
+    return input.mul([Math.cos(deg), Math.sin(deg)]);
+  });
+  return add(...panned);
+});
+
+export let mix = register("mix", (input, channels = 1) => {
+  if (![1, 2].includes(channels)) {
+    channels = 2;
+    console.warn("mix only supports 1 or 2 channels atm.. falling back to 2");
+  }
+  if (channels === 2) {
+    return mix2(input);
+  }
   if (input.type !== "poly") {
     return input;
   }

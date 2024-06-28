@@ -27,6 +27,7 @@ export function compile(node, options = {}) {
     sin: "sin",
     cos: "cos",
   };
+  const mathConstants = ["PI"];
   const audioThreadNodes = [];
   let channels;
   for (let id of sorted) {
@@ -47,6 +48,12 @@ export function compile(node, options = {}) {
       const fn = mathFunctions[node.type];
       const calc = `Math.${fn}(${vars.join(", ")})`;
       const comment = fn;
+      pushVar(id, calc, comment);
+      continue;
+    }
+    if (mathConstants.includes(node.type)) {
+      const calc = `Math.${node.type}`;
+      const comment = node.type;
       pushVar(id, calc, comment);
       continue;
     }
