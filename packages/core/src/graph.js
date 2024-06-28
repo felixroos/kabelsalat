@@ -282,6 +282,8 @@ export let clock = makeNode("Clock");
 export let clockdiv = makeNode("ClockDiv");
 export let distort = makeNode("Distort");
 export let noise = makeNode("Noise");
+export let pinknoise = makeNode("PinkNoise");
+export let pink = makeNode("PinkNoise");
 export let pulse = makeNode("Pulse");
 export let impulse = makeNode("Impulse");
 export let saw = makeNode("Saw");
@@ -327,6 +329,11 @@ export let fork = register("fork", (input, times = 1) =>
 export let perc = module("perc", (gate, release) =>
   gate.adsr(0, 0, 1, release)
 );
+
+export let hpf = module("hpf", (input, cutoff, resonance = 0) =>
+  input.filter(1, resonance).sub(input.filter(cutoff, resonance))
+);
+export let lpf = module("lpf", filter); // alias
 
 export let mix = register("mix", (input) => {
   if (input.type !== "poly") {
@@ -461,6 +468,9 @@ export const NODE_SCHEMA = {
     ],
   },
   Noise: {
+    ins: [],
+  },
+  PinkNoise: {
     ins: [],
   },
   Pulse: {
