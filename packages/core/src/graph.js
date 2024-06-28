@@ -337,6 +337,8 @@ export let hpf = module("hpf", (input, cutoff, resonance = 0) =>
 );
 export let lpf = module("lpf", filter); // alias
 
+export let lfnoise = module("lfnoise", (freq) => noise().hold(impulse(freq)));
+
 export let mix = register("mix", (input) => {
   if (input.type !== "poly") {
     return input;

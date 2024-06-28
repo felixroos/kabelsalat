@@ -353,7 +353,7 @@ class Feedback extends AudioNode {
 
 class NoiseOsc {
   update() {
-    return Math.random();
+    return Math.random() * 2 - 1;
   }
 }
 
