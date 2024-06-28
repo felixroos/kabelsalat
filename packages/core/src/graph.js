@@ -39,8 +39,8 @@ export class Node {
     }
     return poly(...this.ins.map(fn));
   }
-  polymap(fn) {
-    return this.map((node) => dfs(node, fn));
+  dfs(fn, visited) {
+    return this.apply((node) => dfs(node, fn, visited));
   }
   log(fn = (x) => x) {
     console.log(fn(this));
@@ -49,38 +49,40 @@ export class Node {
 }
 
 let dfs = (node, fn, visited = []) => {
-  node = fn(node);
+  node = fn(node, visited);
   visited.push(node);
-  node.ins = node.ins.map((input) =>
-    visited.includes(input) ? input : dfs(input, fn, visited)
-  );
+  node.ins = node.ins.map((input) => {
+    if (visited.includes(input)) {
+      return input;
+    }
+    return dfs(input, fn, visited);
+  });
   return node;
 };
 
-export let modules = new Map(); // module registry
+/// MODULES
 
-// user facing function to create modules
-export function module(name, fn, options = {}) {
-  const { expand = true } = options;
-  let getter = expand ? getNode : getNodeUnexpanded;
-  modules.set(name, fn);
-  return register(name, (...args) => getter(name, ...args));
-}
-
-export function resolveModules(node) {
-  return node.polymap((node) => {
-    if (modules.has(node.type)) {
-      const fn = modules.get(node.type);
-      node = fn(...node.ins).resolveModules(node);
-    }
-    return node;
-  });
-}
-Node.prototype.resolveModules = function () {
-  return resolveModules(this);
+Node.prototype.asModuleInput = function (name) {
+  this.inputOf = name;
+  return this;
 };
 
+Node.prototype.asModuleOutput = function (name) {
+  this.outputOf = name;
+  return this;
+};
+
+// user facing function to create modules
+// inputs and output are annotated so that viz can ignore inner nodes
+export function module(name, fn) {
+  return register(name, (...args) => {
+    args = args.map((input) => parseInput(input).asModuleInput(name));
+    return fn(...args).asModuleOutput(name);
+  });
+}
+
 // converts a registered module into a json string
+// unused atm... not sure if this is feasible
 export function exportModule(name) {
   const mod = modules.get(name);
   const inputs = Array.from({ length: mod.length }, (_, i) =>
@@ -156,6 +158,7 @@ function flatten(node) {
   const flat = visit(node);
   return flat.map((node) => {
     let clone = {
+      ...node,
       type: node.type,
       ins: node.ins.map((child) => flat.indexOf(child) + ""),
     };
@@ -227,13 +230,6 @@ function parseInput(input, node) {
   return 0;
 }
 
-// like getNode, but skips multichannel expansion
-function getNodeUnexpanded(type, ...args) {
-  const next = node(type);
-  args = args.map((arg) => parseInput(arg, next));
-  return next.withIns(...args.map(parseInput));
-}
-
 function getNode(type, ...args) {
   const next = node(type);
   args = args.map((arg) => parseInput(arg, next));
@@ -250,12 +246,20 @@ function getNode(type, ...args) {
   if (maxExpansions === 1) {
     return next.withIns(...args.map(parseInput));
   }
+
+  // takes input of polynode and inherits props from polyNode
+  let polyInput = (inputNode, polyNode) => {
+    polyNode.inputOf && (inputNode.inputOf = polyNode.inputOf);
+    polyNode.outputOf && (inputNode.outputOf = polyNode.outputOf);
+    return parseInput(inputNode);
+  };
+
   // dont expand dac node, but instead input all channels
   if (type === outputType) {
     const inputs = args
       .map((arg) => {
         if (arg.type === polyType) {
-          return arg.ins;
+          return arg.ins.map((input) => polyInput(input, arg));
         }
         return arg;
       })
@@ -268,7 +272,8 @@ function getNode(type, ...args) {
   const expanded = Array.from({ length: maxExpansions }, (_, i) => {
     const inputs = args.map((arg) => {
       if (arg.type === polyType) {
-        return parseInput(arg.ins[i % arg.ins.length]);
+        const input = arg.ins[i % arg.ins.length];
+        return polyInput(input, arg);
       }
       return parseInput(arg);
     });
@@ -354,15 +359,12 @@ export let lfnoise = module("lfnoise", (freq) => noise().hold(impulse(freq)));
 export let bipolar = module("bipolar", (unipolar) => n(unipolar).mul(2).sub(1));
 export let unipolar = module("unipolar", (bipolar) => n(bipolar).add(1).div(2));
 
-// changing module to register makes the viz worse but saves 3 lines in the callback..
-export let pan2deg = module("pan2deg", (pos) => n(pos).add(1).mul(PI, 0.25));
-
 // modules currently don't support returning a poly node because it won't get resolved (too late)
-export let pan = register("pan", (input, pos) => {
+export let pan = module("pan", (input, pos) => {
   // (pos+1)/2 * PI/2 = (pos+1) * PI * 0.25
   // n(pos).unipolar().mul(PI).div(2)
   // n(pos).add(1).div(2).mul(PI).div(2)
-  pos = pan2deg(pos);
+  pos = n(pos).add(1).mul(PI, 0.25);
   return input.mul([cos(pos), sin(pos)]); // this returns a poly which doesn't work with module
 });
 

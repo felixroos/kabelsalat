@@ -160,7 +160,7 @@ export function compile(node, options = {}) {
 }
 
 Node.prototype.compile = function (options) {
-  return compile(this.dagify().resolveModules(), options);
+  return compile(this.dagify(), options);
 };
 
 // taken from noisecraft
