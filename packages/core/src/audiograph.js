@@ -584,6 +584,26 @@ class Lag {
   }
 }
 
+class Slew {
+  constructor() {
+    this.last = 0;
+  }
+
+  update(input, up, dn) {
+    const upStep = up * ISR;
+    const downStep = dn * ISR;
+
+    let delta = input - this.last;
+    if (delta > upStep) {
+      delta = upStep;
+    } else if (delta < -downStep) {
+      delta = -downStep;
+    }
+    this.last += delta;
+    return this.last;
+  }
+}
+
 /**
  * Slide/portamento node
  */
@@ -838,6 +858,7 @@ export let NODE_CLASSES = {
   Tri: TriOsc,
   // Scope: Scope,
   Slide: Slide,
+  Slew: Slew,
   Lag: Lag,
   Filter: Filter,
   Fold: Fold,

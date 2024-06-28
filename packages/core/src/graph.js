@@ -292,6 +292,7 @@ export let saw = makeNode("Saw");
 export let sine = makeNode("Sine");
 export let tri = makeNode("Tri");
 export let slide = makeNode("Slide");
+export let slew = makeNode("Slew");
 export let lag = makeNode("Lag");
 export let filter = makeNode("Filter");
 export let fold = makeNode("Fold");
@@ -521,6 +522,13 @@ export const NODE_SCHEMA = {
     ins: [
       { name: "in", default: 0 },
       { name: "rate", default: 1 },
+    ],
+  },
+  Slew: {
+    ins: [
+      { name: "in", default: 0 },
+      { name: "up", default: 1 },
+      { name: "dn", default: 1 },
     ],
   },
   Tri: {
