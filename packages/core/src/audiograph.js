@@ -12,6 +12,8 @@ MIDI clock pulses per 16th note
 */
 export const CLOCK_PPS = CLOCK_PPQ / 4;
 
+const ISR = 1 / 44100;
+
 /**
  * Stateful graph that generates audio samples
  */
@@ -349,9 +351,19 @@ class Feedback extends AudioNode {
  * White noise source
  */
 
-class NoiseOsc extends AudioNode {
+class NoiseOsc {
   update() {
     return Math.random();
+  }
+}
+
+/**
+ * Dust
+ */
+
+class DustOsc {
+  update(density) {
+    return Math.random() < density * ISR ? Math.random() : 0;
   }
 }
 
@@ -802,6 +814,7 @@ export let NODE_CLASSES = {
   Noise: NoiseOsc,
   PinkNoise: PinkNoise,
   BrownNoise: BrownNoiseOsc,
+  Dust: DustOsc,
   Pulse: PulseOsc,
   Impulse: ImpulseOsc,
   Saw: SawOsc,
