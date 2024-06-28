@@ -19,6 +19,9 @@ Node.prototype.render = async function (container, options = {}) {
     node = node.ins[0]; // don't render exit helper node
   }
 
+  let getNumericLabel = (value) =>
+    Math.trunc(value) === value ? value : value.toFixed(2);
+
   let nodes = node.flatten(false);
   let edges = [];
   const color = "teal";
@@ -48,7 +51,7 @@ Node.prototype.render = async function (container, options = {}) {
     fontcolor,
     fontsize,
     fontname,
-    label: node.value ?? node.type,
+    label: node.value !== undefined ? getNumericLabel(node.value) : node.type,
     ordering: "in",
     width: 0.5,
     height: 0.4,
