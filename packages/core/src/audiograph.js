@@ -449,7 +449,7 @@ class PulseOsc extends AudioNode {
   update(freq, duty) {
     this.phase += this.sampleTime * freq;
     let cyclePos = this.phase % 1;
-    return cyclePos < duty ? -1 : 1;
+    return cyclePos < duty ? 1 : -1;
   }
 }
 
@@ -567,6 +567,22 @@ class TriOsc extends AudioNode {
         this.numSamples++;
     }
 } */
+
+class Lag {
+  constructor() {
+    this.lagUnit = 4410; // 60dB per second (maybe?)
+    // Current state
+    this.s = 0;
+  }
+
+  update(input, rate) {
+    // Remap so the useful range is around [0, 1]
+    rate = rate * this.lagUnit;
+    if (rate < 1) rate = 1;
+    this.s += (1 / rate) * (input - this.s);
+    return this.s;
+  }
+}
 
 /**
  * Slide/portamento node
@@ -822,6 +838,7 @@ export let NODE_CLASSES = {
   Tri: TriOsc,
   // Scope: Scope,
   Slide: Slide,
+  Lag: Lag,
   Filter: Filter,
   Fold: Fold,
   AudioIn: AudioIn,
