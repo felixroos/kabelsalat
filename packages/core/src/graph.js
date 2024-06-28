@@ -284,6 +284,7 @@ export let distort = makeNode("Distort");
 export let noise = makeNode("Noise");
 export let pinknoise = makeNode("PinkNoise");
 export let pink = makeNode("PinkNoise");
+export let brown = makeNode("BrownNoise");
 export let pulse = makeNode("Pulse");
 export let impulse = makeNode("Impulse");
 export let saw = makeNode("Saw");
@@ -471,6 +472,9 @@ export const NODE_SCHEMA = {
     ins: [],
   },
   PinkNoise: {
+    ins: [],
+  },
+  BrownNoise: {
     ins: [],
   },
   Pulse: {

@@ -356,6 +356,21 @@ class NoiseOsc extends AudioNode {
 }
 
 /**
+ * Brown noise source
+ */
+
+class BrownNoiseOsc {
+  constructor() {
+    this.out = 0;
+  }
+  update() {
+    let white = Math.random() * 2 - 1;
+    this.out = (this.out + 0.02 * white) / 1.02;
+    return this.out;
+  }
+}
+
+/**
  * Pink noise source
  */
 
@@ -786,6 +801,7 @@ export let NODE_CLASSES = {
   Hold: Hold,
   Noise: NoiseOsc,
   PinkNoise: PinkNoise,
+  BrownNoise: BrownNoiseOsc,
   Pulse: PulseOsc,
   Impulse: ImpulseOsc,
   Saw: SawOsc,
