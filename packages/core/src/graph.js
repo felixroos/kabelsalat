@@ -356,8 +356,9 @@ export let unipolar = module("unipolar", (bipolar) => n(bipolar).add(1).div(2));
 
 // changing module to register makes the viz worse but saves 3 lines in the callback..
 export let pan2deg = module("pan2deg", (pos) => n(pos).add(1).mul(PI, 0.25));
+
 // modules currently don't support returning a poly node because it won't get resolved (too late)
-export let pan2 = register("pan2", (input, pos) => {
+export let pan = register("pan", (input, pos) => {
   // (pos+1)/2 * PI/2 = (pos+1) * PI * 0.25
   // n(pos).unipolar().mul(PI).div(2)
   // n(pos).add(1).div(2).mul(PI).div(2)
@@ -365,29 +366,23 @@ export let pan2 = register("pan2", (input, pos) => {
   return input.mul([cos(pos), sin(pos)]); // this returns a poly which doesn't work with module
 });
 
-export let mix2 = register("mix2", (input) => {
-  if (input.type !== "poly") {
-    return input;
-  }
-  const panned = input.ins.map((input, i, ins) => {
-    // we can do this at eval time: channels are fixed!
-    const pos = (i / (ins.length - 1)) * 2 - 1;
-    const deg = ((pos + 1) * Math.PI) / 4;
-    return input.mul([Math.cos(deg), Math.sin(deg)]);
-  });
-  return add(...panned);
-});
-
 export let mix = register("mix", (input, channels = 1) => {
   if (![1, 2].includes(channels)) {
     channels = 2;
     console.warn("mix only supports 1 or 2 channels atm.. falling back to 2");
   }
-  if (channels === 2) {
-    return mix2(input);
-  }
   if (input.type !== "poly") {
     return input;
+  }
+  if (channels === 2) {
+    const panned = input.ins.map((input, i, ins) => {
+      // we can do this at eval time: channels are fixed!
+      const pos = (i / (ins.length - 1)) * 2 - 1;
+      const deg = ((pos + 1) * Math.PI) / 4;
+      return input.mul([Math.cos(deg), Math.sin(deg)]);
+    });
+    return add(...panned);
+    // return node("mix").withIns(...panned);
   }
   return node("mix").withIns(...input.ins);
 });
