@@ -82,7 +82,7 @@ export function Repl() {
 
   return (
     <div class="flex flex-col h-full max-h-full justify-stretch text-teal-600 font-mono">
-      <div class="px-4 py-2 space-x-8 font-bold border-b border-stone-800 flex justify-between">
+      <div class="px-4 py-2 space-x-8 font-bold border-b border-stone-800 flex justify-between select-none">
         <div
           class={`font-bold font-mono text-xl
         bg-gradient-to-r from-teal-400 to-fuchsia-300 inline-block text-transparent bg-clip-text
@@ -94,7 +94,7 @@ export function Repl() {
           <div class="flex justify-start items-center space-x-4 font-light">
             <button
               onClick={() => (started() ? repl.stop() : run())}
-              class="items-center flex space-x-1"
+              class="items-center flex space-x-1 hover:opacity-50"
             >
               {!started() ? (
                 <>
@@ -108,11 +108,17 @@ export function Repl() {
                 </>
               )}
             </button>
-            <button onClick={() => run()} class="items-center flex space-x-1">
+            <button
+              onClick={() => run()}
+              class="items-center flex space-x-1 hover:opacity-50"
+            >
               <Icon type="refresh" />
               <span>update</span>
             </button>
-            <a class="items-center flex space-x-1" href="/kabelsalat/learn">
+            <a
+              class="items-center flex space-x-1 hover:opacity-50"
+              href="/kabelsalat/learn"
+            >
               <Icon type="learn" />
               <span>learn</span>
             </a>
@@ -129,7 +135,7 @@ export function Repl() {
           ></textarea>
         )}
         <div
-          class={`bg-stone-900 overflow-auto text-gray-500 p-4 grow-0${
+          class={`select-none bg-stone-900 overflow-auto text-gray-500 p-4 grow-0${
             hideCode() ? " col-span-2" : " border-l border-stone-800"
           }`}
           ref={(el) => {
