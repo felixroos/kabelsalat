@@ -1,3 +1,17 @@
+---
+import { SIDEBAR } from "../config";
+
+const currentPage = Astro.url.pathname;
+const { BASE_URL } = import.meta.env;
+let currentPageMatch = currentPage.slice(
+  BASE_URL.length,
+  currentPage.endsWith("/") ? -1 : undefined
+);
+const baseNoTrailing = BASE_URL.endsWith("/")
+  ? BASE_URL.slice(0, -1)
+  : BASE_URL;
+---
+
 <html lang="en" class="h-full bg-stone-900 dark">
   <head>
     <meta charset="utf-8" />
@@ -10,6 +24,45 @@
     <a class="fixed right-4 top-2 text-teal-500" href="/kabelsalat/"
       >go to REPL</a
     >
-    <main class="prose prose-invert py-8 m-auto"><slot /></main>
+
+    <main class="m-auto max-w-xl">
+      <nav class="h-16 flex items-center">
+        <select id="nav-select" class="bg-stone-900 text-white">
+          {
+            Object.entries(SIDEBAR).map(([header, children]) => (
+              <optgroup label={header}>
+                <ul>
+                  {children.map((child) => {
+                    const url = child.link.startsWith("https://")
+                      ? child.link
+                      : `${baseNoTrailing}/${child.link}`;
+                    if (currentPageMatch === child.link) {
+                      return (
+                        <option selected value={url}>
+                          {child.text}
+                        </option>
+                      );
+                    }
+                    return <option value={url}>{child.text}</option>;
+                  })}
+                </ul>
+              </optgroup>
+            ))
+          }
+        </select>
+      </nav>
+      <article class="py-8 prose prose-invert">
+        <!-- </nav> -->
+        <slot />
+      </article>
+    </main>
+    <script>
+      document
+        .getElementById("nav-select")
+        .addEventListener("change", (e: any) => {
+          console.log("change", e.target.value);
+          window.location.href = e.target.value;
+        });
+    </script>
   </body>
 </html>

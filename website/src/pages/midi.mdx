@@ -1,0 +1,80 @@
+---
+title: MIDI
+layout: ../layouts/doc.astro
+---
+
+import { MiniRepl } from "../components/MiniRepl";
+import { Icon } from "../components/Icon";
+import Box from "../components/Box.astro";
+import DocLayout from "../layouts/doc.astro";
+
+# MIDI
+
+kabelsalat supports MIDI input from any standard MIDI device:
+
+## Receiving MIDI Notes
+
+You can also send midi to kabelsalat. The `midifreq` function will receive any
+notes sent by any midi device. If you don't have a midi device at hand, <a href="https://strudel.cc/#bm90ZSgiYyBhIGYgZSIpLmNsaXAoLjUpLm1pZGkoKQ%3D%3D" target="_blank">send MIDI with strudel</a>
+
+## Receiving MIDI Gates
+
+<MiniRepl code={`midifreq().sine().mul(.5).out()`} client:only="solid" />
+
+You can also limit it to a specific channel with `midifreq(1)` (to listen
+only for notes on midi channel 1) Similarly, `midigate` can be used:
+
+<MiniRepl
+  code={`midifreq().sine()
+.mul( midigate().adsr(.01, .1) )
+.mul(.5)
+.out()`}
+  client:only="solid"
+/>
+
+Here is a monosynth that is a little bit more exciting:
+
+<MiniRepl
+  code={`let env = midigate().adsr(.01,.2,.75).mul(.75)
+midifreq().div(2)
+.saw(.4)
+.filter(
+  sine(.1).range(.7,.8).mul(env), 
+  env.div(2)
+)
+.mul(env)
+.mul(.5)
+.out()`}
+  client:only="solid"
+/>
+
+## Receiving MIDI CC Messages
+
+You can receive cc messages with the `midicc` function:
+
+<MiniRepl
+  code={`// test with: https://strudel.cc/?YnNvjrZjv7Sr
+midicc(74)
+.slide(16)
+.range(100,200)
+.sine()
+.mul(.5).out()`}
+  client:only="solid"
+/>
+
+## Polyphonic MIDI
+
+Using the `fork` function, you can clone a node multiple times. The midifreq and
+midigate functions will automatically do voice allocation of incoming notes:
+
+<MiniRepl
+  code={`// test with https://strudel.cc/#dm9pY2luZygiPERtNyBHN2I5IENeNyBBN2I5PiIpLm1pZGkoKQ%3D%3D
+let env = midigate().fork(8).adsr(0.01, 0.4, 0.7, 0.1);
+saw(midifreq().fork(8)) // 8 saw voices
+  .mul(env) // amp envelope
+  .filter(env.range(0.2, 0.8).mul(env)) // filter envelope
+  .mix() // mix together
+  .add((x) => x.delay(0.2).mul(0.4)) // feedback delay
+  .out();`}
+  client:only="solid"
+/>
