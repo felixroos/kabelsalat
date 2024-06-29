@@ -35,7 +35,7 @@ export function MiniRepl(props) {
     <div class="flex flex-col overflow-hidden rounded-md my-4 border border-teal-500 text-teal-600 font-mono">
       <div class="flex bg-teal-600 text-white">
         <button
-          class="w-14 hover:bg-teal-700 flex justify-center p-1 border-r border-teal-500 "
+          class="w-14 hover:bg-teal-700 flex justify-center p-1 border-r border-teal-500"
           onClick={() => (started() ? repl.stop() : run())}
         >
           {!started() ? <Icon type="play" /> : <Icon type="stop" />}

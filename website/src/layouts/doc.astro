@@ -12,9 +12,11 @@ import Nav from "../components/Nav.astro";
   </head>
   <body class="h-full">
     <nav class="fixed w-full top-0 z-50 bg-stone-900 border-b border-stone-800">
-      <div class="h-12 flex items-center justify-between m-auto max-w-2xl pr-4">
+      <div
+        class="h-12 grid grid-cols-2 items-center justify-between m-auto max-w-2xl px-4"
+      >
         <div
-          class={`font-bold font-mono text-xl
+          class={`font-bold font-mono text-xl whitespace-nowrap
         bg-gradient-to-r from-teal-400 via-Amber-800 to-fuchsia-300 inline-block text-transparent bg-clip-text
         `}
         >
@@ -24,7 +26,7 @@ import Nav from "../components/Nav.astro";
         <!-- <a class="text-teal-500" href="/kabelsalat/">go to REPL</a> -->
       </div>
     </nav>
-    <main class="m-auto max-w-2xl pt-16">
+    <main class="m-auto max-w-2xl pt-16 px-4">
       <article class="py-8 prose prose-invert">
         <!-- </nav> -->
         <slot />
