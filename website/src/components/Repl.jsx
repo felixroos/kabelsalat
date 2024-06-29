@@ -1,6 +1,7 @@
 import { createSignal, onCleanup, onMount } from "solid-js";
 import "@kabelsalat/graphviz";
 import { SalatRepl } from "@kabelsalat/core";
+import { Icon } from "./Icon";
 
 const defaultPatch = `// let's create some notes
 let note = clock(150) // clock at 150bpm
@@ -36,7 +37,8 @@ note
 let vizSettings = { resolveModules: false, dagify: false };
 
 export function Repl() {
-  const repl = new SalatRepl();
+  let [started, setStarted] = createSignal(false);
+  const repl = new SalatRepl({ onToggle: (_started) => setStarted(_started) });
 
   function getURLCode() {
     let urlCode = window.location.hash.slice(1);
@@ -48,11 +50,9 @@ export function Repl() {
 
   const initialCode = getURLCode() || defaultPatch;
   let [code, setCode] = createSignal(initialCode);
-  let [inited, setInited] = createSignal(false);
   let [hideCode, setHideCode] = createSignal(false);
   let container;
   async function run() {
-    setInited(true);
     const node = repl.evaluate(code());
     node.render(container, vizSettings); // update viz
     window.location.hash = "#" + btoa(code());
@@ -81,12 +81,7 @@ export function Repl() {
   });
 
   return (
-    <div
-      class="flex flex-col h-full max-h-full justify-stretch text-teal-600 font-mono"
-      onClick={(e) => {
-        e.target.tagName !== "A" && !inited() && run();
-      }}
-    >
+    <div class="flex flex-col h-full max-h-full justify-stretch text-teal-600 font-mono">
       <div class="px-4 py-2 space-x-8 font-bold border-b border-teal-500 flex justify-between">
         <div
           class={`font-bold font-mono text-xl
@@ -95,10 +90,34 @@ export function Repl() {
         >
           🔌 KABƎLSALAT
         </div>
-        <div class="text-yellow-400">
-          {!inited() && "click somewhere to play"}
+        <div>
+          <div class="flex justify-start items-center space-x-4 font-light">
+            <button
+              onClick={() => (started() ? repl.stop() : run())}
+              class="items-center flex space-x-1"
+            >
+              {!started() ? (
+                <>
+                  <Icon type="play" />
+                  <span class="animate-pulse">play</span>
+                </>
+              ) : (
+                <>
+                  <Icon type="stop" />
+                  <span>stop</span>
+                </>
+              )}
+            </button>
+            <button onClick={() => run()} class="items-center flex space-x-1">
+              <Icon type="refresh" />
+              <span>update</span>
+            </button>
+            <a class="items-center flex space-x-1" href="/kabelsalat/learn">
+              <Icon type="learn" />
+              <span>learn</span>
+            </a>
+          </div>
         </div>
-        <a href="/kabelsalat/learn">learn more</a>
       </div>
       <div class="grid grid-cols-2 flex-auto shrink grow overflow-hidden">
         {!hideCode() && (
