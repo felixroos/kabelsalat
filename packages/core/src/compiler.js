@@ -1,5 +1,5 @@
 import { Node } from "./graph.js";
-import { NODE_SCHEMA } from "./lib.js";
+import { nodeRegistry } from "./graph.js";
 
 // this compiler is actually not from noisecraft :)
 
@@ -59,16 +59,16 @@ export function compile(node, options = {}) {
       continue;
     }
     // is audio node?
-    if (NODE_SCHEMA[node.type] && NODE_SCHEMA[node.type].audio !== false) {
+
+    const schema = nodeRegistry.get(node.type);
+    if (schema && schema.audio !== false) {
       const comment = node.type;
-      const dynamic = NODE_SCHEMA[node.type].dynamic;
+      const dynamic = schema.dynamic;
       let passedVars = vars;
       if (!dynamic) {
         // defaults could theoretically also be set inside update function
         // but that might be bad for the jit compiler, as it needs to check for undefined values?
-        passedVars = NODE_SCHEMA[node.type].ins.map(
-          (inlet, i) => vars[i] ?? inlet.default
-        );
+        passedVars = schema.ins.map((inlet, i) => vars[i] ?? inlet.default);
       }
       const index = audioThreadNodes.length;
       audioThreadNodes.push(node.type);
@@ -80,7 +80,7 @@ export function compile(node, options = {}) {
         );
         writer.to = index;
       }
-      const args = NODE_SCHEMA[node.type].args || []; // some nodes want time or inputs
+      const args = schema.args || []; // some nodes want time or inputs
       const params = args.concat(passedVars);
       const call = `nodes[${index}].update(${params.join(", ")})`;
       pushVar(id, call, comment);

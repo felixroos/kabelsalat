@@ -281,8 +281,12 @@ function getNode(type, ...args) {
   return new Node(polyType).withIns(...expanded);
 }
 
+export let nodeRegistry = new Map();
+
 // todo: dedupe with register?
-export let makeNode = (type, name = type.toLowerCase()) => {
+export let makeNode = (type, schema) => {
+  const { name = type.toLowerCase() } = schema || {};
+  schema && nodeRegistry.set(type, schema);
   Node.prototype[name] = function (...args) {
     return getNode(type, this, ...args);
   };
@@ -298,6 +302,15 @@ export let register = (name, fn) => {
   return fn;
 };
 
+export function getInletName(type, index) {
+  const schema = nodeRegistry.get(type);
+  if (!schema?.ins?.[index]) {
+    return "";
+  }
+  return schema.ins[index].name;
+}
+
+// is this needed?
 Node.prototype.over = function (fn) {
   return this.apply((x) => add(x, fn(x)));
 };

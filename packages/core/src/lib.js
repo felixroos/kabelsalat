@@ -1,42 +1,164 @@
 import { makeNode, Node, register, module } from "./graph";
 
-export let adsr = makeNode("ADSR");
-export let clock = makeNode("Clock");
-export let clockdiv = makeNode("ClockDiv");
-export let distort = makeNode("Distort");
-export let noise = makeNode("Noise");
-export let pinknoise = makeNode("PinkNoise");
-export let pink = makeNode("PinkNoise");
-export let brown = makeNode("BrownNoise");
-export let dust = makeNode("Dust");
-export let pulse = makeNode("Pulse");
-export let impulse = makeNode("Impulse");
-export let saw = makeNode("Saw");
-export let sine = makeNode("Sine");
-export let tri = makeNode("Tri");
-export let slide = makeNode("Slide");
-export let slew = makeNode("Slew");
-export let lag = makeNode("Lag");
-export let filter = makeNode("Filter");
-export let fold = makeNode("Fold");
-export let seq = makeNode("Seq");
-export let delay = makeNode("Delay");
-export let hold = makeNode("Hold");
-// export let midin = makeNode("MidiIn");
-export let midifreq = makeNode("MidiFreq");
-export let midigate = makeNode("MidiGate");
-export let midicc = makeNode("MidiCC");
-export let audioin = makeNode("AudioIn");
+export let adsr = makeNode("ADSR", {
+  ins: [
+    { name: "gate", default: 0 },
+    { name: "att", default: 0.02 },
+    { name: "dec", default: 0.1 },
+    { name: "sus", default: 0.2 },
+    { name: "rel", default: 0.1 },
+  ],
+  args: ["time"], // if set, the update function will get time as first param
+});
+export let clock = makeNode("Clock", {
+  ins: [{ name: "bpm", default: 120 }],
+});
+export let clockdiv = makeNode("ClockDiv", {
+  ins: [
+    { name: "clock", default: 0 },
+    { name: "divisor", default: 2 },
+  ],
+});
+export let distort = makeNode("Distort", {
+  ins: [
+    { name: "in", default: 0 },
+    { name: "amt", default: 0 },
+  ],
+});
+export let noise = makeNode("Noise", {
+  ins: [],
+});
+export let pink = makeNode("PinkNoise", {
+  ins: [],
+});
+export let brown = makeNode("BrownNoise", {
+  ins: [],
+});
+export let dust = makeNode("Dust", {
+  ins: [{ name: "density", default: 0 }],
+});
+export let pulse = makeNode("Pulse", {
+  ins: [
+    { name: "freq", default: 0 },
+    { name: "pw", default: 0.5 },
+  ],
+});
+export let impulse = makeNode("Impulse", {
+  ins: [
+    { name: "freq", default: 0 },
+    { name: "phase", default: 0 },
+  ],
+});
+export let saw = makeNode("Saw", {
+  ins: [{ name: "freq", default: 0 }],
+});
+export let sine = makeNode("Sine", {
+  ins: [
+    { name: "freq", default: 0 },
+    { name: "sync", default: 0 },
+  ],
+});
+export let tri = makeNode("Tri", {
+  ins: [{ name: "freq", default: 0 }],
+});
+export let slide = makeNode("Slide", {
+  ins: [
+    { name: "in", default: 0 },
+    { name: "rate", default: 1 },
+  ],
+});
+
+// feedback_write is a special case in the compiler, so it won't appear here..
+export let feedback_read = makeNode("feedback_read", {
+  ins: [],
+});
+export let slew = makeNode("Slew", {
+  ins: [
+    { name: "in", default: 0 },
+    { name: "up", default: 1 },
+    { name: "dn", default: 1 },
+  ],
+});
+export let lag = makeNode("Lag", {
+  ins: [
+    { name: "in", default: 0 },
+    { name: "rate", default: 1 },
+  ],
+});
+export let filter = makeNode("Filter", {
+  ins: [
+    { name: "in", default: 0 },
+    { name: "cutoff", default: 1 },
+    { name: "reso", default: 0 },
+  ],
+});
+export let fold = makeNode("Fold", {
+  ins: [
+    { name: "in", default: 0 },
+    { name: "rate", default: 0 },
+  ],
+});
+export let seq = makeNode("Seq", {
+  dynamic: true, // dynamic number of inlets
+  ins: [
+    { name: "clock", default: 0 },
+    // 1-Infinity of steps
+  ],
+});
+export let delay = makeNode("Delay", {
+  ins: [
+    { name: "in", default: 0 },
+    { name: "time", default: 0 },
+  ],
+});
+export let hold = makeNode("Hold", {
+  ins: [
+    { name: "in", default: 0 },
+    { name: "trig", default: 0 },
+  ],
+});
+/*export let midin = makeNode("MidiIn",{
+    ins: [],
+});*/
+export let midifreq = makeNode("MidiFreq", {
+  ins: [{ name: "channel", default: -1 }],
+});
+export let midigate = makeNode("MidiGate", {
+  ins: [{ name: "channel", default: -1 }],
+});
+export let midicc = makeNode("MidiCC", {
+  ins: [
+    { name: "ccnumber", default: -1 },
+    { name: "channel", default: -1 },
+  ],
+});
+export let audioin = makeNode("AudioIn", {
+  ins: [],
+  args: ["input"],
+});
 
 // non-audio nodes
 export let sin = makeNode("sin");
 export let cos = makeNode("cos");
-export let mul = makeNode("mul");
+export let mul = makeNode("mul", {
+  ins: [
+    { name: "in0", default: 1 },
+    { name: "in1", default: 1 },
+  ],
+});
 export let add = makeNode("add");
 export let div = makeNode("div");
 export let sub = makeNode("sub");
-export let mod = makeNode("mod"); // untested
-export let range = makeNode("range");
+export let mod = makeNode("mod", {
+  ins: [
+    { name: "in0", default: 0 },
+    { name: "in1", default: 1 },
+  ],
+});
+export let range = makeNode("range", {
+  audio: false,
+  ins: [{ name: "in" }, { name: "min" }, { name: "max" }],
+});
 export let midinote = makeNode("midinote");
 export let dac = makeNode("dac");
 export let exit = makeNode("exit");
@@ -98,180 +220,12 @@ Node.prototype.feedback = function (fn) {
 };
 export let feedback = (fn) => add(fn);
 
-// not implemented noisecraft nodes
-// TODO:
+// todo: remaining noisecraft nodes
 // Greater, ClockOut, Scope, BitCrush?
-// Different Names:
-// Add (=add), AudioOut (=out), Const (=n)
-// WONT DO:
-// GateSeq, MonoSeq, Knob, MonoSeq, Nop, Notes (text note), Module
 
-// this schema is currently only relevant for audio nodes, using, flags dynamic & time, + ins[].default
-// TODO: compress format?
-
-export function getInletName(type, index) {
-  if (!NODE_SCHEMA[type]?.ins?.[index]) {
-    return "";
-  }
-  return NODE_SCHEMA[type].ins[index].name;
-}
-
-export const NODE_SCHEMA = {
-  ADSR: {
-    ins: [
-      { name: "gate", default: 0 },
-      { name: "att", default: 0.02 },
-      { name: "dec", default: 0.1 },
-      { name: "sus", default: 0.2 },
-      { name: "rel", default: 0.1 },
-    ],
-    args: ["time"], // if set, the update function will get time as first param
-  },
-  range: {
-    audio: false,
-    ins: [{ name: "in" }, { name: "min" }, { name: "max" }],
-  },
-  Clock: {
-    ins: [{ name: "bpm", default: 120 }],
-  },
-  ClockDiv: {
-    ins: [
-      { name: "clock", default: 0 },
-      { name: "divisor", default: 2 },
-    ],
-  },
-  Delay: {
-    ins: [
-      { name: "in", default: 0 },
-      { name: "time", default: 0 },
-    ],
-  },
-  Distort: {
-    ins: [
-      { name: "in", default: 0 },
-      { name: "amt", default: 0 },
-    ],
-  },
-  Filter: {
-    ins: [
-      { name: "in", default: 0 },
-      { name: "cutoff", default: 1 },
-      { name: "reso", default: 0 },
-    ],
-  },
-  Fold: {
-    ins: [
-      { name: "in", default: 0 },
-      { name: "rate", default: 0 },
-    ],
-  },
-  Seq: {
-    dynamic: true, // dynamic number of inlets
-    ins: [
-      { name: "clock", default: 0 },
-      // 1-Infinity of steps
-    ],
-  },
-  Hold: {
-    ins: [
-      { name: "in", default: 0 },
-      { name: "trig", default: 0 },
-    ],
-  },
-  feedback_read: {
-    ins: [],
-  },
-  // feedback_write is a special case in the compiler, so it won't appear here..
-  AudioIn: {
-    ins: [],
-    args: ["input"],
-  },
-  MidiIn: {
-    ins: [],
-  },
-  MidiGate: {
-    ins: [{ name: "channel", default: -1 }],
-  },
-  MidiFreq: {
-    ins: [{ name: "channel", default: -1 }],
-  },
-  MidiCC: {
-    ins: [
-      { name: "ccnumber", default: -1 },
-      { name: "channel", default: -1 },
-    ],
-  },
-  Mod: {
-    ins: [
-      { name: "in0", default: 0 },
-      { name: "in1", default: 1 },
-    ],
-  },
-  Mul: {
-    ins: [
-      { name: "in0", default: 1 },
-      { name: "in1", default: 1 },
-    ],
-  },
-  Noise: {
-    ins: [],
-  },
-  PinkNoise: {
-    ins: [],
-  },
-  BrownNoise: {
-    ins: [],
-  },
-  Dust: {
-    ins: [{ name: "density", default: 0 }],
-  },
-  Pulse: {
-    ins: [
-      { name: "freq", default: 0 },
-      { name: "pw", default: 0.5 },
-    ],
-  },
-  Impulse: {
-    ins: [
-      { name: "freq", default: 0 },
-      { name: "phase", default: 0 },
-    ],
-  },
-  Saw: {
-    ins: [{ name: "freq", default: 0 }],
-  },
-  /* Scope: {
+/* Scope: {
     ins: [{ name: "", default: 0 }],
     sendRate: 20,
     sendSize: 5,
     historyLen: 150,
   }, */
-  Sine: {
-    ins: [
-      { name: "freq", default: 0 },
-      { name: "sync", default: 0 },
-    ],
-  },
-  Slide: {
-    ins: [
-      { name: "in", default: 0 },
-      { name: "rate", default: 1 },
-    ],
-  },
-  Lag: {
-    ins: [
-      { name: "in", default: 0 },
-      { name: "rate", default: 1 },
-    ],
-  },
-  Slew: {
-    ins: [
-      { name: "in", default: 0 },
-      { name: "up", default: 1 },
-      { name: "dn", default: 1 },
-    ],
-  },
-  Tri: {
-    ins: [{ name: "freq", default: 0 }],
-  },
-};
