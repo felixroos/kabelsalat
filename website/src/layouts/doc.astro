@@ -15,9 +15,13 @@ import Nav from "../components/Nav.astro";
       <nav
         class="h-16 flex items-center justify-between sticky top-0 z-50 bg-stone-900"
       >
-        <marquee class="text-teal-100 w-32 font-bold">
-          KABƎL.SALAT.KABƎL.SALAT.KABƎL.SALAT.KABƎL.SALAT.KABƎL.SALAT
-        </marquee>
+        <div
+          class={`font-bold font-mono text-xl
+        bg-gradient-to-r from-teal-400 via-Amber-800 to-fuchsia-300 inline-block text-transparent bg-clip-text
+        `}
+        >
+          🔌 KABƎLSALAT
+        </div>
         <Nav />
         <!-- <a class="text-teal-500" href="/kabelsalat/">go to REPL</a> -->
       </nav>

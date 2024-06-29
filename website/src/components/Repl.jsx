@@ -88,9 +88,13 @@ export function Repl() {
       }}
     >
       <div class="px-4 py-2 space-x-8 font-bold border-b border-teal-500 flex justify-between">
-        <marquee class="text-teal-100 w-32">
-          KABƎL.SALAT.KABƎL.SALAT.KABƎL.SALAT.KABƎL.SALAT.KABƎL.SALAT
-        </marquee>
+        <div
+          class={`font-bold font-mono text-xl
+        bg-gradient-to-r from-teal-400 via-Amber-800 to-fuchsia-300 inline-block text-transparent bg-clip-text
+        `}
+        >
+          🔌 KABƎLSALAT
+        </div>
         <div class="text-yellow-400">
           {!inited() && "click somewhere to play"}
         </div>
