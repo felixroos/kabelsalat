@@ -90,7 +90,7 @@ export function Repl() {
       <div class="px-4 py-2 space-x-8 font-bold border-b border-teal-500 flex justify-between">
         <div
           class={`font-bold font-mono text-xl
-        bg-gradient-to-r from-teal-400 via-Amber-800 to-fuchsia-300 inline-block text-transparent bg-clip-text
+        bg-gradient-to-r from-teal-400 to-fuchsia-300 inline-block text-transparent bg-clip-text
         `}
         >
           🔌 KABƎLSALAT
