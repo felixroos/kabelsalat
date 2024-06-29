@@ -82,7 +82,7 @@ export function Repl() {
 
   return (
     <div class="flex flex-col h-full max-h-full justify-stretch text-teal-600 font-mono">
-      <div class="px-4 py-2 space-x-8 font-bold border-b border-teal-500 flex justify-between">
+      <div class="px-4 py-2 space-x-8 font-bold border-b border-stone-800 flex justify-between">
         <div
           class={`font-bold font-mono text-xl
         bg-gradient-to-r from-teal-400 to-fuchsia-300 inline-block text-transparent bg-clip-text
@@ -122,7 +122,7 @@ export function Repl() {
       <div class="grid grid-cols-2 flex-auto shrink grow overflow-hidden">
         {!hideCode() && (
           <textarea
-            class="bg-stone-900 shrink-0 p-4 focus:ring-0 outline-0 border-r border-teal-500"
+            class="bg-stone-900 shrink-0 p-4 focus:ring-0 outline-0 border-0"
             spellcheck="false"
             value={code()}
             onInput={(e) => setCode(e.target.value)}
@@ -130,7 +130,7 @@ export function Repl() {
         )}
         <div
           class={`bg-stone-900 overflow-auto text-gray-500 p-4 grow-0${
-            hideCode() ? " col-span-2" : ""
+            hideCode() ? " col-span-2" : " border-l border-stone-800"
           }`}
           ref={(el) => {
             container = el;
@@ -138,18 +138,12 @@ export function Repl() {
           }}
         ></div>
       </div>
-      <div class="px-4 py-2 border-t border-teal-500 grow-0">
-        <div class="float-right">
-          <a href="https://github.com/felixroos/kabelsalat" target="_blank">
-            code on github
-          </a>
-        </div>
+      <div class="px-4 py-2 border-t border-stone-800 grow-0">
         <p>
-          welcome to kabelsalat. this is a very experimental audio graph live
-          coding prototype.
+          welcome to kabelsalat, is a very experimental audio graph live coding
+          prototype.
         </p>
         <pre>keyboard: ctrl+enter: run, ctrl+dot: stop</pre>
-        <pre></pre>
       </div>
     </div>
   );
