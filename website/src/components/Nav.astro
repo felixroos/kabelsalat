@@ -1,5 +1,16 @@
 ---
-import { SIDEBAR } from "../config";
+export const LINKS = {
+  Tutorial: [
+    { text: "What is kabelsalat", link: "learn" },
+    { text: "MIDI", link: "midi" },
+  ],
+  Development: [{ text: "How kabelsalat works", link: "internals" }],
+  Links: [
+    { text: "REPL", link: "" },
+    { text: "Github", link: "https://github.com/felixroos/kabelsalat" },
+    { text: "npm", link: "https://www.npmjs.com/org/kabelsalat" },
+  ],
+};
 
 const currentPage = Astro.url.pathname;
 const { BASE_URL } = import.meta.env;
@@ -14,7 +25,7 @@ const baseNoTrailing = BASE_URL.endsWith("/")
 
 <select class="nav-select bg-stone-900 text-white">
   {
-    Object.entries(SIDEBAR).map(([header, children]) => (
+    Object.entries(LINKS).map(([header, children]) => (
       <optgroup label={header}>
         <ul>
           {children.map((child) => {
