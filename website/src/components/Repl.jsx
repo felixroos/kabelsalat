@@ -51,6 +51,7 @@ export function Repl() {
   const initialCode = getURLCode() || defaultPatch;
   let [code, setCode] = createSignal(initialCode);
   let [hideCode, setHideCode] = createSignal(false);
+  let [hideWelcome, setHideWelcome] = createSignal(false);
   let container;
   async function run() {
     const node = repl.evaluate(code());
@@ -99,12 +100,12 @@ export function Repl() {
               {!started() ? (
                 <>
                   <Icon type="play" />
-                  <span class="animate-pulse">play</span>
+                  <span class="animate-pulse hidden sm:block">play</span>
                 </>
               ) : (
                 <>
                   <Icon type="stop" />
-                  <span>stop</span>
+                  <span class="hidden sm:block">stop</span>
                 </>
               )}
             </button>
@@ -113,19 +114,42 @@ export function Repl() {
               class="items-center flex space-x-1 hover:opacity-50"
             >
               <Icon type="refresh" />
-              <span>update</span>
+              <span class="hidden sm:block">run</span>
             </button>
             <a
               class="items-center flex space-x-1 hover:opacity-50"
               href="/kabelsalat/learn"
             >
               <Icon type="learn" />
-              <span>learn</span>
+              <span class="hidden sm:block">learn</span>
             </a>
           </div>
         </div>
       </div>
-      <div class="grid grid-cols-2 flex-auto shrink grow overflow-hidden">
+      {!hideWelcome() && (
+        <div class="px-4 py-2 border-b border-stone-800 grow-0 text-sm text-stone-400 flex items-center justify-between">
+          <div>
+            <p>
+              👋 welcome to kabelsalat, a very experimental audio graph live
+              coding prototype.{" "}
+              <a class="underline" href="/kabelsalat/learn">
+                learn more
+              </a>
+            </p>
+            <p class="hidden sm:block">
+              👉 keyboard shortcuts:{" "}
+              <span class="bg-stone-700">ctrl + enter</span> to run,{" "}
+              <span class="bg-stone-700">ctrl + .</span> to stop
+            </p>
+          </div>
+          <div>
+            <button class="underline" onClick={() => setHideWelcome(true)}>
+              dismiss
+            </button>
+          </div>
+        </div>
+      )}
+      <div class="grid sm:grid-cols-2 flex-auto shrink grow overflow-hidden">
         {!hideCode() && (
           <textarea
             class="bg-stone-900 shrink-0 p-4 focus:ring-0 outline-0 border-0"
@@ -135,7 +159,7 @@ export function Repl() {
           ></textarea>
         )}
         <div
-          class={`select-none bg-stone-900 overflow-auto text-gray-500 p-4 grow-0${
+          class={`hidden sm:block select-none bg-stone-900 overflow-auto text-gray-500 p-4 grow-0${
             hideCode() ? " col-span-2" : " border-l border-stone-800"
           }`}
           ref={(el) => {
@@ -143,13 +167,6 @@ export function Repl() {
             repl.evaluate(code()).render(container, vizSettings);
           }}
         ></div>
-      </div>
-      <div class="px-4 py-2 border-t border-stone-800 grow-0">
-        <p>
-          welcome to kabelsalat, is a very experimental audio graph live coding
-          prototype.
-        </p>
-        <pre>keyboard: ctrl+enter: run, ctrl+dot: stop</pre>
       </div>
     </div>
   );
