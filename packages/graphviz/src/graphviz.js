@@ -27,6 +27,7 @@ Node.prototype.render = async function (container, options = {}) {
 
   if (!resolveModules) {
     // mark nodes with "ignore" flag if they are inside a module
+    // maaaybe this could also be done inside module...
     nodes.forEach((node) => {
       if (!node.outputOf) {
         // we only care for nodes that are an output of a module

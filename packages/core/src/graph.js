@@ -230,6 +230,12 @@ function parseInput(input, node) {
   return 0;
 }
 
+Node.prototype.inherit = function (parent) {
+  parent.inputOf && (this.inputOf = parent.inputOf);
+  parent.outputOf && (this.outputOf = parent.outputOf);
+  return this;
+};
+
 function getNode(type, ...args) {
   const next = node(type);
   args = args.map((arg) => parseInput(arg, next));
@@ -247,19 +253,12 @@ function getNode(type, ...args) {
     return next.withIns(...args.map(parseInput));
   }
 
-  // takes input of polynode and inherits props from polyNode
-  let polyInput = (inputNode, polyNode) => {
-    polyNode.inputOf && (inputNode.inputOf = polyNode.inputOf);
-    polyNode.outputOf && (inputNode.outputOf = polyNode.outputOf);
-    return parseInput(inputNode);
-  };
-
   // dont expand dac node, but instead input all channels
   if (type === outputType) {
     const inputs = args
       .map((arg) => {
         if (arg.type === polyType) {
-          return arg.ins.map((input) => polyInput(input, arg));
+          return arg.ins.map((input) => input.inherit(arg));
         }
         return arg;
       })
@@ -273,7 +272,7 @@ function getNode(type, ...args) {
     const inputs = args.map((arg) => {
       if (arg.type === polyType) {
         const input = arg.ins[i % arg.ins.length];
-        return polyInput(input, arg);
+        return input.inherit(arg);
       }
       return parseInput(arg);
     });
@@ -377,15 +376,16 @@ export let mix = register("mix", (input, channels = 1) => {
     return input;
   }
   if (channels === 2) {
-    const panned = input.ins.map((input, i, ins) => {
+    const panned = input.ins.map((inlet, i, ins) => {
       // we can do this at eval time: channels are fixed!
       const pos = (i / (ins.length - 1)) * 2 - 1;
       const deg = ((pos + 1) * Math.PI) / 4;
-      return input.mul([Math.cos(deg), Math.sin(deg)]);
+      const stereo = inlet.mul([Math.cos(deg), Math.sin(deg)]);
+      return stereo.inherit(input);
     });
     return add(...panned);
-    // return node("mix").withIns(...panned);
   }
+  input.ins = input.ins.map((inlet) => inlet.inherit(input));
   return node("mix").withIns(...input.ins);
 });
 
