@@ -104,7 +104,11 @@ export class AudioView {
       latencyHint: "interactive",
       sampleRate: 44100,
     });
+    // This seems to be necessary for Safari
+    this.audioCtx.resume();
+
     await this.audioCtx.audioWorklet.addModule(workletUrl);
+
     this.audioWorklet = new AudioWorkletNode(
       this.audioCtx,
       "sample-generator",
