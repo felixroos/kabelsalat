@@ -89,7 +89,7 @@ export function Repl() {
         bg-gradient-to-r from-teal-400 to-fuchsia-300 inline-block text-transparent bg-clip-text
         `}
         >
-          🔌 KABƎLSALAT
+          🔌 kabelsalat
         </div>
         <div>
           <div class="flex justify-start items-center space-x-4 font-light">
