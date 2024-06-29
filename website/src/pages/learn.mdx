@@ -1,0 +1,294 @@
+---
+title: Tutorial
+layout: ../layouts/doc.astro
+---
+
+import { MiniRepl } from "../components/MiniRepl";
+import { Icon } from "../components/Icon";
+import Box from "../components/Box.astro";
+import DocLayout from "../layouts/doc.astro";
+
+# What is kabelsalat?
+
+**kabelsalat** (= cable salad) is a **live codable modular synthesizer** for the browser. It let's you write synthesizer patches with an easy to use language based on JavaScript.
+
+**You don't need coding skills to learn this!**
+
+## Hello World
+
+Here is a very simple example that generates a sine wave:
+
+<MiniRepl code="sine(200).out()" client:only="solid" />
+
+<Box>
+
+1. Press <Icon type="play" /> to hear a beautiful sine tone.
+2. Change the number 200 to 400
+3. Hit ctrl+enter to update (or press <Icon type="refresh" />)
+4. Hit ctrl+. to stop (or press <Icon type="stop" /> )
+
+</Box>
+
+## Amplitude Modulation
+
+Let's modulate the amplitude using `mul`:
+
+<MiniRepl
+  code={`sine(200)
+.mul( sine(4).range(.4, 1) )
+.out()`}
+  client:only="solid"
+/>
+
+## Frequency Modulation
+
+Let's modulate the frequency instead:
+
+<MiniRepl code={`sine(4).range(210,230).sine().out()`} client:only="solid" />
+<Box>
+
+Note: We could also have written `sine(sine(4).range(210,230))`
+
+</Box>
+
+## Subtractive Synthesis
+
+A lonely sine wave is pretty thin, let's add some oomph with a sawtooth wave
+and a filter:
+
+<MiniRepl
+  code={`saw(55).filter( sine(1).range(.4,.8) ).out()`}
+  client:only="solid"
+/>
+
+## Impulses & Envelopes
+
+We can apply a simple decay envelope with `impulse` and `perc`:
+
+<MiniRepl
+  code={`sine(220)
+.mul( impulse(4).perc(.2) )
+.out()`}
+  client:only="solid"
+/>
+
+For more control over the shape, we can also use ADSR:
+
+<MiniRepl
+  code={`sine(220)
+.mul( impulse(1).perc(.5).adsr(.02,.1,.5,.2) )
+.out()`}
+  client:only="solid"
+/>
+
+<Box>
+    
+Note: `impulse(1).perc(.5)` effectively creates a gate that lasts .5 seconds
+
+</Box>
+
+## Sequences
+
+The `seq` function allows us to cycle through different values using an
+impulse:
+
+<MiniRepl
+  code={`impulse(4).seq(55,110,220,330).saw()
+.filter(.5).out()`}
+  client:only="solid"
+/>
+<Box>
+
+Note: `.saw()` will take everything on the left as input! More generally, `x.y()` is the same as `y(x)`!
+
+</Box>
+
+## Reusing nodes
+
+In the above example, we might want to use the impulse to control the sequence and also an envelope:
+
+<MiniRepl
+  code={`let imp = impulse(4) 
+imp.seq(110,220,330,440).sine()
+.mul( imp.perc(.2).slide(.2) )
+.out()`}
+  client:only="solid"
+/>
+
+Here we are creating the variable `imp` to use the impulse in 2 places.
+Another way to write the same is this:
+
+<MiniRepl
+  code={`impulse(4)
+.apply(imp=>imp
+  .seq(110,220,330,440)
+  .sine()
+  .mul( imp.perc(.2).slide(.2) )
+).out()`}
+  client:only="solid"
+/>
+
+The `apply` method allows us to get a variable without breaking up our patch
+into multiple blocks
+
+## slide
+
+`slide` acts as a so called "slew limiter", making the incoming signal sluggish,
+preventing harsh clicks. It can also be used for glissando effects:
+
+<MiniRepl
+  code={`impulse(2).seq(55,110,220,330)
+.slide(4).saw().filter(.5).out()`}
+  client:only="solid"
+/>
+
+## Feedback Delay
+
+Feedback is a core feature of kabelsalat. You can plug a node back to itself
+using a so called lambda function:
+
+<MiniRepl
+  code={`impulse(2).seq(55,110,220,330)
+.saw().filter(.5)
+.mul(impulse(4).perc(.1).slide(.2))
+.add(x=>x.delay(.1).mul(.8))
+.out()`}
+  client:only="solid"
+/>
+
+## Multichannel Expansion
+
+We can create multiple channels by using brackets:
+
+<MiniRepl code={`sine([200,201]).out()`} client:only="solid" />
+<Box>
+
+In this case, we get 2 sine waves that will be used for the left and right channel of your sound system.
+
+</Box>
+
+If we want more channels, we have to mix them down:
+
+<MiniRepl code={`sine([111,222,333]).mix().out()`} client:only="solid" />
+
+Look what happens when brackets are used in more than one place:
+
+<MiniRepl code={`sine([111,442]).mul([1, .25]).out()`} client:only="solid" />
+
+## Fold
+
+fold limits the signal in between [-1,1] by folding:
+
+<MiniRepl
+  code={`sine(55)
+.fold( sine(.5).range(0.2,4) )
+.out()`}
+  client:only="solid"
+/>
+
+## Distort
+
+<MiniRepl
+  code={`impulse(4).seq(55,0,55,66,77).slide(1).saw()
+.filter( sine(.3).range(.2,.8) , .2)
+.distort( sine(.5).range(0,1) )
+.out()`}
+  client:only="solid"
+/>
+
+## Receiving MIDI Notes
+
+You can also send midi to kabelsalat. The `midifreq` function will receive any
+notes sent by any midi device. If you don't have a midi device at hand, <a href="https://strudel.cc/#bm90ZSgiYyBhIGYgZSIpLmNsaXAoLjUpLm1pZGkoKQ%3D%3D" target="_blank">send MIDI with strudel</a>
+
+## Receiving MIDI Gates
+
+<MiniRepl code={`midifreq().sine().mul(.5).out()`} client:only="solid" />
+
+You can also limit it to a specific channel with `midifreq(1)` (to listen
+only for notes on midi channel 1) Similarly, `midigate` can be used:
+
+<MiniRepl
+  code={`midifreq().sine()
+.mul( midigate().adsr(.01, .1) )
+.mul(.5)
+.out()`}
+  client:only="solid"
+/>
+
+Here is a monosynth that is a little bit more exciting:
+
+<MiniRepl
+  code={`let env = midigate().adsr(.01,.2,.75).mul(.75)
+midifreq().div(2)
+.saw(.4)
+.filter(
+  sine(.1).range(.7,.8).mul(env), 
+  env.div(2)
+)
+.mul(env)
+.mul(.5)
+.out()`}
+  client:only="solid"
+/>
+
+## Receiving MIDI CC Messages
+
+You can receive cc messages with the `midicc` function:
+
+<MiniRepl
+  code={`// test with: https://strudel.cc/?YnNvjrZjv7Sr
+midicc(74)
+.slide(16)
+.range(100,200)
+.sine()
+.mul(.5).out()`}
+  client:only="solid"
+/>
+
+## Polyphonic MIDI
+
+Using the `fork` function, you can clone a node multiple times. The midifreq and
+midigate functions will automatically do voice allocation of incoming notes:
+
+<MiniRepl
+  code={`// test with https://strudel.cc/#dm9pY2luZygiPERtNyBHN2I5IENeNyBBN2I5PiIpLm1pZGkoKQ%3D%3D
+let env = midigate().fork(8).adsr(0.01, 0.4, 0.7, 0.1);
+saw(midifreq().fork(8)) // 8 saw voices
+  .mul(env) // amp envelope
+  .filter(env.range(0.2, 0.8).mul(env)) // filter envelope
+  .mix() // mix together
+  .add((x) => x.delay(0.2).mul(0.4)) // feedback delay
+  .out();`}
+  client:only="solid"
+/>
+
+## Modules
+
+The graph representation of the previous patch is very much cable salad at this
+point. To improve things, you can define modules like this:
+
+<MiniRepl
+    code={`let synth = module("synth", (freq, gate) => {
+  let env = gate.adsr(0.01, 0.4, 0.7, 0.1);
+  return saw(freq).mul(env)
+    .filter( env.range(0.2, 0.8).mul(env) );
+});
+
+let freq = impulse(4).seq(55,110,220,330)
+let gate = impulse(4).perc(.2)
+synth(freq, gate)
+.add((x) => x.delay(0.2).mul(0.4)) // feedback delay
+.out()`}
+client:only="solid"
+/>
+
+<Box>
+
+Note that in the graph above, the "synth" is a single node, hiding its
+internal complexity.
+
+Defining modules is a more advanced feature and requires you to know how JS
+functions are written.
+
+</Box>
