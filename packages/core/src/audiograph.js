@@ -1,5 +1,4 @@
 import { assert } from "./utils.js";
-// import { NODE_SCHEMA } from './model.js';
 import * as synth from "./synth.js";
 
 /**

@@ -1,5 +1,5 @@
 import { AudioView } from "./audioview.js";
-import * as api from "./graph.js";
+import * as api from "./index.js";
 import * as compiler from "./compiler.js";
 
 export class SalatRepl {
