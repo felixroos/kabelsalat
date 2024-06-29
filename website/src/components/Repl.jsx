@@ -83,7 +83,7 @@ export function Repl() {
 
   return (
     <div class="flex flex-col h-full max-h-full justify-stretch text-teal-600 font-mono">
-      <div class="px-4 py-2 space-x-8 font-bold border-b border-stone-800 flex justify-between select-none">
+      <div class="px-4 py-2 space-x-8 font-bold border-b border-stone-800 flex justify-between items-center select-none">
         <div
           class={`font-bold font-mono text-xl
         bg-gradient-to-r from-teal-400 to-fuchsia-300 inline-block text-transparent bg-clip-text
@@ -91,39 +91,37 @@ export function Repl() {
         >
           🔌 kabelsalat
         </div>
-        <div>
-          <div class="flex justify-start items-center space-x-4 font-light">
-            <button
-              onClick={() => (started() ? repl.stop() : run())}
-              class="items-center flex space-x-1 hover:opacity-50"
-            >
-              {!started() ? (
-                <>
-                  <Icon type="play" />
-                  <span class="animate-pulse hidden sm:block">play</span>
-                </>
-              ) : (
-                <>
-                  <Icon type="stop" />
-                  <span class="hidden sm:block">stop</span>
-                </>
-              )}
-            </button>
-            <button
-              onClick={() => run()}
-              class="items-center flex space-x-1 hover:opacity-50"
-            >
-              <Icon type="refresh" />
-              <span class="hidden sm:block">run</span>
-            </button>
-            <a
-              class="items-center flex space-x-1 hover:opacity-50"
-              href="/kabelsalat/learn"
-            >
-              <Icon type="learn" />
-              <span class="hidden sm:block">learn</span>
-            </a>
-          </div>
+        <div class="flex justify-start items-center space-x-4 font-light">
+          <button
+            onClick={() => (started() ? repl.stop() : run())}
+            class="items-center flex space-x-1 hover:opacity-50"
+          >
+            {!started() ? (
+              <>
+                <Icon type="play" />
+                <span class="animate-pulse hidden sm:block">play</span>
+              </>
+            ) : (
+              <>
+                <Icon type="stop" />
+                <span class="hidden sm:block">stop</span>
+              </>
+            )}
+          </button>
+          <button
+            onClick={() => run()}
+            class="items-center flex space-x-1 hover:opacity-50"
+          >
+            <Icon type="refresh" />
+            <span class="hidden sm:block">run</span>
+          </button>
+          <a
+            class="items-center flex space-x-1 hover:opacity-50"
+            href="/kabelsalat/learn"
+          >
+            <Icon type="learn" />
+            <span class="hidden sm:block">learn</span>
+          </a>
         </div>
       </div>
       {!hideWelcome() && (
