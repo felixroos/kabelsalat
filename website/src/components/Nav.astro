@@ -23,7 +23,9 @@ const baseNoTrailing = BASE_URL.endsWith("/")
   : BASE_URL;
 ---
 
-<select class="nav-select bg-stone-900 text-white">
+<select
+  class="nav-select bg-stone-800 text-white rounded-md border-0 outline-none focus:ring-0"
+>
   {
     Object.entries(LINKS).map(([header, children]) => (
       <optgroup label={header}>
