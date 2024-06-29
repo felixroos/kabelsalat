@@ -1,5 +1,21 @@
 import { makeNode, Node, register, module } from "./graph";
 
+/**
+ * ADSR envelope
+ *
+ * @name adsr
+ * @publicApi
+ * @param gate gate signal
+ * @param att attack time
+ * @param dec decay time
+ * @param sus sustain level
+ * @param rel release time
+ * @example
+ * impulse(1).perc(.5)
+ * .adsr(.01, .1, .5, .1)
+ * .mul(sine(220)).out()
+ *
+ */
 export let adsr = makeNode("ADSR", {
   ins: [
     { name: "gate", default: 0 },
@@ -19,24 +35,85 @@ export let clockdiv = makeNode("ClockDiv", {
     { name: "divisor", default: 2 },
   ],
 });
+
+/**
+ * Overdrive-style distortion
+ *
+ * @name distort
+ * @publicApi
+ * @param in signal input
+ * @param amt distortion amount
+ * @example
+ * sine(220)
+ * .distort( saw(.5).range(0,1) )
+ * .out()
+ *
+ */
 export let distort = makeNode("Distort", {
   ins: [
     { name: "in", default: 0 },
     { name: "amt", default: 0 },
   ],
 });
+
+/**
+ * White noise source
+ *
+ * @name noise
+ * @publicApi
+ * @example
+ * noise().out()
+ *
+ */
 export let noise = makeNode("Noise", {
   ins: [],
 });
+
+/**
+ * Pink noise source
+ *
+ * @name pink
+ * @publicApi
+ * @example
+ * pink().out()
+ *
+ */
 export let pink = makeNode("PinkNoise", {
   ins: [],
 });
+/**
+ * Brown noise source
+ *
+ * @name brown
+ * @publicApi
+ * @example
+ * brown().out()
+ *
+ */
 export let brown = makeNode("BrownNoise", {
   ins: [],
 });
+/**
+ * Generates random impulses from 0 to +1.
+ *
+ * @name dust
+ * @publicApi
+ * @example
+ * dust(200).out()
+ *
+ */
 export let dust = makeNode("Dust", {
   ins: [{ name: "density", default: 0 }],
 });
+/**
+ * Pulse wave oscillator
+ *
+ * @name pulse
+ * @publicApi
+ * @example
+ * pulse(110, sine(.1).range(.1,.5)).out()
+ *
+ */
 export let pulse = makeNode("Pulse", {
   ins: [
     { name: "freq", default: 0 },

@@ -38,9 +38,7 @@ import Nav from "../components/Nav.astro";
     <script>
       const navs = document.querySelectorAll(".nav-select");
       navs.forEach((nav) => {
-        console.log("nav", nav);
         nav.addEventListener("change", (e: any) => {
-          console.log("change", e.target.value);
           window.location.href = e.target.value;
         });
       });
