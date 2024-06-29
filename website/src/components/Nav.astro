@@ -1,0 +1,37 @@
+---
+import { SIDEBAR } from "../config";
+
+const currentPage = Astro.url.pathname;
+const { BASE_URL } = import.meta.env;
+let currentPageMatch = currentPage.slice(
+  BASE_URL.length,
+  currentPage.endsWith("/") ? -1 : undefined
+);
+const baseNoTrailing = BASE_URL.endsWith("/")
+  ? BASE_URL.slice(0, -1)
+  : BASE_URL;
+---
+
+<select class="nav-select bg-stone-900 text-white">
+  {
+    Object.entries(SIDEBAR).map(([header, children]) => (
+      <optgroup label={header}>
+        <ul>
+          {children.map((child) => {
+            const url = child.link.startsWith("https://")
+              ? child.link
+              : `${baseNoTrailing}/${child.link}`;
+            if (currentPageMatch === child.link) {
+              return (
+                <option selected value={url}>
+                  {child.text}
+                </option>
+              );
+            }
+            return <option value={url}>{child.text}</option>;
+          })}
+        </ul>
+      </optgroup>
+    ))
+  }
+</select>

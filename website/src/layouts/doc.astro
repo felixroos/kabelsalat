@@ -1,15 +1,5 @@
 ---
-import { SIDEBAR } from "../config";
-
-const currentPage = Astro.url.pathname;
-const { BASE_URL } = import.meta.env;
-let currentPageMatch = currentPage.slice(
-  BASE_URL.length,
-  currentPage.endsWith("/") ? -1 : undefined
-);
-const baseNoTrailing = BASE_URL.endsWith("/")
-  ? BASE_URL.slice(0, -1)
-  : BASE_URL;
+import Nav from "../components/Nav.astro";
 ---
 
 <html lang="en" class="h-full bg-stone-900 dark">
@@ -21,35 +11,15 @@ const baseNoTrailing = BASE_URL.endsWith("/")
     <title>learn kabelsalat</title>
   </head>
   <body class="h-full">
-    <a class="fixed right-4 top-2 text-teal-500" href="/kabelsalat/"
-      >go to REPL</a
-    >
-
     <main class="m-auto max-w-xl">
-      <nav class="h-16 flex items-center">
-        <select id="nav-select" class="bg-stone-900 text-white">
-          {
-            Object.entries(SIDEBAR).map(([header, children]) => (
-              <optgroup label={header}>
-                <ul>
-                  {children.map((child) => {
-                    const url = child.link.startsWith("https://")
-                      ? child.link
-                      : `${baseNoTrailing}/${child.link}`;
-                    if (currentPageMatch === child.link) {
-                      return (
-                        <option selected value={url}>
-                          {child.text}
-                        </option>
-                      );
-                    }
-                    return <option value={url}>{child.text}</option>;
-                  })}
-                </ul>
-              </optgroup>
-            ))
-          }
-        </select>
+      <nav
+        class="h-16 flex items-center justify-between sticky top-0 z-50 bg-stone-900"
+      >
+        <marquee class="text-teal-100 w-32 font-bold">
+          KABƎL.SALAT.KABƎL.SALAT.KABƎL.SALAT.KABƎL.SALAT.KABƎL.SALAT
+        </marquee>
+        <Nav />
+        <!-- <a class="text-teal-500" href="/kabelsalat/">go to REPL</a> -->
       </nav>
       <article class="py-8 prose prose-invert">
         <!-- </nav> -->
@@ -57,12 +27,14 @@ const baseNoTrailing = BASE_URL.endsWith("/")
       </article>
     </main>
     <script>
-      document
-        .getElementById("nav-select")
-        .addEventListener("change", (e: any) => {
+      const navs = document.querySelectorAll(".nav-select");
+      navs.forEach((nav) => {
+        console.log("nav", nav);
+        nav.addEventListener("change", (e: any) => {
           console.log("change", e.target.value);
           window.location.href = e.target.value;
         });
+      });
     </script>
   </body>
 </html>
