@@ -1,7 +1,7 @@
 ---
 export const LINKS = {
   Tutorial: [
-    { text: "What is kabelsalat", link: "learn" },
+    { text: "Intro", link: "learn" },
     { text: "MIDI", link: "midi" },
   ],
   Development: [{ text: "How kabelsalat works", link: "internals" }],
@@ -24,7 +24,7 @@ const baseNoTrailing = BASE_URL.endsWith("/")
 ---
 
 <select
-  class="nav-select bg-stone-800 text-white rounded-md border-0 outline-none focus:ring-0"
+  class="nav-select bg-stone-800 text-white rounded-md border-0 outline-none focus:ring-0 font-mono"
 >
   {
     Object.entries(LINKS).map(([header, children]) => (
