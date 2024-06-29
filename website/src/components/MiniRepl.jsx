@@ -47,10 +47,10 @@ export function MiniRepl(props) {
           <Icon type="refresh" />
         </button>
       </div>
-      <div class="flex border-b border-teal-500 overflow-hidden">
+      <div class="flex border-b border-stone-700 overflow-hidden">
         <textarea
           rows={Math.min(code().split("\n").length, 10)}
-          class="bg-stone-900 shrink-0 p-4 focus:ring-0 outline-0 grow"
+          class="resize-none bg-stone-900 shrink-0 p-4 focus:ring-0 outline-0 grow border-0"
           spellcheck="false"
           value={code()}
           onInput={(e) => setCode(e.target.value)}

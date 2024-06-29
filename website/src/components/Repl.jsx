@@ -152,7 +152,7 @@ export function Repl() {
       <div class="grid sm:grid-cols-2 flex-auto shrink grow overflow-hidden">
         {!hideCode() && (
           <textarea
-            class="bg-stone-900 shrink-0 p-4 focus:ring-0 outline-0 border-0"
+            class="resize-none bg-stone-900 shrink-0 p-4 focus:ring-0 outline-0 border-0"
             spellcheck="false"
             value={code()}
             onInput={(e) => setCode(e.target.value)}
