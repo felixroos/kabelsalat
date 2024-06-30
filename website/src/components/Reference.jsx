@@ -17,20 +17,19 @@ const commonInputs = {
 const items = Array.from(nodeRegistry.entries()).filter(
   ([_, schema]) => !schema.internal
 );
-const tags = Array.from(new Set(items.map((item) => item[1].tags).flat()));
-
+const tags = Array.from(
+  new Set(items.map((item) => item[1].tags).flat())
+).filter(Boolean);
 export function Reference() {
   const [selectedTags, setSelectedTags] = createSignal([]);
   const toggleTag = (tag) => {
     let next;
-    console.log("tag", tag);
     if (selectedTags().includes(tag)) {
       next = selectedTags().filter((t) => t !== tag);
     } else {
       //next = selectedTags().concat([tag]);
       next = [tag];
     }
-    console.log("next", next);
     setSelectedTags(next);
   };
   const filtered = () =>
@@ -51,7 +50,7 @@ export function Reference() {
             <>
               <a
                 class={
-                  "not-prose cursor-pointer text-sm p-1 rounded-md select-none " +
+                  "not-prose cursor-pointer text-sm p-1 rounded-md select-none whitespace-nowrap " +
                   (selectedTags().includes(tag)
                     ? "bg-teal-700"
                     : "bg-stone-700")

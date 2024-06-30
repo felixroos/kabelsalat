@@ -92,7 +92,7 @@ export let brown = makeNode("BrownNoise", {
 });
 
 export let dust = makeNode("Dust", {
-  tags: ["random", "trigger", "noise", "source"],
+  tags: ["trigger", "noise", "source"],
   description: "Generates random impulses from 0 to +1.",
   examples: ["dust(200).out()"],
   ins: [
@@ -368,6 +368,7 @@ export let fork = register(
 );
 
 export let perc = module("perc", (gate, decay) => gate.adsr(0, 0, 1, decay), {
+  tags: ["envelope"],
   description: "percussive envelope. usable with triggers or gates",
   ins: [{ name: "gate" }, { name: "release" }],
   examples: [`impulse(4).perc(.1).mul( pink() ).out()`],
@@ -394,7 +395,7 @@ export let lpf = module("lpf", filter, {
 export let lfnoise = module("lfnoise", (freq) => noise().hold(impulse(freq)), {
   ins: [{ name: "freq" }],
   description: "low frequency stepped noise.",
-  tags: ["regular", "random", "noise"],
+  tags: ["regular", "noise"],
   examples: [`lfnoise(4).range(200,800).sine().out()`],
 });
 
