@@ -17,152 +17,144 @@ import { makeNode, Node, register, module } from "./graph";
  *
  */
 export let adsr = makeNode("ADSR", {
+  description: "ADSR envelope",
   ins: [
-    { name: "gate", default: 0 },
-    { name: "att", default: 0.02 },
-    { name: "dec", default: 0.1 },
-    { name: "sus", default: 0.2 },
-    { name: "rel", default: 0.1 },
+    { name: "gate", default: 0, description: "gate input" },
+    { name: "att", default: 0.02, description: "attack time" },
+    { name: "dec", default: 0.1, description: "decay time" },
+    { name: "sus", default: 0.2, description: "sustain level" },
+    { name: "rel", default: 0.1, description: "release time" },
   ],
   args: ["time"], // if set, the update function will get time as first param
 });
 export let clock = makeNode("Clock", {
-  ins: [{ name: "bpm", default: 120 }],
+  description: "Clock source, with tempo in BPM",
+  ins: [
+    {
+      name: "bpm",
+      default: 120,
+      description: "clock tempo in bpm (beats per minute)",
+    },
+  ],
 });
 export let clockdiv = makeNode("ClockDiv", {
+  description: "Clock signal divider",
   ins: [
-    { name: "clock", default: 0 },
-    { name: "divisor", default: 2 },
+    { name: "clock", default: 0, description: "clock input" },
+    { name: "divisor", default: 2, description: "tempo divisor" },
   ],
 });
 
-/**
- * Overdrive-style distortion
- *
- * @name distort
- * @publicApi
- * @param in signal input
- * @param amt distortion amount
- * @example
- * sine(220)
- * .distort( saw(.5).range(0,1) )
- * .out()
- *
- */
 export let distort = makeNode("Distort", {
+  description: "Overdrive-style distortion",
+  examples: [
+    `sine(220)
+.distort( saw(.5).range(0,1) )
+.out()`,
+  ],
   ins: [
     { name: "in", default: 0 },
-    { name: "amt", default: 0 },
+    { name: "amt", default: 0, description: "distortion amount" },
   ],
 });
 
-/**
- * White noise source
- *
- * @name noise
- * @publicApi
- * @example
- * noise().out()
- *
- */
 export let noise = makeNode("Noise", {
+  description: "White noise source",
+  examples: ["noise().out()"],
   ins: [],
 });
 
-/**
- * Pink noise source
- *
- * @name pink
- * @publicApi
- * @example
- * pink().out()
- *
- */
 export let pink = makeNode("PinkNoise", {
+  description: "Pink noise source",
+  examples: ["pink().out()"],
   ins: [],
 });
-/**
- * Brown noise source
- *
- * @name brown
- * @publicApi
- * @example
- * brown().out()
- *
- */
+
 export let brown = makeNode("BrownNoise", {
+  description: "Brown noise source",
+  examples: ["brown().out()"],
   ins: [],
 });
-/**
- * Generates random impulses from 0 to +1.
- *
- * @name dust
- * @publicApi
- * @example
- * dust(200).out()
- *
- */
+
 export let dust = makeNode("Dust", {
-  ins: [{ name: "density", default: 0 }],
+  description: "Generates random impulses from 0 to +1.",
+  examples: ["dust(200).out()"],
+  ins: [
+    { name: "density", default: 0, description: "average impulses per second" },
+  ],
 });
-/**
- * Pulse wave oscillator
- *
- * @name pulse
- * @publicApi
- * @example
- * pulse(110, sine(.1).range(.1,.5)).out()
- *
- */
+
 export let pulse = makeNode("Pulse", {
+  description: "Pulse wave oscillator",
+  examples: ["pulse(110, sine(.1).range(.1,.5)).out()"],
   ins: [
     { name: "freq", default: 0 },
-    { name: "pw", default: 0.5 },
+    { name: "pw", default: 0.5, description: "pulse width 0 - 1" },
   ],
 });
+
 export let impulse = makeNode("Impulse", {
+  description: "Regular single sample impulses (0 - 1)",
   ins: [
     { name: "freq", default: 0 },
     { name: "phase", default: 0 },
   ],
 });
 export let saw = makeNode("Saw", {
+  description: "Sawtooth wave oscillator",
   ins: [{ name: "freq", default: 0 }],
 });
 export let sine = makeNode("Sine", {
+  description: "Sine wave oscillator",
   ins: [
     { name: "freq", default: 0 },
-    { name: "sync", default: 0 },
+    { name: "sync", default: 0, description: "sync input" },
   ],
 });
 export let tri = makeNode("Tri", {
+  description: "Triangle wave oscillator",
   ins: [{ name: "freq", default: 0 }],
 });
 export let slide = makeNode("Slide", {
+  description: "Slide/portamento node",
   ins: [
     { name: "in", default: 0 },
     { name: "rate", default: 1 },
+  ],
+});
+export let lag = makeNode("Lag", {
+  description: "Smoothes a signal. Good for slide / portamento effects.",
+  ins: [
+    { name: "in", default: 0 },
+    { name: "rate", default: 1, description: "60 dB lag time in seconds" },
   ],
 });
 
 // feedback_write is a special case in the compiler, so it won't appear here..
 export let feedback_read = makeNode("feedback_read", {
+  internal: true,
+  description: "internal helper node to read the last feedback_write output",
   ins: [],
 });
 export let slew = makeNode("Slew", {
+  description:
+    "Limits the slope of an input signal. The slope is expressed in units per second.",
   ins: [
     { name: "in", default: 0 },
-    { name: "up", default: 1 },
-    { name: "dn", default: 1 },
-  ],
-});
-export let lag = makeNode("Lag", {
-  ins: [
-    { name: "in", default: 0 },
-    { name: "rate", default: 1 },
+    {
+      name: "up",
+      default: 1,
+      description: "Maximum upward slope in units per second",
+    },
+    {
+      name: "dn",
+      default: 1,
+      description: "Maximum downward slope in units per second",
+    },
   ],
 });
 export let filter = makeNode("Filter", {
+  description: "Two-pole low-pass filter",
   ins: [
     { name: "in", default: 0 },
     { name: "cutoff", default: 1 },
@@ -170,25 +162,30 @@ export let filter = makeNode("Filter", {
   ],
 });
 export let fold = makeNode("Fold", {
+  description: 'Distort incoming audio signal by "folding"',
   ins: [
     { name: "in", default: 0 },
     { name: "rate", default: 0 },
   ],
 });
 export let seq = makeNode("Seq", {
+  description: "Trigger controlled sequencer",
   dynamic: true, // dynamic number of inlets
   ins: [
-    { name: "clock", default: 0 },
+    { name: "trig", default: 0 },
+    { name: "step", default: 0, dynamic: true, description: "step inputs" },
     // 1-Infinity of steps
   ],
 });
 export let delay = makeNode("Delay", {
+  description: "Delay line node",
   ins: [
     { name: "in", default: 0 },
     { name: "time", default: 0 },
   ],
 });
 export let hold = makeNode("Hold", {
+  description: "Sample and hold",
   ins: [
     { name: "in", default: 0 },
     { name: "trig", default: 0 },
@@ -198,9 +195,19 @@ export let hold = makeNode("Hold", {
     ins: [],
 });*/
 export let midifreq = makeNode("MidiFreq", {
-  ins: [{ name: "channel", default: -1 }],
+  description:
+    "Outputs frequency of midi note in. Multiple instances will do voice allocation",
+  ins: [
+    {
+      name: "channel",
+      default: -1,
+      description: "Channel filter. Defaults to all channels",
+    },
+  ],
 });
 export let midigate = makeNode("MidiGate", {
+  description:
+    "outputs gate of midi note in. Multiple instances will do voice allocation",
   ins: [{ name: "channel", default: -1 }],
 });
 export let midicc = makeNode("MidiCC", {
@@ -210,29 +217,49 @@ export let midicc = makeNode("MidiCC", {
   ],
 });
 export let audioin = makeNode("AudioIn", {
+  description: "External Audio Input, depends on your system input",
   ins: [],
   args: ["input"],
 });
 
 // non-audio nodes
-export let sin = makeNode("sin");
-export let cos = makeNode("cos");
-export let mul = makeNode("mul", {
-  ins: [
-    { name: "in0", default: 1 },
-    { name: "in1", default: 1 },
-  ],
+export let sin = makeNode("sin", {
+  description: "calculates the sine of the input signal",
+  audio: false,
+  ins: [{ name: "in" }],
 });
-export let add = makeNode("add");
-export let div = makeNode("div");
-export let sub = makeNode("sub");
+export let cos = makeNode("cos", {
+  description: "calculates the cosine of the input signal",
+  audio: false,
+  ins: [{ name: "in" }],
+});
+export let mul = makeNode("mul", {
+  description: "multiplies the given signals",
+  audio: false,
+  ins: [{ name: "in", dynamic: true }],
+});
+export let add = makeNode("add", {
+  description: "sums the given signals",
+  audio: false,
+  ins: [{ name: "in", dynamic: true }],
+});
+export let div = makeNode("div", {
+  description: "adds the given signals",
+  audio: false,
+  ins: [{ name: "in", dynamic: true }],
+});
+export let sub = makeNode("sub", {
+  description: "subtracts the given signals",
+  audio: false,
+  ins: [{ name: "in", dynamic: true }],
+});
 export let mod = makeNode("mod", {
-  ins: [
-    { name: "in0", default: 0 },
-    { name: "in1", default: 1 },
-  ],
+  description: "calculates the modulo",
+  audio: false,
+  ins: [{ name: "in" }, { name: "modulo" }],
 });
 export let range = makeNode("range", {
+  description: "Scales the incoming bipolar value to the given range",
   audio: false,
   ins: [{ name: "in" }, { name: "min" }, { name: "max" }],
 });

@@ -4,13 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "pretest": "npm run jsdoc-json",
-    "prebuild": "npm run jsdoc-json",
-    "predev": "npm run jsdoc-json",
     "dev": "pnpm predev && cd website && pnpm dev",
     "build": "cd website && pnpm build",
-    "preview": "cd website && pnpm preview",
-    "jsdoc-json": "jsdoc packages/ --template ./node_modules/jsdoc-json --destination doc.json -c jsdoc/jsdoc.config.json"
+    "preview": "cd website && pnpm preview"
   },
   "author": "Felix Roos <flix91@gmail.com>",
   "license": "AGPL-3.0-or-later",
@@ -25,8 +21,6 @@
     "postcss": "^8.4.38",
     "tailwindcss": "^3.4.4",
     "vite": "^5.2.0",
-    "vite-plugin-solid": "^2.10.2",
-    "jsdoc": "^4.0.2",
-    "jsdoc-json": "^2.0.2"
+    "vite-plugin-solid": "^2.10.2"
   }
 }

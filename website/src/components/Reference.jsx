@@ -1,22 +1,40 @@
 import { MiniRepl } from "../components/MiniRepl";
-import jsdoc from "../../../doc.json";
 import { For } from "solid-js";
+import { nodeRegistry } from "@kabelsalat/core";
 
-const items = jsdoc.docs.filter((item) => !!item.tags);
+const commonInputs = {
+  in: "signal input",
+  freq: "frequency",
+  phase: "phase offset 0 - 1",
+  cutoff: "cutoff frequency",
+  reso: "resonance",
+  min: "minimum value",
+  max: "maximum value",
+  gate: "gate input",
+  trig: "trigger input",
+};
 
+const items = Array.from(nodeRegistry.entries()).filter(
+  ([_, schema]) => !schema.internal
+);
+console.log("items", items);
 export function Reference() {
   return (
     <div>
-      <div class="space-x-2">
+      <div>
         <For each={items}>
-          {(item) => <a href={`#${item.longname}`}>{item.longname}</a>}
+          {([name, schema]) => (
+            <>
+              <a href={`#${name}`}>{name}</a>{" "}
+            </>
+          )}
         </For>
       </div>
       <For each={items}>
-        {(item) => (
+        {([name, schema]) => (
           <div>
-            <h2 id={item.longname}>{item.longname}</h2>
-            <p>{item.description}</p>
+            <h2 id={name}>{name}</h2>
+            <p>{schema.description}</p>
 
             {/* <div class="flex space-x-2 pb-2">
               <For each={item.tags}>
@@ -27,14 +45,16 @@ export function Reference() {
                 )}
               </For>
             </div> */}
-            <For each={item.params}>
-              {(param) => (
+            <For each={schema.ins}>
+              {(input) => (
                 <div class="p-2 text-sm">
-                  {param.name}: {param.description}
+                  {input.dynamic && "..."}
+                  {input.name} ({input.default}):{" "}
+                  {input.description || commonInputs[input.name]}
                 </div>
               )}
             </For>
-            <For each={item.examples}>
+            <For each={schema.examples}>
               {(example) => <MiniRepl code={example} />}
             </For>
           </div>
