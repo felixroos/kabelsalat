@@ -74,11 +74,15 @@ Node.prototype.asModuleOutput = function (name) {
 
 // user facing function to create modules
 // inputs and output are annotated so that viz can ignore inner nodes
-export function module(name, fn) {
-  return register(name, (...args) => {
-    args = args.map((input) => parseInput(input).asModuleInput(name));
-    return fn(...args).asModuleOutput(name);
-  });
+export function module(name, fn, schema) {
+  return register(
+    name,
+    (...args) => {
+      args = args.map((input) => parseInput(input).asModuleInput(name));
+      return fn(...args).asModuleOutput(name);
+    },
+    schema
+  );
 }
 
 // converts a registered module into a json string
@@ -295,7 +299,8 @@ export let makeNode = (type, schema) => {
   };
 };
 
-export let register = (name, fn) => {
+export let register = (name, fn, schema) => {
+  schema && nodeRegistry.set(name, schema);
   Node.prototype[name] = function (...args) {
     return fn(this, ...args);
   };
