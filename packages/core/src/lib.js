@@ -361,6 +361,7 @@ export let fork = register(
     poly(...Array.from({ length: times }, () => input.clone())),
   {
     ins: [{ name: "in" }, { name: "times" }],
+    tags: ["multi-channel"],
     description: "split the signal into n channels",
     examples: [`dust(4).fork(2).adsr(.1).mul(sine(220)).out()`],
   }
@@ -390,41 +391,96 @@ export let lpf = module("lpf", filter, {
   examples: [`saw(55).lpf( sine(1).range(.4,.8) ).out()`],
 }); // alias
 
-export let lfnoise = module("lfnoise", (freq) => noise().hold(impulse(freq)));
+export let lfnoise = module("lfnoise", (freq) => noise().hold(impulse(freq)), {
+  ins: [{ name: "freq" }],
+  description: "low frequency stepped noise.",
+  tags: ["regular", "random", "noise"],
+  examples: [`lfnoise(4).range(200,800).sine().out()`],
+});
 
-export let bipolar = module("bipolar", (unipolar) => n(unipolar).mul(2).sub(1));
-export let unipolar = module("unipolar", (bipolar) => n(bipolar).add(1).div(2));
+export let bipolar = module(
+  "bipolar",
+  (unipolar) => n(unipolar).mul(2).sub(1),
+  {
+    ins: [{ name: "in" }],
+    description: "convert unipolar [0,1] signal to bipolar [-1,1]",
+    tags: ["math"],
+    // examples: [], // tbd
+  }
+);
+export let unipolar = module(
+  "unipolar",
+  (bipolar) => n(bipolar).add(1).div(2),
+  {
+    ins: [{ name: "in" }],
+    description: "convert bipolar [-1,1] signal to unipolar [0,1]",
+    tags: ["math"],
+    // examples: [], // tbd
+  }
+);
 
 // modules currently don't support returning a poly node because it won't get resolved (too late)
-export let pan = module("pan", (input, pos) => {
-  // (pos+1)/2 * PI/2 = (pos+1) * PI * 0.25
-  // n(pos).unipolar().mul(PI).div(2)
-  // n(pos).add(1).div(2).mul(PI).div(2)
-  pos = n(pos).add(1).mul(PI, 0.25);
-  return input.mul([cos(pos), sin(pos)]); // this returns a poly which doesn't work with module
-});
+export let pan = module(
+  "pan",
+  (input, pos) => {
+    // (pos+1)/2 * PI/2 = (pos+1) * PI * 0.25
+    // n(pos).unipolar().mul(PI).div(2)
+    // n(pos).add(1).div(2).mul(PI).div(2)
+    pos = n(pos).add(1).mul(PI, 0.25);
+    return input.mul([cos(pos), sin(pos)]); // this returns a poly which doesn't work with module
+  },
+  {
+    ins: [
+      { name: "in" },
+      {
+        name: "pos",
+        description: "bipolar position: -1 = left, 0 = center, 1 = right",
+      },
+    ],
+    description: "pans signal to stereo position. splits signal path in 2",
+    tags: ["multi-channel"],
+    examples: [`sine(220).pan(sine(.25)).out()`],
+  }
+);
 
-export let mix = register("mix", (input, channels = 1) => {
-  if (![1, 2].includes(channels)) {
-    channels = 2;
-    console.warn("mix only supports 1 or 2 channels atm.. falling back to 2");
+export let mix = register(
+  "mix",
+  (input, channels = 1) => {
+    if (![1, 2].includes(channels)) {
+      channels = 2;
+      console.warn("mix only supports 1 or 2 channels atm.. falling back to 2");
+    }
+    if (input.type !== "poly") {
+      return input;
+    }
+    if (channels === 2) {
+      const panned = input.ins.map((inlet, i, ins) => {
+        // we can do this at eval time: channels are fixed!
+        const pos = (i / (ins.length - 1)) * 2 - 1;
+        const deg = ((pos + 1) * Math.PI) / 4;
+        const stereo = inlet.mul([Math.cos(deg), Math.sin(deg)]);
+        return stereo.inherit(input);
+      });
+      return add(...panned);
+    }
+    input.ins = input.ins.map((inlet) => inlet.inherit(input));
+    return node("mix").withIns(...input.ins);
+  },
+  {
+    description: `mixes down multiple channels. Useful to make sure you get a mono or stereo signal out at the end. 
+When mixing down to 2 channels, the input channels are equally distributed over the stereo image, e.g. 3 channels are panned [-1,0,1]`,
+    ins: [
+      { name: "in" },
+      {
+        name: "channels",
+        default: 1,
+        description: "how many channels to mix down to. Only supports 1 and 2",
+      },
+    ],
+    tags: ["multi-channel"],
+    examples: [`sine([220,330,440]).mix(2).out()`],
   }
-  if (input.type !== "poly") {
-    return input;
-  }
-  if (channels === 2) {
-    const panned = input.ins.map((inlet, i, ins) => {
-      // we can do this at eval time: channels are fixed!
-      const pos = (i / (ins.length - 1)) * 2 - 1;
-      const deg = ((pos + 1) * Math.PI) / 4;
-      const stereo = inlet.mul([Math.cos(deg), Math.sin(deg)]);
-      return stereo.inherit(input);
-    });
-    return add(...panned);
-  }
-  input.ins = input.ins.map((inlet) => inlet.inherit(input));
-  return node("mix").withIns(...input.ins);
-});
+);
 
 // legacy...
 Node.prototype.feedback = function (fn) {
