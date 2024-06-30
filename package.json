@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "pnpm predev && cd website && pnpm dev",
+    "dev": "cd website && pnpm dev",
     "build": "cd website && pnpm build",
     "preview": "cd website && pnpm preview"
   },
