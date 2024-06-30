@@ -15,6 +15,7 @@ import { makeNode, Node, register, module } from "./graph";
  *
  */
 export let adsr = makeNode("ADSR", {
+  tags: ["envelope"],
   description: "ADSR envelope",
   examples: [
     `impulse(1).perc(.5)
@@ -31,6 +32,7 @@ export let adsr = makeNode("ADSR", {
   args: ["time"], // if set, the update function will get time as first param
 });
 export let clock = makeNode("Clock", {
+  tags: ["regular", "clock"],
   internal: true, // disable for now...
   description: "Clock source, with tempo in BPM",
   examples: [`clock(120).clockdiv(16).mul(sine(220)).out()`],
@@ -43,6 +45,7 @@ export let clock = makeNode("Clock", {
   ],
 });
 export let clockdiv = makeNode("ClockDiv", {
+  tags: ["clock"],
   internal: true, // disable for now...
   description: "Clock signal divider",
   examples: [`clock(120).clockdiv(16).mul(sine(220)).out()`],
@@ -53,6 +56,7 @@ export let clockdiv = makeNode("ClockDiv", {
 });
 
 export let distort = makeNode("Distort", {
+  tags: ["fx", "distortion"],
   description: "Overdrive-style distortion",
   examples: [
     `sine(220)
@@ -66,6 +70,7 @@ export let distort = makeNode("Distort", {
 });
 
 export let noise = makeNode("Noise", {
+  tags: ["source", "noise"],
   description: "White noise source",
   examples: ["noise().mul(.25).out()"],
   ins: [],
@@ -73,18 +78,21 @@ export let noise = makeNode("Noise", {
 
 // todo: how to show "pink" in reference?
 export let pink = makeNode("PinkNoise", {
+  tags: ["source", "noise"],
   description: "Pink noise source",
   examples: ["pink().mul(.5).out()"],
   ins: [],
 });
 
 export let brown = makeNode("BrownNoise", {
+  tags: ["source", "noise"],
   description: "Brown noise source",
   examples: ["brown().out()"],
   ins: [],
 });
 
 export let dust = makeNode("Dust", {
+  tags: ["random", "trigger", "noise", "source"],
   description: "Generates random impulses from 0 to +1.",
   examples: ["dust(200).out()"],
   ins: [
@@ -93,6 +101,7 @@ export let dust = makeNode("Dust", {
 });
 
 export let impulse = makeNode("Impulse", {
+  tags: ["regular", "trigger"],
   description: "Regular single sample impulses (0 - 1)",
   examples: ["impulse(10).out()"],
   ins: [
@@ -101,11 +110,13 @@ export let impulse = makeNode("Impulse", {
   ],
 });
 export let saw = makeNode("Saw", {
+  tags: ["regular", "waveform", "source"],
   description: "Sawtooth wave oscillator",
   examples: ["saw(110).mul(.5).out()"],
   ins: [{ name: "freq", default: 0 }],
 });
 export let sine = makeNode("Sine", {
+  tags: ["regular", "waveform", "source"],
   description: "Sine wave oscillator",
   examples: ["sine(110).out()"],
   ins: [
@@ -114,12 +125,14 @@ export let sine = makeNode("Sine", {
   ],
 });
 export let tri = makeNode("Tri", {
+  tags: ["regular", "waveform", "source"],
   description: "Triangle wave oscillator",
   examples: ["tri(220).out()"],
   ins: [{ name: "freq", default: 0 }],
 });
 
 export let pulse = makeNode("Pulse", {
+  tags: ["regular", "waveform", "source"],
   description: "Pulse wave oscillator",
   examples: ["pulse(220, sine(.1).range(.1,.5)).mul(.5).out()"],
   ins: [
@@ -129,6 +142,7 @@ export let pulse = makeNode("Pulse", {
 });
 
 export let slide = makeNode("Slide", {
+  tags: ["fx"],
   internal: true,
   description: "Slide/portamento node",
   examples: [
@@ -141,6 +155,7 @@ export let slide = makeNode("Slide", {
   ],
 });
 export let lag = makeNode("Lag", {
+  tags: ["fx"],
   description: "Smoothes a signal. Good for slide / portamento effects.",
   examples: [
     `impulse(2).seq(220,330,440,550)
@@ -159,6 +174,7 @@ export let feedback_read = makeNode("feedback_read", {
   ins: [],
 });
 export let slew = makeNode("Slew", {
+  tags: ["fx"],
   description:
     "Limits the slope of an input signal. The slope is expressed in units per second.",
   examples: [`pulse(800).slew(4000, 4000).out()`],
@@ -177,6 +193,8 @@ export let slew = makeNode("Slew", {
   ],
 });
 export let filter = makeNode("Filter", {
+  tags: ["fx", "filter"],
+  internal: true,
   description: "Two-pole low-pass filter",
   examples: [`saw(55).filter( sine(1).range(.4,.8) ).out()`],
   ins: [
@@ -186,6 +204,7 @@ export let filter = makeNode("Filter", {
   ],
 });
 export let fold = makeNode("Fold", {
+  tags: ["fx", "distortion", "limiter"],
   description: 'Distort incoming audio signal by "folding"',
   examples: [
     `sine(55)
@@ -198,6 +217,7 @@ export let fold = makeNode("Fold", {
   ],
 });
 export let seq = makeNode("Seq", {
+  tags: ["sequencer"],
   description: "Trigger controlled sequencer",
   examples: [
     `impulse(2).seq(220,330,440,550)
@@ -211,6 +231,7 @@ export let seq = makeNode("Seq", {
   ],
 });
 export let delay = makeNode("Delay", {
+  tags: ["fx"],
   description: "Delay line node",
   examples: [
     `impulse(1).perc(.4).mul(sine(220))
@@ -222,6 +243,7 @@ export let delay = makeNode("Delay", {
   ],
 });
 export let hold = makeNode("Hold", {
+  tags: ["fx"],
   description: "Sample and hold",
   examples: [
     `noise().hold(impulse(2))
@@ -236,6 +258,7 @@ export let hold = makeNode("Hold", {
     ins: [],
 });*/
 export let midifreq = makeNode("MidiFreq", {
+  tags: ["external", "midi"],
   description:
     "Outputs frequency of midi note in. Multiple instances will do voice allocation",
   examples: [`midifreq().sine().out()`],
@@ -248,12 +271,14 @@ export let midifreq = makeNode("MidiFreq", {
   ],
 });
 export let midigate = makeNode("MidiGate", {
+  tags: ["external", "midi"],
   description:
     "outputs gate of midi note in. Multiple instances will do voice allocation",
   examples: [`midigate().lag(1).mul(sine(220)).out()`],
   ins: [{ name: "channel", default: -1 }],
 });
 export let midicc = makeNode("MidiCC", {
+  tags: ["external", "midi"],
   description: "outputs bipolar value of given midi cc number",
   examples: [`midicc(74).range(100,200).sine().out()`],
   ins: [
@@ -262,6 +287,7 @@ export let midicc = makeNode("MidiCC", {
   ],
 });
 export let audioin = makeNode("AudioIn", {
+  tags: ["source", "external"],
   description: "External Audio Input, depends on your system input",
   examples: [`audioin().add(x=>x.delay(.1).mul(.8)).out()`],
   ins: [],
@@ -270,46 +296,54 @@ export let audioin = makeNode("AudioIn", {
 
 // non-audio nodes
 export let sin = makeNode("sin", {
+  tags: ["math"],
   internal: true, // tbd find example
   description: "calculates the sine of the input signal",
   audio: false,
   ins: [{ name: "in" }],
 });
 export let cos = makeNode("cos", {
+  tags: ["math"],
   internal: true, // tbd find example
   description: "calculates the cosine of the input signal",
   audio: false,
   ins: [{ name: "in" }],
 });
 export let mul = makeNode("mul", {
+  tags: ["math"],
   description: "Multiplies the given signals.",
   examples: [`sine(220).mul( sine(4).range(.25,1) ).out()`],
   audio: false,
   ins: [{ name: "in", dynamic: true }],
 });
 export let add = makeNode("add", {
+  tags: ["math"],
   description: "sums the given signals",
   examples: [`n([0,3,7,10]).add(60).midinote().sine().mix(2).out()`],
   audio: false,
   ins: [{ name: "in", dynamic: true }],
 });
 export let div = makeNode("div", {
+  tags: ["math"],
   description: "adds the given signals",
   audio: false,
   ins: [{ name: "in", dynamic: true }],
 });
 export let sub = makeNode("sub", {
+  tags: ["math"],
   description: "subtracts the given signals",
   audio: false,
   ins: [{ name: "in", dynamic: true }],
 });
 export let mod = makeNode("mod", {
+  tags: ["math"],
   description: "calculates the modulo",
   examples: [`add(x=>x.add(.003).mod(1)).out()`],
   audio: false,
   ins: [{ name: "in" }, { name: "modulo" }],
 });
 export let range = makeNode("range", {
+  tags: ["math"],
   description: "Scales the incoming bipolar value to the given range.",
   examples: [`sine(.5).range(.25,1).mul(sine(440)).out()`],
   audio: false,
@@ -321,18 +355,40 @@ export let exit = makeNode("exit");
 export let poly = makeNode("poly");
 export let PI = new Node("PI");
 
-export let fork = register("fork", (input, times = 1) =>
-  poly(...Array.from({ length: times }, () => input.clone()))
+export let fork = register(
+  "fork",
+  (input, times = 1) =>
+    poly(...Array.from({ length: times }, () => input.clone())),
+  {
+    ins: [{ name: "in" }, { name: "times" }],
+    description: "split the signal into n channels",
+    examples: [`dust(4).fork(2).adsr(.1).mul(sine(220)).out()`],
+  }
 );
 
-export let perc = module("perc", (gate, release) =>
-  gate.adsr(0, 0, 1, release)
-);
+export let perc = module("perc", (gate, decay) => gate.adsr(0, 0, 1, decay), {
+  description: "percussive envelope. usable with triggers or gates",
+  ins: [{ name: "gate" }, { name: "release" }],
+  examples: [`impulse(4).perc(.1).mul( pink() ).out()`],
+});
 
-export let hpf = module("hpf", (input, cutoff, resonance = 0) =>
-  input.filter(1, resonance).sub(input.filter(cutoff, resonance))
+export let hpf = module(
+  "hpf",
+  (input, cutoff, resonance = 0) =>
+    input.filter(1, resonance).sub(input.filter(cutoff, resonance)),
+  {
+    ins: [{ name: "in" }, { name: "cutoff" }, { name: "reso" }],
+    description: "high pass filter",
+    tags: ["fx", "filter"],
+    examples: [`tri([220,331,442]).mix().hpf(sine(.5).range(0,.9)).out()`],
+  }
 );
-export let lpf = module("lpf", filter); // alias
+export let lpf = module("lpf", filter, {
+  ins: [{ name: "in" }, { name: "cutoff" }, { name: "reso" }],
+  description: "low pass filter",
+  tags: ["fx", "filter"],
+  examples: [`saw(55).lpf( sine(1).range(.4,.8) ).out()`],
+}); // alias
 
 export let lfnoise = module("lfnoise", (freq) => noise().hold(impulse(freq)));
 
