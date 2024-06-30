@@ -55,7 +55,7 @@ export function Reference() {
               )}
             </For>
             <For each={schema.examples}>
-              {(example) => <MiniRepl code={example} />}
+              {(example) => <MiniRepl code={example} hideGraph />}
             </For>
           </div>
         )}

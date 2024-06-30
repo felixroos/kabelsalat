@@ -18,7 +18,7 @@ export function MiniRepl(props) {
   let container;
   async function run() {
     const node = repl.evaluate(code());
-    node.render(container, vizSettings); // update viz
+    !props.hideGraph && node.render(container, vizSettings); // update viz
     repl.play(node);
   }
   let handleKeydown = (e) => {
@@ -57,13 +57,15 @@ export function MiniRepl(props) {
           onKeyDown={handleKeydown}
         ></textarea>
       </div>
-      <div
-        class={`bg-stone-900 overflow-auto text-gray-500 p-4 grow-0 text-center max-h-[400px]`}
-        ref={(el) => {
-          container = el;
-          repl.evaluate(code()).render(container, vizSettings);
-        }}
-      ></div>
+      {!props.hideGraph && (
+        <div
+          class={`bg-stone-900 overflow-auto text-gray-500 p-4 grow-0 text-center max-h-[400px]`}
+          ref={(el) => {
+            container = el;
+            repl.evaluate(code()).render(container, vizSettings);
+          }}
+        ></div>
+      )}
     </div>
   );
 }
