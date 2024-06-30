@@ -38,7 +38,7 @@ Here is a monosynth that is a little bit more exciting:
   code={`let env = midigate().adsr(.01,.2,.75).mul(.75)
 midifreq().div(2)
 .saw(.4)
-.filter(
+.lpf(
   sine(.1).range(.7,.8).mul(env), 
   env.div(2)
 )
@@ -72,7 +72,7 @@ midigate functions will automatically do voice allocation of incoming notes:
 let env = midigate().fork(8).adsr(0.01, 0.4, 0.7, 0.1);
 saw(midifreq().fork(8)) // 8 saw voices
   .mul(env) // amp envelope
-  .filter(env.range(0.2, 0.8).mul(env)) // filter envelope
+  .lpf(env.range(0.2, 0.8).mul(env)) // filter envelope
   .mix() // mix together
   .add((x) => x.delay(0.2).mul(0.4)) // feedback delay
   .out();`}

@@ -54,10 +54,10 @@ Note: We could also have written `sine(sine(4).range(210,230))`
 ## Subtractive Synthesis
 
 A lonely sine wave is pretty thin, let's add some oomph with a sawtooth wave
-and a filter:
+and a low pass filter:
 
 <MiniRepl
-  code={`saw(55).filter( sine(1).range(.4,.8) ).out()`}
+  code={`saw(55).lpf( sine(1).range(.4,.8) ).out()`}
   client:only="solid"
 />
 
@@ -94,7 +94,7 @@ impulse:
 
 <MiniRepl
   code={`impulse(4).seq(55,110,220,330).saw()
-.filter(.5).out()`}
+.lpf(.5).out()`}
   client:only="solid"
 />
 <Box>
@@ -138,7 +138,7 @@ preventing harsh clicks. It can also be used for glissando effects:
 
 <MiniRepl
   code={`impulse(2).seq(55,110,220,330)
-.slide(4).saw().filter(.5).out()`}
+.slide(4).saw().lpf(.5).out()`}
   client:only="solid"
 />
 
@@ -149,7 +149,7 @@ using a so called lambda function:
 
 <MiniRepl
   code={`impulse(2).seq(55,110,220,330)
-.saw().filter(.5)
+.saw().lpf(.5)
 .mul(impulse(4).perc(.1).slide(.2))
 .add(x=>x.delay(.1).mul(.8))
 .out()`}
@@ -190,7 +190,7 @@ Look what happens when brackets are used in more than one place:
 
 <MiniRepl
   code={`impulse(4).seq(55,0,55,66,77).slide(1).saw()
-.filter( sine(.3).range(.2,.8) , .2)
+.lpf( sine(.3).range(.2,.8) , .2)
 .distort( sine(.5).range(0,1) )
 .out()`}
   client:only="solid"
@@ -205,7 +205,7 @@ point. To improve things, you can define modules like this:
     code={`let synth = module("synth", (freq, gate) => {
   let env = gate.adsr(0.01, 0.4, 0.7, 0.1);
   return saw(freq).mul(env)
-    .filter( env.range(0.2, 0.8).mul(env) );
+    .lpf( env.range(0.2, 0.8).mul(env) );
 });
 
 let freq = impulse(4).seq(55,110,220,330)

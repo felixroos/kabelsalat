@@ -196,7 +196,7 @@ export let filter = makeNode("Filter", {
   tags: ["fx", "filter"],
   internal: true,
   description: "Two-pole low-pass filter",
-  examples: [`saw(55).filter( sine(1).range(.4,.8) ).out()`],
+  examples: [`saw(55).lpf( sine(1).range(.4,.8) ).out()`],
   ins: [
     { name: "in", default: 0 },
     { name: "cutoff", default: 1 },
@@ -375,7 +375,7 @@ export let perc = module("perc", (gate, decay) => gate.adsr(0, 0, 1, decay), {
 export let hpf = module(
   "hpf",
   (input, cutoff, resonance = 0) =>
-    input.filter(1, resonance).sub(input.filter(cutoff, resonance)),
+    input.lpf(1, resonance).sub(input.lpf(cutoff, resonance)),
   {
     ins: [{ name: "in" }, { name: "cutoff" }, { name: "reso" }],
     description: "high pass filter",

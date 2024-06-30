@@ -21,7 +21,7 @@ note
 .hold(note) // hold notes above zeroes
 .midinote() // convert midi numbers to freq
 .pulse(.2) // pulse wave with .2 width
-.filter(
+.lpf(
   sine(.1).range(.7,.8).mul(env), // modulated cutoff
   // env.mul(.5) // resonance with envelope
 )

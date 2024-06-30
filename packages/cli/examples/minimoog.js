@@ -24,6 +24,6 @@ return waves[type.value](freq)
 
 osc([2,3,4,1], [55.1,110,220.2,440.9])
 .mix()
-.filter(impulse(4).perc(.25).slide(1).mul(sine(.2).range(.6,1)))
+.lpf(impulse(4).perc(.25).slide(1).mul(sine(.2).range(.6,1)))
 .mul(.2)
 .out()

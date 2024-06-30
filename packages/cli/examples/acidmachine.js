@@ -14,7 +14,7 @@ let kick = (gate) =>
   );
 
 let snare = (gate) =>
-  gate.adsr(0, 0.11, 0.1, 0.1).mul(noise()).filter(0.78, 0.29);
+  gate.adsr(0, 0.11, 0.1, 0.1).mul(noise()).lpf(0.78, 0.29);
 
 let c = clock(160);
 let notes = c
@@ -29,7 +29,7 @@ notes
   .slide(sine(0.21).range(0, 1))
   .pulse(0.48)
   .mul(env)
-  .filter(
+  .lpf(
     env.mul(sine(0.09).range(0.55, 1)), // cutoff
     sine(0.22).range(0, 0.35) // res
   )
