@@ -6,8 +6,10 @@ export class SalatRepl {
   constructor({ onToggle } = {}) {
     this.audio = new AudioView();
     this.onToggle = onToggle;
-    Object.assign(globalThis, api);
-    Object.assign(globalThis, compiler);
+    if (typeof window !== "undefined") {
+      Object.assign(globalThis, api);
+      Object.assign(globalThis, compiler);
+    }
   }
   evaluate(code) {
     return api.evaluate(code);

@@ -55,7 +55,9 @@ export function MiniRepl(props) {
           value={code()}
           onInput={(e) => setCode(e.target.value)}
           onKeyDown={handleKeydown}
-        ></textarea>
+        >
+          {code()}
+        </textarea>
       </div>
       {!props.hideGraph && (
         <div
