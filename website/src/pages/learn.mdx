@@ -18,7 +18,7 @@ import DocLayout from "../layouts/doc.astro";
 
 Here is a very simple example that generates a sine wave:
 
-<MiniRepl code="sine(200).out()" client:only="solid" />
+<MiniRepl code="sine(200).out()" client:visible="solid" />
 
 <Box>
 
@@ -37,14 +37,14 @@ Let's modulate the amplitude using `mul`:
   code={`sine(200)
 .mul( sine(4).range(.4, 1) )
 .out()`}
-  client:only="solid"
+  client:visible="solid"
 />
 
 ## Frequency Modulation
 
 Let's modulate the frequency instead:
 
-<MiniRepl code={`sine(4).range(210,230).sine().out()`} client:only="solid" />
+<MiniRepl code={`sine(4).range(210,230).sine().out()`} client:visible="solid" />
 <Box>
 
 Note: We could also have written `sine(sine(4).range(210,230))`
@@ -58,7 +58,7 @@ and a low pass filter:
 
 <MiniRepl
   code={`saw(55).lpf( sine(1).range(.4,.8) ).out()`}
-  client:only="solid"
+  client:visible="solid"
 />
 
 ## Impulses & Envelopes
@@ -69,7 +69,7 @@ We can apply a simple decay envelope with `impulse` and `perc`:
   code={`sine(220)
 .mul( impulse(4).perc(.2) )
 .out()`}
-  client:only="solid"
+  client:visible="solid"
 />
 
 For more control over the shape, we can also use ADSR:
@@ -78,7 +78,7 @@ For more control over the shape, we can also use ADSR:
   code={`sine(220)
 .mul( impulse(1).perc(.5).adsr(.02,.1,.5,.2) )
 .out()`}
-  client:only="solid"
+  client:visible="solid"
 />
 
 <Box>
@@ -95,7 +95,7 @@ impulse:
 <MiniRepl
   code={`impulse(4).seq(55,110,220,330).saw()
 .lpf(.5).out()`}
-  client:only="solid"
+  client:visible="solid"
 />
 <Box>
 
@@ -112,7 +112,7 @@ In the above example, we might want to use the impulse to control the sequence a
 imp.seq(110,220,330,440).sine()
 .mul( imp.perc(.2).slide(.2) )
 .out()`}
-  client:only="solid"
+  client:visible="solid"
 />
 
 Here we are creating the variable `imp` to use the impulse in 2 places.
@@ -125,7 +125,7 @@ Another way to write the same is this:
   .sine()
   .mul( imp.perc(.2).slide(.2) )
 ).out()`}
-  client:only="solid"
+  client:visible="solid"
 />
 
 The `apply` method allows us to get a variable without breaking up our patch
@@ -139,7 +139,7 @@ preventing harsh clicks. It can also be used for glissando effects:
 <MiniRepl
   code={`impulse(2).seq(55,110,220,330)
 .slide(4).saw().lpf(.5).out()`}
-  client:only="solid"
+  client:visible="solid"
 />
 
 ## Feedback Delay
@@ -153,14 +153,14 @@ using a so called lambda function:
 .mul(impulse(4).perc(.1).slide(.2))
 .add(x=>x.delay(.1).mul(.8))
 .out()`}
-  client:only="solid"
+  client:visible="solid"
 />
 
 ## Multichannel Expansion
 
 We can create multiple channels by using brackets:
 
-<MiniRepl code={`sine([200,201]).out()`} client:only="solid" />
+<MiniRepl code={`sine([200,201]).out()`} client:visible="solid" />
 <Box>
 
 In this case, we get 2 sine waves that will be used for the left and right channel of your sound system.
@@ -169,11 +169,11 @@ In this case, we get 2 sine waves that will be used for the left and right chann
 
 If we want more channels, we have to mix them down:
 
-<MiniRepl code={`sine([111,222,333]).mix().out()`} client:only="solid" />
+<MiniRepl code={`sine([111,222,333]).mix().out()`} client:visible="solid" />
 
 Look what happens when brackets are used in more than one place:
 
-<MiniRepl code={`sine([111,442]).mul([1, .25]).out()`} client:only="solid" />
+<MiniRepl code={`sine([111,442]).mul([1, .25]).out()`} client:visible="solid" />
 
 ## fold
 
@@ -183,7 +183,7 @@ Look what happens when brackets are used in more than one place:
   code={`sine(55)
 .fold( sine(.5).range(0.2,4) )
 .out()`}
-  client:only="solid"
+  client:visible="solid"
 />
 
 ## Distort
@@ -193,7 +193,7 @@ Look what happens when brackets are used in more than one place:
 .lpf( sine(.3).range(.2,.8) , .2)
 .distort( sine(.5).range(0,1) )
 .out()`}
-  client:only="solid"
+  client:visible="solid"
 />
 
 ## Modules
@@ -213,7 +213,7 @@ let gate = impulse(4).perc(.2)
 synth(freq, gate)
 .add((x) => x.delay(0.2).mul(0.4)) // feedback delay
 .out()`}
-client:only="solid"
+client:visible="solid"
 />
 
 <Box>

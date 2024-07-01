@@ -31,7 +31,7 @@ Let's look at this example:
   code={`sine(200)
 .log(n=>JSON.stringify(n,null,2))
 .out()`}
-  client:only="solid"
+  client:visible="solid"
 />
 
 If you run the above patch, the `log` method will output this:
@@ -103,7 +103,7 @@ This step takes the last `Node` and turns it into an Array of `Node`'s where, th
   code={`const graph = sine(200).mul(.5)
 console.log('flat graph', JSON.stringify(graph.flatten(),null,2))
 graph.out()`}
-  client:only="solid"
+  client:visible="solid"
 />
 
 This is the console output:
@@ -146,7 +146,7 @@ This representation of the graph contains the same info, but structured in a way
 const flat = graph.flatten()
 console.log('sorted', JSON.stringify(topoSort(flat),null,2))
 graph.out()`}
-  client:only="solid"
+  client:visible="solid"
 />
 
 This gives us:
@@ -194,7 +194,7 @@ The compiler can now generate a chunk of code, where each line roughly correspon
   code={`const graph = sine(200).mul(.5)
 console.log(compile(graph))
 graph.out()`}
-  client:only="solid"
+  client:visible="solid"
 />
 
 The compiler gives us this compiled `unit`:

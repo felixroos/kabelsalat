@@ -19,7 +19,7 @@ notes sent by any midi device. If you don't have a midi device at hand, <a href=
 
 ## Receiving MIDI Gates
 
-<MiniRepl code={`midifreq().sine().mul(.5).out()`} client:only="solid" />
+<MiniRepl code={`midifreq().sine().mul(.5).out()`} client:visible="solid" />
 
 You can also limit it to a specific channel with `midifreq(1)` (to listen
 only for notes on midi channel 1) Similarly, `midigate` can be used:
@@ -29,7 +29,7 @@ only for notes on midi channel 1) Similarly, `midigate` can be used:
 .mul( midigate().adsr(.01, .1) )
 .mul(.5)
 .out()`}
-  client:only="solid"
+  client:visible="solid"
 />
 
 Here is a monosynth that is a little bit more exciting:
@@ -45,7 +45,7 @@ midifreq().div(2)
 .mul(env)
 .mul(.5)
 .out()`}
-  client:only="solid"
+  client:visible="solid"
 />
 
 ## Receiving MIDI CC Messages
@@ -59,7 +59,7 @@ midicc(74)
 .range(100,200)
 .sine()
 .mul(.5).out()`}
-  client:only="solid"
+  client:visible="solid"
 />
 
 ## Polyphonic MIDI
@@ -76,5 +76,5 @@ saw(midifreq().fork(8)) // 8 saw voices
   .mix() // mix together
   .add((x) => x.delay(0.2).mul(0.4)) // feedback delay
   .out();`}
-  client:only="solid"
+  client:visible="solid"
 />

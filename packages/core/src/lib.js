@@ -480,6 +480,7 @@ When mixing down to 2 channels, the input channels are equally distributed over 
     ],
     tags: ["multi-channel"],
     examples: [`sine([220,330,440]).mix(2).out()`],
+    audio: false,
   }
 );
 
