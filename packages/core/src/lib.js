@@ -14,7 +14,7 @@ import { makeNode, Node, register, module } from "./graph";
  *
  *
  */
-export let adsr = makeNode("ADSR", {
+export let adsr = makeNode("adsr", {
   tags: ["envelope"],
   description: "ADSR envelope",
   examples: [
@@ -31,7 +31,7 @@ export let adsr = makeNode("ADSR", {
   ],
   args: ["time"], // if set, the update function will get time as first param
 });
-export let clock = makeNode("Clock", {
+export let clock = makeNode("clock", {
   tags: ["regular", "clock"],
   internal: true, // disable for now...
   description: "Clock source, with tempo in BPM",
@@ -44,7 +44,7 @@ export let clock = makeNode("Clock", {
     },
   ],
 });
-export let clockdiv = makeNode("ClockDiv", {
+export let clockdiv = makeNode("clockdiv", {
   tags: ["clock"],
   internal: true, // disable for now...
   description: "Clock signal divider",
@@ -55,7 +55,7 @@ export let clockdiv = makeNode("ClockDiv", {
   ],
 });
 
-export let distort = makeNode("Distort", {
+export let distort = makeNode("distort", {
   tags: ["fx", "distortion"],
   description: "Overdrive-style distortion",
   examples: [
@@ -69,7 +69,7 @@ export let distort = makeNode("Distort", {
   ],
 });
 
-export let noise = makeNode("Noise", {
+export let noise = makeNode("noise", {
   tags: ["source", "noise"],
   description: "White noise source",
   examples: ["noise().mul(.25).out()"],
@@ -77,21 +77,21 @@ export let noise = makeNode("Noise", {
 });
 
 // todo: how to show "pink" in reference?
-export let pink = makeNode("PinkNoise", {
+export let pink = makeNode("pink", {
   tags: ["source", "noise"],
   description: "Pink noise source",
   examples: ["pink().mul(.5).out()"],
   ins: [],
 });
 
-export let brown = makeNode("BrownNoise", {
+export let brown = makeNode("brown", {
   tags: ["source", "noise"],
   description: "Brown noise source",
   examples: ["brown().out()"],
   ins: [],
 });
 
-export let dust = makeNode("Dust", {
+export let dust = makeNode("dust", {
   tags: ["trigger", "noise", "source"],
   description: "Generates random impulses from 0 to +1.",
   examples: ["dust(200).out()"],
@@ -100,7 +100,7 @@ export let dust = makeNode("Dust", {
   ],
 });
 
-export let impulse = makeNode("Impulse", {
+export let impulse = makeNode("impulse", {
   tags: ["regular", "trigger"],
   description: "Regular single sample impulses (0 - 1)",
   examples: ["impulse(10).out()"],
@@ -109,29 +109,29 @@ export let impulse = makeNode("Impulse", {
     { name: "phase", default: 0 },
   ],
 });
-export let saw = makeNode("Saw", {
+export let saw = makeNode("saw", {
   tags: ["regular", "waveform", "source"],
   description: "Sawtooth wave oscillator",
   examples: ["saw(110).mul(.5).out()"],
   ins: [{ name: "freq", default: 0 }],
 });
-export let sine = makeNode("Sine", {
+export let sine = makeNode("sine", {
   tags: ["regular", "waveform", "source"],
   description: "Sine wave oscillator",
-  examples: ["sine(110).out()"],
+  examples: ["sine(220).out()"],
   ins: [
     { name: "freq", default: 0 },
     { name: "sync", default: 0, description: "sync input" },
   ],
 });
-export let tri = makeNode("Tri", {
+export let tri = makeNode("tri", {
   tags: ["regular", "waveform", "source"],
   description: "Triangle wave oscillator",
   examples: ["tri(220).out()"],
   ins: [{ name: "freq", default: 0 }],
 });
 
-export let pulse = makeNode("Pulse", {
+export let pulse = makeNode("pulse", {
   tags: ["regular", "waveform", "source"],
   description: "Pulse wave oscillator",
   examples: ["pulse(220, sine(.1).range(.1,.5)).mul(.5).out()"],
@@ -141,7 +141,7 @@ export let pulse = makeNode("Pulse", {
   ],
 });
 
-export let slide = makeNode("Slide", {
+export let slide = makeNode("slide", {
   tags: ["fx"],
   internal: true,
   description: "Slide/portamento node",
@@ -154,7 +154,7 @@ export let slide = makeNode("Slide", {
     { name: "rate", default: 1 },
   ],
 });
-export let lag = makeNode("Lag", {
+export let lag = makeNode("lag", {
   tags: ["fx"],
   description: "Smoothes a signal. Good for slide / portamento effects.",
   examples: [
@@ -173,7 +173,7 @@ export let feedback_read = makeNode("feedback_read", {
   description: "internal helper node to read the last feedback_write output",
   ins: [],
 });
-export let slew = makeNode("Slew", {
+export let slew = makeNode("slew", {
   tags: ["fx"],
   description:
     "Limits the slope of an input signal. The slope is expressed in units per second.",
@@ -192,7 +192,7 @@ export let slew = makeNode("Slew", {
     },
   ],
 });
-export let filter = makeNode("Filter", {
+export let filter = makeNode("filter", {
   tags: ["fx", "filter"],
   internal: true,
   description: "Two-pole low-pass filter",
@@ -203,7 +203,7 @@ export let filter = makeNode("Filter", {
     { name: "reso", default: 0 },
   ],
 });
-export let fold = makeNode("Fold", {
+export let fold = makeNode("fold", {
   tags: ["fx", "distortion", "limiter"],
   description: 'Distort incoming audio signal by "folding"',
   examples: [
@@ -216,7 +216,7 @@ export let fold = makeNode("Fold", {
     { name: "rate", default: 0 },
   ],
 });
-export let seq = makeNode("Seq", {
+export let seq = makeNode("seq", {
   tags: ["sequencer"],
   description: "Trigger controlled sequencer",
   examples: [
@@ -230,7 +230,7 @@ export let seq = makeNode("Seq", {
     // 1-Infinity of steps
   ],
 });
-export let delay = makeNode("Delay", {
+export let delay = makeNode("delay", {
   tags: ["fx"],
   description: "Delay line node",
   examples: [
@@ -242,7 +242,7 @@ export let delay = makeNode("Delay", {
     { name: "time", default: 0 },
   ],
 });
-export let hold = makeNode("Hold", {
+export let hold = makeNode("hold", {
   tags: ["fx"],
   description: "Sample and hold",
   examples: [
@@ -257,7 +257,7 @@ export let hold = makeNode("Hold", {
 /*export let midin = makeNode("MidiIn",{
     ins: [],
 });*/
-export let midifreq = makeNode("MidiFreq", {
+export let midifreq = makeNode("midifreq", {
   tags: ["external", "midi"],
   description:
     "Outputs frequency of midi note in. Multiple instances will do voice allocation",
@@ -270,14 +270,14 @@ export let midifreq = makeNode("MidiFreq", {
     },
   ],
 });
-export let midigate = makeNode("MidiGate", {
+export let midigate = makeNode("midigate", {
   tags: ["external", "midi"],
   description:
     "outputs gate of midi note in. Multiple instances will do voice allocation",
   examples: [`midigate().lag(1).mul(sine(220)).out()`],
   ins: [{ name: "channel", default: -1 }],
 });
-export let midicc = makeNode("MidiCC", {
+export let midicc = makeNode("midicc", {
   tags: ["external", "midi"],
   description: "outputs bipolar value of given midi cc number",
   examples: [`midicc(74).range(100,200).sine().out()`],
@@ -286,7 +286,7 @@ export let midicc = makeNode("MidiCC", {
     { name: "channel", default: -1 },
   ],
 });
-export let audioin = makeNode("AudioIn", {
+export let audioin = makeNode("audioin", {
   tags: ["source", "external"],
   description: "External Audio Input, depends on your system input",
   examples: [`audioin().add(x=>x.delay(.1).mul(.8)).out()`],
