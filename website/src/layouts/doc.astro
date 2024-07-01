@@ -27,14 +27,16 @@ import Nav from "../components/Nav.astro";
         <!-- <a class="text-teal-500" href="/kabelsalat/">go to REPL</a> -->
       </div>
     </nav>
-    <main class="m-auto max-w-2xl px-4 grow overflow-auto">
-      <article
-        class="py-8 prose prose-invert prose-stone prose-headings:text-teal-100 font-mono"
-      >
-        <!-- </nav> -->
-        <slot />
-      </article>
-    </main>
+    <div class="grow overflow-auto">
+      <main class="m-auto max-w-2xl px-4">
+        <article
+          class="py-8 prose prose-invert prose-stone prose-headings:text-teal-100 font-mono"
+        >
+          <!-- </nav> -->
+          <slot />
+        </article>
+      </main>
+    </div>
     <script>
       const navs = document.querySelectorAll(".nav-select");
       navs.forEach((nav) => {
