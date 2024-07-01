@@ -1,6 +1,6 @@
-import { MiniRepl } from "../components/MiniRepl";
 import { For, createSignal } from "solid-js";
 import { nodeRegistry } from "@kabelsalat/core";
+import { MiniRepl } from "./MiniRepl.jsx";
 
 const commonInputs = {
   in: "signal input",
@@ -20,6 +20,14 @@ const items = Array.from(nodeRegistry.entries())
 const tags = Array.from(
   new Set(items.map((item) => item[1].tags).flat())
 ).filter(Boolean);
+
+const tagRefs = Object.fromEntries(
+  tags.map((tag) => [
+    tag,
+    items.filter(([_, schema]) => schema.tags?.includes(tag)).length,
+  ])
+);
+
 export function Reference() {
   const [selectedTags, setSelectedTags] = createSignal([]);
   const toggleTag = (tag) => {
@@ -57,12 +65,7 @@ export function Reference() {
                 }
                 onClick={() => toggleTag(tag)}
               >
-                {tag} (
-                {
-                  items.filter(([_, schema]) => schema.tags?.includes(tag))
-                    .length
-                }
-                )
+                {tag} ({tagRefs[tag]})
               </a>{" "}
             </>
           )}
@@ -71,7 +74,7 @@ export function Reference() {
         <For each={filtered()}>
           {([name, schema]) => (
             <>
-              <a href={`#${name}`}>{name}</a>{" "}
+              <a href={`/kabelsalat/reference/#${name}`}>{name}</a>{" "}
             </>
           )}
         </For>

@@ -18,7 +18,7 @@
     "@kabelsalat/core": "workspace:*",
     "@kabelsalat/graphviz": "workspace:*",
     "astro": "^4.11.3",
-    "solid-js": "^1.8.17",
+    "solid-js": "^1.8.18",
     "tailwindcss": "^3.4.4"
   },
   "devDependencies": {
