@@ -9,6 +9,7 @@ export class SalatRepl {
     if (typeof window !== "undefined") {
       Object.assign(globalThis, api);
       Object.assign(globalThis, compiler);
+      Object.assign(globalThis, { audio: this.audio });
     }
   }
   evaluate(code) {

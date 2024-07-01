@@ -1,4 +1,4 @@
-import { assert } from "./utils.js";
+import { assert, lerp } from "./utils.js";
 import * as synth from "./synth.js";
 
 /**
@@ -24,14 +24,15 @@ export class AudioGraph {
     // Current playback position in seconds
     this.playPos = 0;
 
-    // Compiled code to generate audio samples
-    this._genSample = null;
-
     // Method to send messages to the main thread
     this.send = send;
 
     // Stateful audio processing nodes, indexed by nodeId
     this.nodes = [];
+
+    this.generators = [];
+
+    this.fadeTime = 1;
   }
 
   /**
@@ -43,13 +44,18 @@ export class AudioGraph {
     // disconnected nodes may get reconnected, and deleting things like
     // delay lines would lose their current state.
     // All nodes get garbage collected when the playback is stopped.
-
     const types = unit.audioThreadNodes;
     for (let i in types) {
       if (types[i] in NODE_CLASSES) {
         const nodeClass = NODE_CLASSES[types[i]];
+        const index = Number(i) + Number(unit.ugenOffset);
         // TODO node reuse / graph diffing whatever / only create nodes that are not already created..
-        this.nodes[i] = new nodeClass(i, {}, this.sampleRate, this.send);
+        this.nodes[index] = new nodeClass(
+          index,
+          {},
+          this.sampleRate,
+          this.send
+        );
         // console.log("node", this.nodes[i]);
       } else {
         console.warn(`unknown audio node type "${types[i]}"`);
@@ -59,8 +65,29 @@ export class AudioGraph {
       `${types.length} ugens spawned, ${Object.keys(this.nodes).length} total`
     ); */
 
-    // Create the sample generation function
-    this._genSample = new Function("time", "nodes", "input", unit.src);
+    const fadeStart = this.playPos;
+    const fadeEnd = this.playPos + this.fadeTime;
+
+    /* console.log("fadeTime", this.fadeTime);
+    console.log("fade", fadeStart, fadeEnd); */
+
+    // start fade out of latest generator
+    if (this.generators.length > 0) {
+      const last = this.generators[this.generators.length - 1];
+      const fadeFrom = last.getLevel();
+      last.getLevel = () =>
+        lerp((this.playPos - fadeStart) / (fadeEnd - fadeStart), fadeFrom, 0);
+    }
+
+    // create and fade in new generator
+    const generator = new Function("time", "nodes", "input", "lvl", unit.src);
+    generator.getLevel = () =>
+      lerp((this.playPos - fadeStart) / (fadeEnd - fadeStart), 0, 0.3);
+
+    // filter out finished generators
+    this.generators = this.generators.filter((gen) => gen.getLevel() > 0);
+    // console.log("generators", this.generators.length);
+    this.generators.push(generator);
   }
 
   /**
@@ -84,6 +111,10 @@ export class AudioGraph {
 
       case "CC":
         this.midiCC(msg);
+        break;
+
+      case "FADE_TIME":
+        this.fadeTime = Number(msg.fadeTime);
         break;
 
       default:
@@ -133,9 +164,18 @@ export class AudioGraph {
    * Generate one [left, right] pair of audio samples
    */
   genSample(inputs) {
-    if (!this._genSample) return [0, 0];
+    if (!this.generators.length) return [0, 0];
     this.playPos += 1 / 44100;
-    return this._genSample(this.playPos, this.nodes, inputs);
+
+    const sum = [0, 0];
+    for (let i = 0; i < this.generators.length; i++) {
+      const gen = this.generators[i];
+      const lvl = gen.getLevel();
+      const channels = gen(this.playPos, this.nodes, inputs, lvl);
+      sum[0] += channels[0];
+      sum[1] += channels[1];
+    }
+    return sum;
   }
 }
 

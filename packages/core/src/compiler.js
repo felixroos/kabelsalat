@@ -4,7 +4,7 @@ import { nodeRegistry } from "./graph.js";
 // this compiler is actually not from noisecraft :)
 
 export function compile(node, options = {}) {
-  const { log = false } = options;
+  const { log = false, ugenOffset = 0 } = options;
   log && console.log("compile", node);
   const nodes = node.flatten(true);
   // log && console.log("flat", nodes);
@@ -70,7 +70,7 @@ export function compile(node, options = {}) {
         // but that might be bad for the jit compiler, as it needs to check for undefined values?
         passedVars = schema.ins.map((inlet, i) => vars[i] ?? inlet.default);
       }
-      const index = audioThreadNodes.length;
+      const index = audioThreadNodes.length + ugenOffset;
       audioThreadNodes.push(node.type);
       if (node.type === "feedback_read") {
         // remap indices
@@ -150,7 +150,7 @@ export function compile(node, options = {}) {
     console.warn("returned more than 2 channels.. using first 2");
     channels = channels.slice(0, 2);
   }
-  lines.push(`return [${channels.map((chan) => `(${chan}*0.3)`).join(", ")}]`);
+  lines.push(`return [${channels.map((chan) => `(${chan}*lvl)`).join(", ")}]`);
 
   const src = lines.join("\n");
   if (log) {

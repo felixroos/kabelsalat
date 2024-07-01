@@ -47,8 +47,14 @@ if (match) {
 // console.log("workletUrl", workletUrl);
 
 export class AudioView {
+  constructor() {
+    this.ugenOffset = 0;
+  }
   async updateGraph(node) {
-    const { src, audioThreadNodes } = node.compile({ log: true });
+    const { src, audioThreadNodes } = node.compile({
+      log: true,
+      ugenOffset: this.ugenOffset,
+    });
     if (
       !this.midiInited &&
       audioThreadNodes.some((node) => node.startsWith("Midi"))
@@ -58,10 +64,12 @@ export class AudioView {
     if (!this.audioIn && audioThreadNodes.some((node) => node === "AudioIn")) {
       await this.initAudioIn();
     }
+
     this.send({
       type: "NEW_UNIT",
-      unit: { src, audioThreadNodes },
+      unit: { src, audioThreadNodes, ugenOffset: this.ugenOffset },
     });
+    this.ugenOffset += audioThreadNodes.length;
   }
 
   async initAudioIn() {
@@ -138,5 +146,9 @@ export class AudioView {
 
     this.audioCtx.close();
     this.audioCtx = null;
+  }
+
+  set fadeTime(fadeTime) {
+    this.send({ type: "FADE_TIME", fadeTime });
   }
 }
