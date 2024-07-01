@@ -14,9 +14,9 @@ const commonInputs = {
   trig: "trigger input",
 };
 
-const items = Array.from(nodeRegistry.entries()).filter(
-  ([_, schema]) => !schema.internal
-);
+const items = Array.from(nodeRegistry.entries())
+  .filter(([_, schema]) => !schema.internal)
+  .sort(([a], [b]) => a.localeCompare(b));
 const tags = Array.from(
   new Set(items.map((item) => item[1].tags).flat())
 ).filter(Boolean);
