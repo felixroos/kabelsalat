@@ -32,7 +32,7 @@ export class AudioGraph {
 
     this.generators = [];
 
-    this.fadeTime = 1;
+    this.fadeTime = 0.1;
   }
 
   /**
