@@ -295,6 +295,20 @@ export let audioin = makeNode("audioin", {
 });
 
 // non-audio nodes
+export let log = makeNode("log", {
+  tags: ["math"],
+  internal: true, // tbd find example
+  description: "calculates the logarithm (base 10) of the input signal",
+  audio: false,
+  ins: [{ name: "in" }],
+});
+export let exp = makeNode("exp", {
+  tags: ["math"],
+  internal: true, // tbd find example
+  description: "raises e to the power of the input signal",
+  audio: false,
+  ins: [{ name: "in" }],
+});
 export let sin = makeNode("sin", {
   tags: ["math"],
   internal: true, // tbd find example
@@ -349,6 +363,24 @@ export let range = makeNode("range", {
   audio: false,
   ins: [{ name: "in" }, { name: "min" }, { name: "max" }],
 });
+
+export let rangex = module(
+  "rangex",
+  (sig, min, max) => {
+    let logmin = log(min);
+    let range = log(max).sub(logmin);
+    let uni = sig.unipolar();
+    let l = uni.mul(range).add(logmin);
+    return exp(l);
+  },
+  {
+    tags: ["math"],
+    description: "exponential range",
+    ins: [{ name: "in" }, { name: "min" }, { name: "max" }],
+    examples: [`sine([1,3]).exprange(100, 2e3).sine().out()`],
+  }
+);
+
 export let midinote = makeNode("midinote");
 export let dac = makeNode("dac");
 export let exit = makeNode("exit");

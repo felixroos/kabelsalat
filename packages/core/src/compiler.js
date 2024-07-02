@@ -27,6 +27,8 @@ export function compile(node, options = {}) {
   const mathFunctions = {
     sin: "sin",
     cos: "cos",
+    log: "log",
+    exp: "exp",
   };
   const mathConstants = ["PI"];
   const audioThreadNodes = [];
@@ -99,12 +101,15 @@ export function compile(node, options = {}) {
     }
     switch (node.type) {
       case "range": {
-        const [bipolar, min, max] = vars;
+        const [bipolar, min, max, curve = 1] = vars;
         // bipolar [-1,1] to unipolar [0,1] => (v+1)/2
         const unipolar = infix(infix(bipolar, "+", 1), "*", 0.5);
+        const shaped =
+          curve === 1 ? unipolar : `Math.pow(${unipolar}, ${curve})`;
+
         // var = val*(max-min)+min
         const range = infix(max, "-", min);
-        const calc = infix(infix(unipolar, "*", range), "+", min);
+        const calc = infix(infix(shaped, "*", range), "+", min);
         pushVar(id, calc, "range");
         break;
       }
