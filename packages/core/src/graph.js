@@ -78,6 +78,7 @@ export function module(name, fn, schema) {
   return register(
     name,
     (...args) => {
+      // TODO: support function as arg for feedback => parseInput expects 2 args
       args = args.map((input) => parseInput(input).asModuleInput(name));
       return fn(...args).asModuleOutput(name);
     },
@@ -203,21 +204,18 @@ export function n(value) {
     return value;
   }
   return node("n", value);
-  //return parseInput(value);
 }
 
 const polyType = "poly";
 const outputType = "dac";
 
 function parseInput(input, node) {
-  if (Array.isArray(input)) {
-    input = new Node(polyType).withIns(...input);
-  }
-  if (input.type === polyType) {
-    // mind bending here we go
-    return input.withIns(...input.ins.map((arg) => parseInput(arg, input)));
-  }
   if (typeof input === "function") {
+    if (!node) {
+      throw new Error(
+        "tried to parse function input without without passing node.."
+      );
+    }
     return node.apply(input);
   }
   if (typeof input === "object") {
@@ -241,20 +239,22 @@ Node.prototype.inherit = function (parent) {
 };
 
 function getNode(type, ...args) {
-  const next = node(type);
-  args = args.map((arg) => parseInput(arg, next));
-  // gets channels per arg
-  const expansions = args.map((arg) => {
-    if (arg.type === polyType) {
-      return arg.ins.length;
+  let maxExpansions = 1;
+  args = args.map((arg) => {
+    // desugar array to poly node
+    if (Array.isArray(arg)) {
+      arg = new Node(polyType).withIns(...arg);
     }
-    return 1;
+    if (arg.type === polyType) {
+      maxExpansions = Math.max(arg.ins.length, maxExpansions);
+    }
+    return arg;
   });
-  // max channels to expand. the 1 is to make sure empty args won't break!
-  const maxExpansions = Math.max(1, ...expansions);
-  // no expansion early exit
+
+  // early exit if no expansion is happening
   if (maxExpansions === 1) {
-    return next.withIns(...args.map(parseInput));
+    const next = node(type);
+    return next.withIns(...args.map((arg) => parseInput(arg, next))); //
   }
 
   // dont expand dac node, but instead input all channels
@@ -262,7 +262,8 @@ function getNode(type, ...args) {
     const inputs = args
       .map((arg) => {
         if (arg.type === polyType) {
-          return arg.ins.map((input) => input.inherit(arg));
+          // we expect arg.ins to not contain functions..
+          return arg.ins.map((arg) => parseInput(arg).inherit(arg));
         }
         return arg;
       })
@@ -273,14 +274,15 @@ function getNode(type, ...args) {
   // multichannel expansion:
   // node([a,b,c], [x,y]) => expand(node(a,x), node(b,y), node(c,x))
   const expanded = Array.from({ length: maxExpansions }, (_, i) => {
+    const cloned = new Node(type);
     const inputs = args.map((arg) => {
       if (arg.type === polyType) {
-        const input = arg.ins[i % arg.ins.length];
+        const input = parseInput(arg.ins[i % arg.ins.length], cloned);
         return input.inherit(arg);
       }
-      return parseInput(arg);
+      return parseInput(arg, cloned); // wire up cloned node for feedback..
     });
-    return new Node(type).withIns(...inputs);
+    return cloned.withIns(...inputs);
   });
   return new Node(polyType).withIns(...expanded);
 }
