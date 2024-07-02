@@ -7,7 +7,7 @@ export function compile(node, options = {}) {
   const { log = false, ugenOffset = 0 } = options;
   log && console.log("compile", node);
   const nodes = node.flatten(true);
-  // log && console.log("flat", nodes);
+  log && console.log("flat", nodes);
   const sorted = topoSort(nodes);
   let lines = [];
   let v = (id) => (nodes[id].type === "n" ? nodes[id].value : `n${id}`);
@@ -37,6 +37,13 @@ export function compile(node, options = {}) {
     // is infix operator node?
     if (infixOperators[node.type]) {
       const op = infixOperators[node.type];
+      if (vars.length === 0) {
+        console.warn(
+          `infix node of type "${node.type}" (${id}) has no inputs! falling back to 0`
+        );
+        pushVar(id, "0", "ERROR!");
+        continue;
+      }
       const calc = vars.join(` ${op} `);
       const comment = nodes[id].ins
         .map((inlet) => nodes[inlet].type)
