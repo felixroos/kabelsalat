@@ -35,6 +35,32 @@ export class AudioGraph {
     this.fadeTime = 0.1;
   }
 
+  fadeOut(generator = this.generators[this.generators.length - 1]) {
+    if (!generator) {
+      return;
+    }
+    const fadeStart = this.playPos;
+    const fadeEnd = this.playPos + this.fadeTime;
+    const fadeFrom = generator.getLevel();
+    generator.getLevel = () =>
+      lerp((this.playPos - fadeStart) / (fadeEnd - fadeStart), fadeFrom, 0);
+  }
+
+  fadeIn(generator) {
+    const fadeStart = this.playPos;
+    const fadeEnd = this.playPos + this.fadeTime;
+    generator.getLevel = () =>
+      lerp((this.playPos - fadeStart) / (fadeEnd - fadeStart), 0, 0.3);
+  }
+
+  stop() {
+    this.fadeOut();
+    this.send({
+      type: "STOP",
+      fadeTime: this.fadeTime,
+    });
+  }
+
   /**
    * Update the audio graph given a new compiled unit
    */
@@ -65,24 +91,13 @@ export class AudioGraph {
       `${types.length} ugens spawned, ${Object.keys(this.nodes).length} total`
     ); */
 
-    const fadeStart = this.playPos;
-    const fadeEnd = this.playPos + this.fadeTime;
-
-    /* console.log("fadeTime", this.fadeTime);
-    console.log("fade", fadeStart, fadeEnd); */
-
-    // start fade out of latest generator
     if (this.generators.length > 0) {
-      const last = this.generators[this.generators.length - 1];
-      const fadeFrom = last.getLevel();
-      last.getLevel = () =>
-        lerp((this.playPos - fadeStart) / (fadeEnd - fadeStart), fadeFrom, 0);
+      this.fadeOut();
     }
 
     // create and fade in new generator
     const generator = new Function("time", "nodes", "input", "lvl", unit.src);
-    generator.getLevel = () =>
-      lerp((this.playPos - fadeStart) / (fadeEnd - fadeStart), 0, 0.3);
+    this.fadeIn(generator);
 
     // filter out finished generators
     this.generators = this.generators.filter((gen) => gen.getLevel() > 0);
@@ -115,6 +130,10 @@ export class AudioGraph {
 
       case "FADE_TIME":
         this.fadeTime = Number(msg.fadeTime);
+        break;
+
+      case "STOP":
+        this.stop();
         break;
 
       default:

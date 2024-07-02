@@ -126,7 +126,12 @@ export class AudioView {
     );
     // Callback to receive messages from the audioworklet
     this.audioWorklet.port.onmessage = (msg) => {
-      console.log("msg from worklet", msg);
+      // console.log("msg from worklet", msg);
+      const type = msg.data.type;
+      if (type === "STOP") {
+        const lash = 200;
+        setTimeout(() => this.destroy(), msg.data.fadeTime * 1000 + lash);
+      }
     };
     this.audioWorklet.connect(this.audioCtx.destination);
   }
@@ -135,17 +140,20 @@ export class AudioView {
     return !!this.audioCtx;
   }
 
-  /**
-   * Stop audio playback
-   */
-  stop() {
-    assert(this.audioCtx);
-
+  destroy() {
     this.audioWorklet.disconnect();
     this.audioWorklet = null;
 
     this.audioCtx.close();
     this.audioCtx = null;
+  }
+
+  /**
+   * Stop audio playback
+   */
+  stop() {
+    assert(this.audioCtx);
+    this.send({ type: "STOP" });
   }
 
   set fadeTime(fadeTime) {
