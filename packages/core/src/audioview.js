@@ -57,11 +57,11 @@ export class AudioView {
     });
     if (
       !this.midiInited &&
-      audioThreadNodes.some((node) => node.startsWith("Midi"))
+      audioThreadNodes.some((node) => node.startsWith("midi"))
     ) {
       this.initMidi();
     }
-    if (!this.audioIn && audioThreadNodes.some((node) => node === "AudioIn")) {
+    if (!this.audioIn && audioThreadNodes.some((node) => node === "audioin")) {
       await this.initAudioIn();
     }
 

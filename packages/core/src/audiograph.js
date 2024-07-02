@@ -145,12 +145,12 @@ export class AudioGraph {
     const { channel, note, velocity } = msg;
     const midifreqs = this.nodes.filter(
       (node) =>
-        node.type === "MidiFreq" &&
+        node.type === "midifreq" &&
         (node.channel === -1 || node.channel === channel)
     );
     const midigates = this.nodes.filter(
       (node) =>
-        node.type === "MidiGate" &&
+        node.type === "midigate" &&
         (node.channel === -1 || node.channel === channel)
     );
 
@@ -170,7 +170,7 @@ export class AudioGraph {
     const { channel, cc, value } = msg;
     this.nodes.forEach((node) => {
       if (
-        node.type === "MidiCC" &&
+        node.type === "midicc" &&
         (node.channel === -1 || node.channel === channel) &&
         node.ccnumber === cc
       ) {
@@ -767,7 +767,7 @@ class MidiIn extends AudioNode {
 
     // Current gate state
     this.gateState = "off";
-    this.type = "MidiIn";
+    this.type = "midiin";
     this.channel = -1;
   }
 
@@ -833,7 +833,7 @@ class MidiIn extends AudioNode {
 class MidiGate extends MidiIn {
   constructor(id, state, sampleRate, send) {
     super(id, state, sampleRate, send);
-    this.type = "MidiGate";
+    this.type = "midigate";
   }
   update(channel) {
     this.channel = channel;
@@ -844,7 +844,7 @@ class MidiGate extends MidiIn {
 class MidiFreq extends MidiIn {
   constructor(id, state, sampleRate, send) {
     super(id, state, sampleRate, send);
-    this.type = "MidiFreq";
+    this.type = "midifreq";
   }
   update(channel) {
     this.channel = channel;
@@ -855,7 +855,7 @@ class MidiFreq extends MidiIn {
 class MidiCC extends AudioNode {
   constructor(id, state, sampleRate, send) {
     super(id, state, sampleRate, send);
-    this.type = "MidiCC";
+    this.type = "midicc";
     this.value = -1;
     this.channel = -1;
     this.ccnumber = -1;
