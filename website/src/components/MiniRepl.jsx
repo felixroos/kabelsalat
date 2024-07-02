@@ -38,7 +38,9 @@ export function MiniRepl(props) {
           class="w-14 hover:bg-teal-700 flex justify-center p-1 border-r border-teal-500"
           onClick={() => (started() ? repl.stop() : run())}
         >
-          {!started() ? <Icon type="play" /> : <Icon type="stop" />}
+          <Show when={!started()} fallback={<Icon type="stop" />}>
+            <Icon type="play" />
+          </Show>
         </button>
         <button
           class="w-14 hover:bg-teal-700 flex justify-center py-1"
