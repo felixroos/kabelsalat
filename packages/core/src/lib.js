@@ -122,6 +122,7 @@ export let sine = makeNode("sine", {
   ins: [
     { name: "freq", default: 0 },
     { name: "sync", default: 0, description: "sync input" },
+    { name: "phase", default: 0, description: "phase offset" },
   ],
 });
 export let tri = makeNode("tri", {

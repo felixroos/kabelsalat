@@ -542,12 +542,12 @@ class SineOsc extends AudioNode {
     this.syncSgn = false;
   }
 
-  update(freq, sync) {
+  update(freq, sync, phaseOffset) {
     if (!this.syncSgn && sync > 0) this.phase = 0;
 
     this.syncSgn = sync > 0;
 
-    let cyclePos = this.phase % 1;
+    let cyclePos = (this.phase + phaseOffset) % 1;
     this.phase += this.sampleTime * freq;
 
     return Math.sin(cyclePos * 2 * Math.PI);
