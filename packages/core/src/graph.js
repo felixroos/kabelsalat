@@ -63,7 +63,8 @@ let dfs = (node, fn, visited = []) => {
 /// MODULES
 
 Node.prototype.asModuleInput = function (name) {
-  this.inputOf = name;
+  this.inputOf = this.inputOf || [];
+  this.inputOf.push(name);
   return this;
 };
 

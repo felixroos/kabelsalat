@@ -35,8 +35,8 @@ Node.prototype.render = async function (container, options = {}) {
       }
       const moduleType = node.outputOf;
       let dfs = (node, inputs = []) => {
-        if (node.inputOf === moduleType) {
-          inputs.push(node);
+        if (node.inputOf?.includes(moduleType)) {
+          !inputs.includes(node) && inputs.push(node);
           return;
         }
         !node.outputOf && (node.ignore = true);
