@@ -8,6 +8,7 @@ Node.prototype.render = async function (container, options = {}) {
   const {
     dagify = false, // if true, cycles will be transformed to feedback nodes
     resolveModules = false, // if false, module innards are ignored
+    inlineNumerics = true,
     rankdir = "TB",
     size = 0,
   } = options;
@@ -22,12 +23,18 @@ Node.prototype.render = async function (container, options = {}) {
   let getNumericLabel = (value) =>
     Math.trunc(value) === value ? value : value.toFixed(2);
 
+  let getLabel = (node) => {
+    if (node.value !== undefined) {
+      return getNumericLabel(node.value);
+    }
+    return node.type;
+  };
+
   let nodes = node.flatten(false);
   nodes.forEach((node, i) => (node.id = i)); // set id so filtering won't mess us up
 
+  // create compound nodes for modules, hiding their internal complexity
   if (!resolveModules) {
-    // mark nodes with "ignore" flag if they are inside a module
-    // maaaybe this could also be done inside module...
     nodes.forEach((node) => {
       if (!node.outputOf) {
         // we only care for nodes that are an output of a module
@@ -58,6 +65,39 @@ Node.prototype.render = async function (container, options = {}) {
   const fontsize = 10;
   const fontname = "monospace";
 
+  // inlines nodes for inputs if only numbers are used
+  if (inlineNumerics) {
+    nodes.forEach((node) => {
+      const inlets = node.ins.slice(1); // tbd find way to make it work for sources...
+      if (!inlets.length) {
+        return;
+      }
+      const inletNodes = inlets.map((input) =>
+        nodes.find((node) => node.id === Number(input))
+      );
+      const numericOnly = inletNodes.reduce(
+        (acc, node) => acc && node.type === "n",
+        true
+      );
+      if (!numericOnly) {
+        // a node with at least one non-numeric input should not be compounded
+        return;
+      }
+      const values = inlets
+        .map((input) => {
+          let inputNode = nodes.find((node) => node.id === Number(input));
+          inputNode.ignore = true;
+          return getNumericLabel(inputNode.value);
+          //return inputNode.value + ":";
+        })
+        .join(" ");
+      node.shape = "box";
+      node.label = `${node.type} ${values}`;
+      node.ins = [node.ins[0]];
+    });
+    nodes = nodes.filter((node) => !node.ignore);
+  }
+
   nodes.forEach((node) =>
     node.ins.forEach((parent, i) => {
       edges.push({
@@ -74,14 +114,16 @@ Node.prototype.render = async function (container, options = {}) {
     })
   );
 
+  let commutativeNodes = ["mul", "add"];
   nodes = nodes.map((node) => ({
     id: node.id,
-    color, //: node.ignore ? "red" : color,
+    color: node.color || color,
     fontcolor,
     fontsize,
     fontname,
-    label: node.value !== undefined ? getNumericLabel(node.value) : node.type,
-    ordering: "in",
+    // shape: node.shape || "oval",
+    label: node.label ?? getLabel(node),
+    ordering: commutativeNodes.includes(node.type) ? "" : "in",
     width: 0.5,
     height: 0.4,
   }));
