@@ -68,32 +68,34 @@ Node.prototype.render = async function (container, options = {}) {
   // inlines nodes for inputs if only numbers are used
   if (inlineNumerics) {
     nodes.forEach((node) => {
-      const inlets = node.ins.slice(1); // tbd find way to make it work for sources...
-      if (!inlets.length) {
+      if (!node.ins.length) {
         return;
       }
-      const inletNodes = inlets.map((input) =>
+      const inletNodes = node.ins.map((input) =>
         nodes.find((node) => node.id === Number(input))
       );
-      const numericOnly = inletNodes.reduce(
-        (acc, node) => acc && node.type === "n",
-        true
-      );
-      if (!numericOnly) {
+      const firstIsNumeric = inletNodes[0].type === "n";
+      if (!firstIsNumeric && inletNodes.length === 1) {
+        return; // skip if only one non-numeric input
+      }
+      const restIsNumeric = inletNodes
+        .slice(1) // first one is allowed to be non-numeric
+        .reduce((acc, node) => acc && node.type === "n", true);
+      if (!restIsNumeric) {
         // a node with at least one non-numeric input should not be compounded
         return;
       }
-      const values = inlets
-        .map((input) => {
-          let inputNode = nodes.find((node) => node.id === Number(input));
+      // skip first, if non-numeric
+      const numericNodes = firstIsNumeric ? inletNodes : inletNodes.slice(1);
+      // get string of numeric inputs
+      const values = numericNodes
+        .map((inputNode) => {
           inputNode.ignore = true;
           return getNumericLabel(inputNode.value);
-          //return inputNode.value + ":";
         })
         .join(" ");
-      node.shape = "box";
       node.label = `${node.type} ${values}`;
-      node.ins = [node.ins[0]];
+      node.ins = firstIsNumeric ? [] : [node.ins[0]];
     });
     nodes = nodes.filter((node) => !node.ignore);
   }
