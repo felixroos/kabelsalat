@@ -52,7 +52,7 @@ export class AudioView {
   }
   async updateGraph(node) {
     const { src, audioThreadNodes } = node.compile({
-      log: true,
+      log: false,
       ugenOffset: this.ugenOffset,
     });
     if (

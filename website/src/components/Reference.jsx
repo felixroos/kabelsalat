@@ -74,7 +74,7 @@ export function Reference() {
         <For each={filtered()}>
           {([name, schema]) => (
             <>
-              <a href={`/kabelsalat/reference/#${name}`}>{name}</a>{" "}
+              <a href={`#${name}`}>{name}</a>{" "}
             </>
           )}
         </For>

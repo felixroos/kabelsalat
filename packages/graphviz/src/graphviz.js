@@ -5,6 +5,9 @@ import { Graphviz } from "@hpcc-js/wasm";
 const graphvizLoaded = Graphviz.load();
 
 Node.prototype.render = async function (container, options = {}) {
+  if (!container) {
+    return;
+  }
   const {
     dagify = false, // if true, cycles will be transformed to feedback nodes
     resolveModules = false, // if false, module innards are ignored

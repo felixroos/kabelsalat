@@ -66,9 +66,18 @@ importers:
       '@kabelsalat/graphviz':
         specifier: workspace:*
         version: link:../packages/graphviz
+      '@nanostores/persistent':
+        specifier: ^0.10.1
+        version: 0.10.1(nanostores@0.10.3)
+      '@nanostores/solid':
+        specifier: ^0.4.2
+        version: 0.4.2(nanostores@0.10.3)(solid-js@1.8.18)
       astro:
         specifier: ^4.11.3
         version: 4.11.3
+      nanostores:
+        specifier: ^0.10.3
+        version: 0.10.3
       solid-js:
         specifier: ^1.8.18
         version: 1.8.18
@@ -525,6 +534,18 @@ packages:
 
   '@mdx-js/mdx@3.0.1':
     resolution: {integrity: sha512-eIQ4QTrOWyL3LWEe/bu6Taqzq2HQvHcyTMaOrI95P2/LmJE7AsfPfgJGuFLPVqBUE1BC1rik3VIhU+s9u72arA==}
+
+  '@nanostores/persistent@0.10.1':
+    resolution: {integrity: sha512-BMYj47ONmkrPkHfomimtBAwtDNNjO57lw0uk7jB35GHVwixmqWtlK6DVAAbioqwJn9WEaWSB/9Ss5ukBG0NHlQ==}
+    engines: {node: ^18.0.0 || >=20.0.0}
+    peerDependencies:
+      nanostores: ^0.9.0 || ^0.10.0
+
+  '@nanostores/solid@0.4.2':
+    resolution: {integrity: sha512-8v32+C9KdRbnvP4x4Oiw/CtL1tZwbRxYfmFsPIY9PXevCgxSFnicG6VnLLtNAR7F0kl8Ec7OROHO34Ffv0KDzg==}
+    peerDependencies:
+      nanostores: '>=0.8.0'
+      solid-js: ^1.6.0
 
   '@nodelib/fs.scandir@2.1.5':
     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==}
@@ -1603,6 +1624,10 @@ packages:
     resolution: {integrity: sha512-eSRppjcPIatRIMC1U6UngP8XFcz8MQWGQdt1MTBQ7NaAmvXDfvNxbvWV3x2y6CdEUciCSsDHDQZbhYaB8QEo2g==}
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
     hasBin: true
+
+  nanostores@0.10.3:
+    resolution: {integrity: sha512-Nii8O1XqmawqSCf9o2aWqVxhKRN01+iue9/VEd1TiJCr9VT5XxgPFbF1Edl1XN6pwJcZRsl8Ki+z01yb/T/C2g==}
+    engines: {node: ^18.0.0 || >=20.0.0}
 
   nlcst-to-string@4.0.0:
     resolution: {integrity: sha512-YKLBCcUYKAg0FNlOBT6aI91qFmSiFKiluk655WzPF+DDMA02qIyy8uiRqI8QXtcFpEvll12LpL5MXqEmAZ+dcA==}
@@ -2689,6 +2714,15 @@ snapshots:
       vfile: 6.0.1
     transitivePeerDependencies:
       - supports-color
+
+  '@nanostores/persistent@0.10.1(nanostores@0.10.3)':
+    dependencies:
+      nanostores: 0.10.3
+
+  '@nanostores/solid@0.4.2(nanostores@0.10.3)(solid-js@1.8.18)':
+    dependencies:
+      nanostores: 0.10.3
+      solid-js: 1.8.18
 
   '@nodelib/fs.scandir@2.1.5':
     dependencies:
@@ -4115,6 +4149,8 @@ snapshots:
       thenify-all: 1.6.0
 
   nanoid@3.3.7: {}
+
+  nanostores@0.10.3: {}
 
   nlcst-to-string@4.0.0:
     dependencies:
