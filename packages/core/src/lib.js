@@ -34,7 +34,6 @@ export let ad = module(
 
 export let clock = makeNode("clock", {
   tags: ["regular", "clock"],
-  internal: true, // disable for now...
   description: "Clock source, with tempo in BPM",
   examples: [`clock(120).clockdiv(16).mul(sine(220)).out()`],
   ins: [
@@ -47,7 +46,6 @@ export let clock = makeNode("clock", {
 });
 export let clockdiv = makeNode("clockdiv", {
   tags: ["clock"],
-  internal: true, // disable for now...
   description: "Clock signal divider",
   examples: [`clock(120).clockdiv(16).mul(sine(220)).out()`],
   ins: [
@@ -299,35 +297,30 @@ export let audioin = makeNode("audioin", {
 // non-audio nodes
 export let log = makeNode("log", {
   tags: ["math"],
-  internal: true, // tbd find example
   description: "calculates the logarithm (base 10) of the input signal",
   audio: false,
   ins: [{ name: "in" }],
 });
 export let exp = makeNode("exp", {
   tags: ["math"],
-  internal: true, // tbd find example
   description: "raises e to the power of the input signal",
   audio: false,
   ins: [{ name: "in" }],
 });
 export let pow = makeNode("pow", {
   tags: ["math"],
-  internal: true, // tbd find example
   description: "raises the input to the given power",
   audio: false,
   ins: [{ name: "in" }, { name: "power" }],
 });
 export let sin = makeNode("sin", {
   tags: ["math"],
-  internal: true, // tbd find example
   description: "calculates the sine of the input signal",
   audio: false,
   ins: [{ name: "in" }],
 });
 export let cos = makeNode("cos", {
   tags: ["math"],
-  internal: true, // tbd find example
   description: "calculates the cosine of the input signal",
   audio: false,
   ins: [{ name: "in" }],
