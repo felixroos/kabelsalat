@@ -39,7 +39,7 @@ Node.prototype.render = async function (container, options = {}) {
           !inputs.includes(node) && inputs.push(node);
           return;
         }
-        !node.outputOf && (node.ignore = true);
+        node.outputOf !== moduleType && (node.ignore = true);
         for (let index of node.ins) {
           dfs(nodes[index], inputs);
         }
@@ -76,7 +76,7 @@ Node.prototype.render = async function (container, options = {}) {
 
   nodes = nodes.map((node) => ({
     id: node.id,
-    color,
+    color, //: node.ignore ? "red" : color,
     fontcolor,
     fontsize,
     fontname,
