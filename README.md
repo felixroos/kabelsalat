@@ -26,5 +26,3 @@ compilation strategy / graph format based on <https://noisecraft.app/>
 - [insect buzzing by luiiuuuiiiii](https://felixroos.github.io/kabelsalat/#c2luZSgxMjExMSkKLmZvbGQoc2luZSguNTEpLnJhbmdlKDAsIC4zKSkKLm11bCgKICBzaW5lKAogICAgbig3KS5tdWwoCiAgICAgIHNpbmUoMC41KS5yYW5nZSgxLDMpCiAgICApCiAgKS5yYW5nZSguMCwuMSkKKQoub3V0KCk=)
 - [Da Wubs](https://felixroos.github.io/kabelsalat/#c2F3KC4zNSkKLm11bCg0LjcpCi5hZGQoLjM1KQouc2luZSgpCi5tdWwoMzkxLjk5NSkKLm11bCh0cmkoNTApKQouc2luZSgpCi5tdWwoMSkKLm91dCgpCgovLyBEYSBXdWJzCi8vIGh0dHBzOi8vbm9pc2VjcmFmdC5hcHAvNTEK)
 - [weird noise thing](https://felixroos.github.io/kabelsalat/#bm9pc2UoMikucmFuZ2UoNTUsMjIwKS5tdWwoc2luZSguMikucmFuZ2UoMSwxLjEpKS5ub2lzZSgpCi5maWx0ZXIobm9pc2UoKS5yYW5nZSguNywuNCkuc2xpZGUoMSksIG5vaXNlKC42KS5yYW5nZSgyLDQpKQouZmlsdGVyKGNsb2NrKDEyKS5zZXEoLjEsLjIsLjUsLjIsLjcpKQoubXVsKDQpLmZvbGQoKQoub3V0KCk=)
-
-## api
