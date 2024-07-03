@@ -310,6 +310,13 @@ export let exp = makeNode("exp", {
   audio: false,
   ins: [{ name: "in" }],
 });
+export let pow = makeNode("pow", {
+  tags: ["math"],
+  internal: true, // tbd find example
+  description: "raises the input to the given power",
+  audio: false,
+  ins: [{ name: "in" }, { name: "power" }],
+});
 export let sin = makeNode("sin", {
   tags: ["math"],
   internal: true, // tbd find example

@@ -67,8 +67,15 @@ export function compile(node, options = {}) {
       pushVar(id, calc, comment);
       continue;
     }
-    // is audio node?
+    if (node.type === "pow") {
+      const [base, exponent] = vars;
+      const calc = `Math.pow(${base},${exponent})`;
+      const comment = node.type;
+      pushVar(id, calc, comment);
+      continue;
+    }
 
+    // is audio node?
     const schema = nodeRegistry.get(node.type);
     if (schema && schema.audio !== false) {
       const comment = node.type;
