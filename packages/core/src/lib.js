@@ -1,19 +1,5 @@
 import { makeNode, Node, register, module } from "./graph";
 
-/**
- * ADSR envelope
- *
- * @name adsr
- * @publicApi
- * @param gate gate signal
- * @param att attack time
- * @param dec decay time
- * @param sus sustain level
- * @param rel release time
- * @example
- *
- *
- */
 export let adsr = makeNode("adsr", {
   tags: ["envelope"],
   description: "ADSR envelope",
@@ -31,6 +17,21 @@ export let adsr = makeNode("adsr", {
   ],
   args: ["time"], // if set, the update function will get time as first param
 });
+export let ad = module(
+  "ad",
+  (gate = 0, attack = 0.02, decay = 0.1) => gate.adsr(attack, 0, 1, decay),
+  {
+    tags: ["envelope"],
+    description: "AD envelope",
+    examples: [`impulse(1).ad(.01, .1).mul(sine(220)).out()`],
+    ins: [
+      { name: "trig", default: 0, description: "gate input" },
+      { name: "att", default: 0.02, description: "attack time" },
+      { name: "dec", default: 0.1, description: "decay time" },
+    ],
+  }
+);
+
 export let clock = makeNode("clock", {
   tags: ["regular", "clock"],
   internal: true, // disable for now...
