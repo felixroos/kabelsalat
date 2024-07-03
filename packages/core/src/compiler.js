@@ -7,7 +7,7 @@ export function compile(node, options = {}) {
   const { log = false, ugenOffset = 0 } = options;
   log && console.log("compile", node);
   const nodes = node.flatten(true);
-  log && console.log("flat", nodes);
+  // log && console.log("flat", nodes);
   const sorted = topoSort(nodes);
   let lines = [];
   let v = (id) => (nodes[id].type === "n" ? nodes[id].value : `n${id}`);

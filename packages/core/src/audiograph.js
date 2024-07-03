@@ -87,9 +87,9 @@ export class AudioGraph {
         console.warn(`unknown audio node type "${types[i]}"`);
       }
     }
-    /* console.log(
+    console.log(
       `${types.length} ugens spawned, ${Object.keys(this.nodes).length} total`
-    ); */
+    );
 
     if (this.generators.length > 0) {
       this.fadeOut();
