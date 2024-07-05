@@ -77,7 +77,7 @@ export function compile(node, options = {}) {
 
     // is audio node?
     const schema = nodeRegistry.get(node.type);
-    if (schema && schema.audio !== false) {
+    if (schema && schema.ugen) {
       const comment = node.type;
       const dynamic = schema.dynamic;
       let passedVars = vars;
@@ -87,7 +87,7 @@ export function compile(node, options = {}) {
         passedVars = schema.ins.map((inlet, i) => vars[i] ?? inlet.default);
       }
       const index = audioThreadNodes.length + ugenOffset;
-      audioThreadNodes.push(node.type);
+      audioThreadNodes.push(schema.ugen);
       if (node.type === "feedback_read") {
         // remap indices
         // we need to rewrite the "to" value to the audio node index (instead of flat node index)

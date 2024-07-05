@@ -4,62 +4,142 @@ export class Node {
     value !== undefined && (this.value = value);
     this.ins = [];
   }
-  // connect nodes to input node(s), return this node
-  withIns(...ins) {
-    this.ins = ins;
-    return this;
+}
+export const node = (type, value) => new Node(type, value);
+
+export let nodeRegistry = new Map();
+
+nodeRegistry.set("n", {
+  tags: ["math"],
+  description: "Constant value node. Turns a number into a Node.",
+  ins: [{ name: "value", default: 0 }],
+});
+export function n(value) {
+  if (Array.isArray(value)) {
+    return poly(...value.map((v) => n(v)));
   }
-  withValue(value) {
-    this.value = value;
-    return this;
+  if (typeof value === "object") {
+    return value;
   }
-  addInput(node) {
-    this.ins.push(node);
-    return this;
-  }
-  flatten() {
-    return flatten(this);
-  }
-  dagify() {
-    return dagify(this);
-  }
-  apply(fn) {
-    return fn(this);
-  }
-  apply2(fn) {
-    // clock(10).seq(51,52,0,53).apply2(hold).midinote().sine().out()
-    return fn(this, this);
-  }
-  clone() {
-    return new Node(this.type, this.value).withIns(...this.ins);
-  }
-  map(fn) {
-    if (this.type !== "poly") {
-      return fn(this);
-    }
-    return poly(...this.ins.map(fn));
-  }
-  dfs(fn, visited) {
-    return this.apply((node) => dfs(node, fn, visited));
-  }
-  // find first occurence of type up in the graph
-  select(type) {
-    for (let input of this.ins) {
-      if (input.type === type) {
-        return input;
-      }
-      const upper = input.select(type);
-      if (upper) {
-        return upper;
-      }
-    }
-  }
-  log(fn = (x) => x) {
-    console.log(fn(this));
-    return this;
-  }
+  return node("n", value);
 }
 
+nodeRegistry.set("withIns", {
+  tags: ["innards"],
+  description: "Sets the inputs of a node. Returns the node itself",
+  ins: [{ name: "in", dynamic: true }],
+});
+Node.prototype.withIns = function (...ins) {
+  this.ins = ins;
+  return this;
+};
+
+nodeRegistry.set("flatten", {
+  tags: ["innards"],
+  description:
+    "Flattens the node to a list of all nodes in the graph, where each Node's ins are now indices",
+});
+Node.prototype.flatten = function () {
+  return flatten(this);
+};
+
+nodeRegistry.set("dagify", {
+  tags: ["innards"],
+  description:
+    "Removes all cycles and replaces them with feedback_read / feedback_write Node's",
+});
+Node.prototype.dagify = function () {
+  return dagify(this);
+};
+
+nodeRegistry.set("apply", {
+  graph: true,
+  tags: ["meta"],
+  description:
+    "Applies the given function to the Node. Useful when a node has to be used multiple times.",
+  examples: [
+    `impulse(4)
+.apply(imp=>imp
+  .seq(110,220,330,440)
+  .sine()
+  .mul( imp.ad(.1,.1) )
+).out()`,
+  ],
+});
+Node.prototype.apply = function (fn) {
+  return fn(this);
+};
+
+// tbd doc?
+Node.prototype.apply2 = function (fn) {
+  // clock(10).seq(51,52,0,53).apply2(hold).midinote().sine().out()
+  return fn(this, this);
+};
+
+nodeRegistry.set("clone", {
+  tags: ["innards"],
+  description: "Clones the node",
+});
+Node.prototype.clone = function () {
+  return new Node(this.type, this.value).withIns(...this.ins);
+};
+
+nodeRegistry.set("map", {
+  tags: ["meta"],
+  description:
+    "Applies the given function to all ins if it's poly node. Otherwise it applies the function to itself.",
+  examples: [
+    `n([110,220,330])
+.map( freq=>freq.mul([1,1.007]).saw().mix() )
+.mix(2).mul(.5).out()`,
+  ],
+});
+Node.prototype.map = function (fn) {
+  if (this.type !== "poly") {
+    return fn(this);
+  }
+  return poly(...this.ins.map(fn));
+};
+
+// tbd doc?
+Node.prototype.dfs = function (fn, visited) {
+  return this.apply((node) => dfs(node, fn, visited));
+};
+
+nodeRegistry.set("select", {
+  tags: ["meta"],
+  graph: true,
+  description:
+    "Find the first occurence of the given type up in the graph and returns the match. Useful to exit a feedback loop at another point.",
+  examples: [
+    `sine(220).mul(impulse(1).ad(.001,.2))
+.add( x=>x.delay(.2).mul(.8) )
+.select('delay').out()
+`,
+  ],
+});
+Node.prototype.select = function (type) {
+  for (let input of this.ins) {
+    if (input.type === type) {
+      return input;
+    }
+    const upper = input.select(type);
+    if (upper) {
+      return upper;
+    }
+  }
+};
+
+nodeRegistry.set("debug", {
+  tags: ["meta"],
+  description: "Logs the node to the console",
+});
+Node.prototype.debug = function (fn = (x) => x) {
+  console.log(fn(this));
+  return this;
+};
+
+// tbd doc?
 let dfs = (node, fn, visited = []) => {
   node = fn(node, visited);
   visited.push(node);
@@ -72,21 +152,33 @@ let dfs = (node, fn, visited = []) => {
   return node;
 };
 
-/// MODULES
-
+// tbd doc?
 Node.prototype.asModuleInput = function (name, id, index) {
   this.inputOf = this.inputOf || [];
   this.inputOf.push([name, id, index]);
   return this;
 };
-
+// tbd doc?
 Node.prototype.asModuleOutput = function (name, id) {
   this.outputOf = [name, id];
   return this;
 };
 
-// user facing function to create modules
-// inputs and output are annotated so that viz can ignore inner nodes
+nodeRegistry.set("module", {
+  tags: ["meta"],
+  graph: true,
+  description:
+    "Creates a module. Like `register`, but the graph viz will hide the internal complexity of the module.",
+  examples: [
+    `let kick = module('kick', gate => gate.adsr(0,.11,0,.11)
+.apply(env => env.mul(env)
+  .mul(158)
+  .sine(env)
+  .distort(.85)
+))
+impulse(2).kick().out()`,
+  ],
+});
 let moduleId = 0;
 export function module(name, fn, schema) {
   return register(
@@ -128,6 +220,8 @@ function loopsToMe(node, me) {
     }
   }
 }
+
+// GRAPH HELPERS
 
 // transforms the graph into a dag, where cycles are broken into feedback_read and feedback_write nodes
 function dagify(node) {
@@ -203,23 +297,6 @@ export function evaluate(code) {
     console.error(err);
     return n(0);
   }
-}
-
-// TODO: find a cool api to register functions (maybe similar to strudel's register)
-// so far, node types added here also have to be added to the compiler, as well as NODE_CLASSES (for audio nodes)
-// it would be nice if there was a way to define custom functions / nodes / dsp logic in a single place...
-
-// let index = 0;
-export const node = (type, value) => new Node(type, value /* , ++index */);
-
-export function n(value) {
-  if (Array.isArray(value)) {
-    return poly(...value.map((v) => n(v)));
-  }
-  if (typeof value === "object") {
-    return value;
-  }
-  return node("n", value);
 }
 
 const polyType = "poly";
@@ -308,8 +385,6 @@ function getNode(type, ...args) {
   });
   return new Node(polyType).withIns(...expanded);
 }
-
-export let nodeRegistry = new Map();
 
 // todo: dedupe with register?
 export let makeNode = (type, schema) => {
