@@ -62,26 +62,30 @@ let dfs = (node, fn, visited = []) => {
 
 /// MODULES
 
-Node.prototype.asModuleInput = function (name) {
+Node.prototype.asModuleInput = function (name, id, index) {
   this.inputOf = this.inputOf || [];
-  this.inputOf.push(name);
+  this.inputOf.push([name, id, index]);
   return this;
 };
 
-Node.prototype.asModuleOutput = function (name) {
-  this.outputOf = name;
+Node.prototype.asModuleOutput = function (name, id) {
+  this.outputOf = [name, id];
   return this;
 };
 
 // user facing function to create modules
 // inputs and output are annotated so that viz can ignore inner nodes
+let moduleId = 0;
 export function module(name, fn, schema) {
   return register(
     name,
     (...args) => {
+      const id = moduleId++;
       // TODO: support function as arg for feedback => parseInput expects 2 args
-      args = args.map((input) => parseInput(input).asModuleInput(name));
-      return fn(...args).asModuleOutput(name);
+      args = args.map((input, i) =>
+        parseInput(input).asModuleInput(name, id, i)
+      );
+      return fn(...args).asModuleOutput(name, id);
     },
     schema
   );
@@ -246,6 +250,12 @@ function getNode(type, ...args) {
     if (Array.isArray(arg)) {
       arg = new Node(polyType).withIns(...arg);
     }
+    /* if (typeof arg === "function") {
+      const peek = arg(new Node("foo"));
+      if (peek.type === polyType) {
+        maxExpansions = Math.max(peek.ins.length, maxExpansions);
+      }
+    } */
     if (arg.type === polyType) {
       maxExpansions = Math.max(arg.ins.length, maxExpansions);
     }

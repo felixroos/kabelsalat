@@ -43,13 +43,18 @@ Node.prototype.render = async function (container, options = {}) {
         // we only care for nodes that are an output of a module
         return;
       }
-      const moduleType = node.outputOf;
+      const [moduleType, moduleId] = node.outputOf;
       let dfs = (node, inputs = []) => {
-        if (node.inputOf?.includes(moduleType)) {
-          !inputs.includes(node) && inputs.push(node);
+        const inlet = node.inputOf?.find(
+          ([name, id]) => name === moduleType && id === moduleId
+        );
+        if (inlet) {
+          !inputs.includes(node) && (inputs[inlet[2]] = node);
           return;
         }
-        node.outputOf !== moduleType && (node.ignore = true);
+        if (node.outputOf?.[0] !== moduleType) {
+          node.ignore = true;
+        }
         for (let index of node.ins) {
           dfs(nodes[index], inputs);
         }
@@ -57,7 +62,7 @@ Node.prototype.render = async function (container, options = {}) {
       };
       const moduleInputs = dfs(node);
       node.type = moduleType;
-      node.ins = moduleInputs.map((input) => nodes.indexOf(input));
+      node.ins = moduleInputs?.map((input) => nodes.indexOf(input)) || [];
     });
     nodes = nodes.filter((node) => !node.ignore);
   }
