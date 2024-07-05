@@ -141,10 +141,10 @@ export class AudioView {
   }
 
   destroy() {
-    this.audioWorklet.disconnect();
+    this.audioWorklet?.disconnect();
     this.audioWorklet = null;
 
-    this.audioCtx.close();
+    this.audioCtx?.close();
     this.audioCtx = null;
   }
 
@@ -152,8 +152,7 @@ export class AudioView {
    * Stop audio playback
    */
   stop() {
-    assert(this.audioCtx);
-    this.send({ type: "STOP" });
+    this.audioCtx && this.send({ type: "STOP" });
   }
 
   set fadeTime(fadeTime) {
