@@ -107,14 +107,13 @@ function loopsToMe(node, me) {
   if (node === me) {
     return true;
   }
-  if (node.ins.length === 0) {
-    return false;
-  }
   for (let neighbor of node.ins) {
     if (neighbor.ins.includes(me)) {
       return true;
     }
-    return loopsToMe(neighbor, me);
+    if (loopsToMe(neighbor, me)) {
+      return true;
+    }
   }
 }
 
