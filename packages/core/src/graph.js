@@ -9,6 +9,162 @@ export const node = (type, value) => new Node(type, value);
 
 export let nodeRegistry = new Map();
 
+const polyType = "poly";
+const outputType = "dac";
+
+function parseInput(input, node) {
+  if (typeof input === "function") {
+    if (!node) {
+      throw new Error(
+        "tried to parse function input without without passing node.."
+      );
+    }
+    return node.apply(input);
+  }
+  if (typeof input === "object") {
+    // is node
+    return input;
+  }
+  if (typeof input === "number" && !isNaN(input)) {
+    return n(input);
+  }
+  console.log(
+    `invalid input type "${typeof input}" for node of type, falling back to 0. The input was:`,
+    input
+  );
+  return 0;
+}
+
+Node.prototype.inherit = function (parent) {
+  parent.inputOf && (this.inputOf = parent.inputOf);
+  parent.outputOf && (this.outputOf = parent.outputOf);
+  return this;
+};
+
+function getNode(type, ...args) {
+  let maxExpansions = 1;
+  args = args.map((arg) => {
+    // desugar array to poly node
+    if (Array.isArray(arg)) {
+      arg = new Node(polyType).withIns(...arg);
+    }
+    /* if (typeof arg === "function") {
+      const peek = arg(new Node("foo"));
+      if (peek.type === polyType) {
+        maxExpansions = Math.max(peek.ins.length, maxExpansions);
+      }
+    } */
+    if (arg.type === polyType) {
+      maxExpansions = Math.max(arg.ins.length, maxExpansions);
+    }
+    return arg;
+  });
+
+  // early exit if no expansion is happening
+  if (maxExpansions === 1) {
+    const next = node(type);
+    return next.withIns(...args.map((arg) => parseInput(arg, next))); //
+  }
+
+  // dont expand dac node, but instead input all channels
+  if (type === outputType) {
+    const inputs = args
+      .map((arg) => {
+        if (arg.type === polyType) {
+          // we expect arg.ins to not contain functions..
+          return arg.ins.map((arg) => parseInput(arg).inherit(arg));
+        }
+        return arg;
+      })
+      .flat();
+    return node(outputType).withIns(...inputs);
+  }
+
+  // multichannel expansion:
+  // node([a,b,c], [x,y]) => expand(node(a,x), node(b,y), node(c,x))
+  const expanded = Array.from({ length: maxExpansions }, (_, i) => {
+    const cloned = new Node(type);
+    const inputs = args.map((arg) => {
+      if (arg.type === polyType) {
+        const input = parseInput(arg.ins[i % arg.ins.length], cloned);
+        return input.inherit(arg);
+      }
+      return parseInput(arg, cloned); // wire up cloned node for feedback..
+    });
+    return cloned.withIns(...inputs);
+  });
+  return new Node(polyType).withIns(...expanded);
+}
+
+export function getInletName(type, index) {
+  const schema = nodeRegistry.get(type);
+  if (!schema?.ins?.[index]) {
+    return "";
+  }
+  return schema.ins[index].name;
+}
+
+export let makeNode = (type, schema) => {
+  schema && nodeRegistry.set(type, schema);
+  return register(type, (...args) => getNode(type, ...args), schema);
+};
+
+////////
+
+nodeRegistry.set("register", {
+  tags: ["meta"],
+  graph: false,
+  description:
+    "Registers a new Node function. Sets it on the prototype + returns the function itself. Like `module` but doesn't hide complexity in graph viz.",
+  examples: [
+    `let kick = register('kick', gate => gate.adsr(0,.11,0,.11)
+.apply(env => env.mul(env)
+  .mul(158)
+  .sine(env)
+  .distort(.85)
+))
+impulse(2).kick().out()`,
+  ],
+});
+export let register = (name, fn, schema) => {
+  schema && nodeRegistry.set(name, schema);
+  Node.prototype[name] = function (...args) {
+    return fn(this, ...args);
+  };
+  return fn;
+};
+
+nodeRegistry.set("module", {
+  tags: ["meta"],
+  graph: true,
+  description:
+    "Creates a module. Like `register`, but the graph viz will hide the internal complexity of the module.",
+  examples: [
+    `let kick = module('kick', gate => gate.adsr(0,.11,0,.11)
+.apply(env => env.mul(env)
+  .mul(158)
+  .sine(env)
+  .distort(.85)
+))
+impulse(2).kick().out()`,
+  ],
+});
+let moduleId = 0;
+export function module(name, fn, schema) {
+  return register(
+    name,
+    (...args) => {
+      const id = moduleId++;
+      // TODO: support function as arg for feedback => parseInput expects 2 args
+      args = args.map((input, i) =>
+        parseInput(input).asModuleInput(name, id, i)
+      );
+      return fn(...args).asModuleOutput(name, id);
+    },
+    schema
+  );
+}
+
 nodeRegistry.set("n", {
   tags: ["math"],
   description: "Constant value node. Turns a number into a Node.",
@@ -70,12 +226,6 @@ Node.prototype.apply = function (fn) {
   return fn(this);
 };
 
-// tbd doc?
-Node.prototype.apply2 = function (fn) {
-  // clock(10).seq(51,52,0,53).apply2(hold).midinote().sine().out()
-  return fn(this, this);
-};
-
 nodeRegistry.set("clone", {
   tags: ["innards"],
   description: "Clones the node",
@@ -99,11 +249,6 @@ Node.prototype.map = function (fn) {
     return fn(this);
   }
   return poly(...this.ins.map(fn));
-};
-
-// tbd doc?
-Node.prototype.dfs = function (fn, visited) {
-  return this.apply((node) => dfs(node, fn, visited));
 };
 
 nodeRegistry.set("select", {
@@ -138,62 +283,6 @@ Node.prototype.debug = function (fn = (x) => x) {
   console.log(fn(this));
   return this;
 };
-
-// tbd doc?
-let dfs = (node, fn, visited = []) => {
-  node = fn(node, visited);
-  visited.push(node);
-  node.ins = node.ins.map((input) => {
-    if (visited.includes(input)) {
-      return input;
-    }
-    return dfs(input, fn, visited);
-  });
-  return node;
-};
-
-// tbd doc?
-Node.prototype.asModuleInput = function (name, id, index) {
-  this.inputOf = this.inputOf || [];
-  this.inputOf.push([name, id, index]);
-  return this;
-};
-// tbd doc?
-Node.prototype.asModuleOutput = function (name, id) {
-  this.outputOf = [name, id];
-  return this;
-};
-
-nodeRegistry.set("module", {
-  tags: ["meta"],
-  graph: true,
-  description:
-    "Creates a module. Like `register`, but the graph viz will hide the internal complexity of the module.",
-  examples: [
-    `let kick = module('kick', gate => gate.adsr(0,.11,0,.11)
-.apply(env => env.mul(env)
-  .mul(158)
-  .sine(env)
-  .distort(.85)
-))
-impulse(2).kick().out()`,
-  ],
-});
-let moduleId = 0;
-export function module(name, fn, schema) {
-  return register(
-    name,
-    (...args) => {
-      const id = moduleId++;
-      // TODO: support function as arg for feedback => parseInput expects 2 args
-      args = args.map((input, i) =>
-        parseInput(input).asModuleInput(name, id, i)
-      );
-      return fn(...args).asModuleOutput(name, id);
-    },
-    schema
-  );
-}
 
 // converts a registered module into a json string
 // unused atm... not sure if this is feasible
@@ -299,122 +388,42 @@ export function evaluate(code) {
   }
 }
 
-const polyType = "poly";
-const outputType = "dac";
-
-function parseInput(input, node) {
-  if (typeof input === "function") {
-    if (!node) {
-      throw new Error(
-        "tried to parse function input without without passing node.."
-      );
-    }
-    return node.apply(input);
-  }
-  if (typeof input === "object") {
-    // is node
-    return input;
-  }
-  if (typeof input === "number" && !isNaN(input)) {
-    return n(input);
-  }
-  console.log(
-    `invalid input type "${typeof input}" for node of type, falling back to 0. The input was:`,
-    input
-  );
-  return 0;
-}
-
-Node.prototype.inherit = function (parent) {
-  parent.inputOf && (this.inputOf = parent.inputOf);
-  parent.outputOf && (this.outputOf = parent.outputOf);
-  return this;
-};
-
-function getNode(type, ...args) {
-  let maxExpansions = 1;
-  args = args.map((arg) => {
-    // desugar array to poly node
-    if (Array.isArray(arg)) {
-      arg = new Node(polyType).withIns(...arg);
-    }
-    /* if (typeof arg === "function") {
-      const peek = arg(new Node("foo"));
-      if (peek.type === polyType) {
-        maxExpansions = Math.max(peek.ins.length, maxExpansions);
-      }
-    } */
-    if (arg.type === polyType) {
-      maxExpansions = Math.max(arg.ins.length, maxExpansions);
-    }
-    return arg;
-  });
-
-  // early exit if no expansion is happening
-  if (maxExpansions === 1) {
-    const next = node(type);
-    return next.withIns(...args.map((arg) => parseInput(arg, next))); //
-  }
-
-  // dont expand dac node, but instead input all channels
-  if (type === outputType) {
-    const inputs = args
-      .map((arg) => {
-        if (arg.type === polyType) {
-          // we expect arg.ins to not contain functions..
-          return arg.ins.map((arg) => parseInput(arg).inherit(arg));
-        }
-        return arg;
-      })
-      .flat();
-    return node(outputType).withIns(...inputs);
-  }
-
-  // multichannel expansion:
-  // node([a,b,c], [x,y]) => expand(node(a,x), node(b,y), node(c,x))
-  const expanded = Array.from({ length: maxExpansions }, (_, i) => {
-    const cloned = new Node(type);
-    const inputs = args.map((arg) => {
-      if (arg.type === polyType) {
-        const input = parseInput(arg.ins[i % arg.ins.length], cloned);
-        return input.inherit(arg);
-      }
-      return parseInput(arg, cloned); // wire up cloned node for feedback..
-    });
-    return cloned.withIns(...inputs);
-  });
-  return new Node(polyType).withIns(...expanded);
-}
-
-// todo: dedupe with register?
-export let makeNode = (type, schema) => {
-  const { name = type.toLowerCase() } = schema || {};
-  schema && nodeRegistry.set(type, schema);
-  Node.prototype[name] = function (...args) {
-    return getNode(type, this, ...args);
-  };
-  return (...args) => {
-    return getNode(type, ...args);
-  };
-};
-
-export let register = (name, fn, schema) => {
-  schema && nodeRegistry.set(name, schema);
-  Node.prototype[name] = function (...args) {
-    return fn(this, ...args);
-  };
-  return fn;
-};
-
-export function getInletName(type, index) {
-  const schema = nodeRegistry.get(type);
-  if (!schema?.ins?.[index]) {
-    return "";
-  }
-  return schema.ins[index].name;
-}
-
 // is this needed?
 Node.prototype.over = function (fn) {
   return this.apply((x) => add(x, fn(x)));
+};
+
+// tbd doc?
+Node.prototype.dfs = function (fn, visited) {
+  return this.apply((node) => dfs(node, fn, visited));
+};
+// tbd doc?
+Node.prototype.apply2 = function (fn) {
+  // clock(10).seq(51,52,0,53).apply2(hold).midinote().sine().out()
+  return fn(this, this);
+};
+
+// tbd doc?
+let dfs = (node, fn, visited = []) => {
+  node = fn(node, visited);
+  visited.push(node);
+  node.ins = node.ins.map((input) => {
+    if (visited.includes(input)) {
+      return input;
+    }
+    return dfs(input, fn, visited);
+  });
+  return node;
+};
+
+// tbd doc?
+Node.prototype.asModuleInput = function (name, id, index) {
+  this.inputOf = this.inputOf || [];
+  this.inputOf.push([name, id, index]);
+  return this;
+};
+// tbd doc?
+Node.prototype.asModuleOutput = function (name, id) {
+  this.outputOf = [name, id];
+  return this;
 };
