@@ -379,7 +379,7 @@ export let rangex = module(
     tags: ["math"],
     description: "exponential range",
     ins: [{ name: "in" }, { name: "min" }, { name: "max" }],
-    examples: [`sine([1,3]).exprange(100, 2e3).sine().out()`],
+    examples: [`sine([1,3]).rangex(100, 2e3).sine().out()`],
   }
 );
 
