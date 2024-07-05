@@ -42,6 +42,18 @@ export class Node {
   dfs(fn, visited) {
     return this.apply((node) => dfs(node, fn, visited));
   }
+  // find first occurence of type up in the graph
+  select(type) {
+    for (let input of this.ins) {
+      if (input.type === type) {
+        return input;
+      }
+      const upper = input.select(type);
+      if (upper) {
+        return upper;
+      }
+    }
+  }
   log(fn = (x) => x) {
     console.log(fn(this));
     return this;
