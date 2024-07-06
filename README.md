@@ -26,3 +26,32 @@ compilation strategy / graph format based on <https://noisecraft.app/>
 - [insect buzzing by luiiuuuiiiii](https://felixroos.github.io/kabelsalat/#c2luZSgxMjExMSkKLmZvbGQoc2luZSguNTEpLnJhbmdlKDAsIC4zKSkKLm11bCgKICBzaW5lKAogICAgbig3KS5tdWwoCiAgICAgIHNpbmUoMC41KS5yYW5nZSgxLDMpCiAgICApCiAgKS5yYW5nZSguMCwuMSkKKQoub3V0KCk=)
 - [Da Wubs](https://felixroos.github.io/kabelsalat/#c2F3KC4zNSkKLm11bCg0LjcpCi5hZGQoLjM1KQouc2luZSgpCi5tdWwoMzkxLjk5NSkKLm11bCh0cmkoNTApKQouc2luZSgpCi5tdWwoMSkKLm91dCgpCgovLyBEYSBXdWJzCi8vIGh0dHBzOi8vbm9pc2VjcmFmdC5hcHAvNTEK)
 - [weird noise thing](https://felixroos.github.io/kabelsalat/#bm9pc2UoMikucmFuZ2UoNTUsMjIwKS5tdWwoc2luZSguMikucmFuZ2UoMSwxLjEpKS5ub2lzZSgpCi5maWx0ZXIobm9pc2UoKS5yYW5nZSguNywuNCkuc2xpZGUoMSksIG5vaXNlKC42KS5yYW5nZSgyLDQpKQouZmlsdGVyKGNsb2NrKDEyKS5zZXEoLjEsLjIsLjUsLjIsLjcpKQoubXVsKDQpLmZvbGQoKQoub3V0KCk=)
+
+## Project Setup
+
+You need [nodejs v22](https://nodejs.org/en) and [pnpm](https://pnpm.io/). Then run `pnpm i` to install dependencies.
+
+## Running Offline
+
+1. `pnpm build` to build the site
+2. `pnpm preview` to serve the build
+
+## Develop
+
+- `pnpm dev` run the dev server
+- `pnpm test` run tests
+
+## Publishing
+
+```sh
+npm login
+
+# this will increment all the versions in package.json files of non private packages to selected versions
+npx lerna version --no-private
+
+# publish all packages inside /packages using pnpm! don't use lerna to publish!!
+pnpm --filter "./packages/**" publish --dry-run
+
+# the last command was only a dry-run. if everything looks ok, run this:
+pnpm --filter "./packages/**" publish --access public
+```
