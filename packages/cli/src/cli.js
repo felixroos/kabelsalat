@@ -1,14 +1,11 @@
 #!/usr/bin/env node
 
-import "@kabelsalat/core/dist/index.mjs";
+import * as api from "@kabelsalat/core/dist/index.mjs";
 import { MIDI, parseMidiMessage } from "@kabelsalat/core/src/midi.js";
-// import { AudioGraph } from "@kabelsalat/core/src/audiograph.js";
 import { AudioGraph } from "@kabelsalat/core/src/audiograph.js";
 import { existsSync } from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
-import * as api from "@kabelsalat/core/dist/index.mjs";
-import { evaluate } from "@kabelsalat/core/dist/index.mjs";
 import { audiostream } from "./audiostream.js";
 import chokidar from "chokidar";
 import Speaker from "speaker";
@@ -77,7 +74,7 @@ midi.on("midimessage", (_, message) => {
 Object.assign(globalThis, api);
 function update(code) {
   try {
-    const node = evaluate(code);
+    const node = api.evaluate(code);
     const unit = node.compile();
     audioGraph.parseMsg({ type: "NEW_UNIT", unit: { ...unit, ugenOffset: 0 } });
   } catch (err) {
