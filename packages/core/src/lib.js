@@ -1,4 +1,4 @@
-import { makeNode, Node, register, module } from "./graph";
+import { makeNode, Node, register, module } from "./graph.js";
 
 export let adsr = makeNode("adsr", {
   ugen: "ADSRNode",

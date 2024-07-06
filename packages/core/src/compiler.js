@@ -1,5 +1,4 @@
-import { Node } from "./graph.js";
-import { nodeRegistry } from "./graph.js";
+import { Node, nodeRegistry } from "./graph.js";
 
 // this compiler is actually not from noisecraft :)
 
@@ -176,7 +175,7 @@ export function compile(node, options = {}) {
     console.log("compiled code:");
     console.log(src);
   }
-  return { src, nodes, audioThreadNodes };
+  return { src, nodes, audioThreadNodes, ugenOffset };
 }
 
 Node.prototype.compile = function (options) {
