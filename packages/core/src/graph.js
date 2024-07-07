@@ -187,6 +187,15 @@ export function n(value) {
   return node("n", value);
 }
 
+nodeRegistry.set("out", {
+  tags: ["meta"],
+  description: "Sends the node to the audio output (dac)",
+});
+// this method will be overriden when using evaluate
+Node.prototype.out = function () {
+  return dac(this);
+};
+
 nodeRegistry.set("withIns", {
   tags: ["innards"],
   description: "Sets the inputs of a node. Returns the node itself",
