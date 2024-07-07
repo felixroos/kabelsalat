@@ -1,4 +1,11 @@
-import { n, makeNode, Node, register, module, nodeRegistry } from "./graph.js";
+import {
+  n,
+  registerNode,
+  Node,
+  register,
+  module,
+  nodeRegistry,
+} from "./graph.js";
 
 export let time = register("time", (code) => new Node("time", code), {
   tags: ["meta"],
@@ -76,7 +83,9 @@ export let floatbeat = register(
   }
 );
 
-export let adsr = makeNode("adsr", {
+let callUgen = (index, ...args) => `nodes[${index}].update(${args.join(",")})`;
+
+export let adsr = registerNode("adsr", {
   ugen: "ADSRNode",
   tags: ["envelope"],
   description: "ADSR envelope",
@@ -109,7 +118,7 @@ export let ad = module(
   }
 );
 
-export let clock = makeNode("clock", {
+export let clock = registerNode("clock", {
   ugen: "Clock",
   tags: ["regular", "clock"],
   description: "Clock source, with tempo in BPM",
@@ -122,7 +131,7 @@ export let clock = makeNode("clock", {
     },
   ],
 });
-export let clockdiv = makeNode("clockdiv", {
+export let clockdiv = registerNode("clockdiv", {
   ugen: "ClockDiv",
   tags: ["clock"],
   description: "Clock signal divider",
@@ -133,7 +142,7 @@ export let clockdiv = makeNode("clockdiv", {
   ],
 });
 
-export let distort = makeNode("distort", {
+export let distort = registerNode("distort", {
   ugen: "Distort",
   tags: ["fx", "distortion"],
   description: "Overdrive-style distortion",
@@ -148,7 +157,7 @@ export let distort = makeNode("distort", {
   ],
 });
 
-export let noise = makeNode("noise", {
+export let noise = registerNode("noise", {
   ugen: "NoiseOsc",
   tags: ["source", "noise"],
   description: "White noise source",
@@ -157,7 +166,7 @@ export let noise = makeNode("noise", {
 });
 
 // todo: how to show "pink" in reference?
-export let pink = makeNode("pink", {
+export let pink = registerNode("pink", {
   ugen: "PinkNoise",
   tags: ["source", "noise"],
   description: "Pink noise source",
@@ -165,7 +174,7 @@ export let pink = makeNode("pink", {
   ins: [],
 });
 
-export let brown = makeNode("brown", {
+export let brown = registerNode("brown", {
   ugen: "BrownNoiseOsc",
   tags: ["source", "noise"],
   description: "Brown noise source",
@@ -173,7 +182,7 @@ export let brown = makeNode("brown", {
   ins: [],
 });
 
-export let dust = makeNode("dust", {
+export let dust = registerNode("dust", {
   ugen: "DustOsc",
   tags: ["trigger", "noise", "source"],
   description: "Generates random impulses from 0 to +1.",
@@ -183,7 +192,7 @@ export let dust = makeNode("dust", {
   ],
 });
 
-export let impulse = makeNode("impulse", {
+export let impulse = registerNode("impulse", {
   ugen: "ImpulseOsc",
   tags: ["regular", "trigger"],
   description: "Regular single sample impulses (0 - 1)",
@@ -193,14 +202,14 @@ export let impulse = makeNode("impulse", {
     { name: "phase", default: 0 },
   ],
 });
-export let saw = makeNode("saw", {
+export let saw = registerNode("saw", {
   ugen: "SawOsc",
   tags: ["regular", "waveform", "source"],
   description: "Sawtooth wave oscillator",
   examples: ["saw(110).mul(.5).out()"],
   ins: [{ name: "freq", default: 0 }],
 });
-export let sine = makeNode("sine", {
+export let sine = registerNode("sine", {
   tags: ["regular", "waveform", "source"],
   ugen: "SineOsc",
   description: "Sine wave oscillator",
@@ -210,16 +219,19 @@ export let sine = makeNode("sine", {
     { name: "sync", default: 0, description: "sync input" },
     { name: "phase", default: 0, description: "phase offset" },
   ],
+  compile: ([freq = 0, sync = 0, phase = 0], _, index) =>
+    callUgen(index, freq, sync, phase),
 });
-export let tri = makeNode("tri", {
+export let tri = registerNode("tri", {
   ugen: "TriOsc",
   tags: ["regular", "waveform", "source"],
   description: "Triangle wave oscillator",
   examples: ["tri(220).out()"],
   ins: [{ name: "freq", default: 0 }],
+  compile: ([freq = 0], _, index) => callUgen(index, freq),
 });
 
-export let pulse = makeNode("pulse", {
+export let pulse = registerNode("pulse", {
   ugen: "PulseOsc",
   tags: ["regular", "waveform", "source"],
   description: "Pulse wave oscillator",
@@ -228,9 +240,10 @@ export let pulse = makeNode("pulse", {
     { name: "freq", default: 0 },
     { name: "pw", default: 0.5, description: "pulse width 0 - 1" },
   ],
+  compile: ([freq = 0, pw = 0.5], _, index) => callUgen(index, freq, pw),
 });
 
-export let slide = makeNode("slide", {
+export let slide = registerNode("slide", {
   ugen: "Slide",
   tags: ["fx"],
   internal: true,
@@ -244,7 +257,7 @@ export let slide = makeNode("slide", {
     { name: "rate", default: 1 },
   ],
 });
-export let lag = makeNode("lag", {
+export let lag = registerNode("lag", {
   ugen: "Lag",
   tags: ["fx"],
   description: "Smoothes a signal. Good for slide / portamento effects.",
@@ -265,13 +278,13 @@ nodeRegistry.set("feedback_write", {
   description: "Writes to the feedback buffer. Not intended for direct use",
   compile: (vars, node) => `nodes[${node.to}].write(${vars[0]})`,
 });
-export let feedback_read = makeNode("feedback_read", {
+export let feedback_read = registerNode("feedback_read", {
   ugen: "Feedback",
   internal: true,
   description: "internal helper node to read the last feedback_write output",
   ins: [],
 });
-export let slew = makeNode("slew", {
+export let slew = registerNode("slew", {
   ugen: "Slew",
   tags: ["fx"],
   description:
@@ -291,7 +304,7 @@ export let slew = makeNode("slew", {
     },
   ],
 });
-export let filter = makeNode("filter", {
+export let filter = registerNode("filter", {
   ugen: "Filter",
   tags: ["fx", "filter"],
   internal: true,
@@ -303,7 +316,7 @@ export let filter = makeNode("filter", {
     { name: "reso", default: 0 },
   ],
 });
-export let fold = makeNode("fold", {
+export let fold = registerNode("fold", {
   ugen: "Fold",
   tags: ["fx", "distortion", "limiter"],
   description: 'Distort incoming audio signal by "folding"',
@@ -317,7 +330,7 @@ export let fold = makeNode("fold", {
     { name: "rate", default: 0 },
   ],
 });
-export let seq = makeNode("seq", {
+export let seq = registerNode("seq", {
   ugen: "Sequence",
   tags: ["sequencer"],
   description: "Trigger controlled sequencer",
@@ -332,7 +345,7 @@ export let seq = makeNode("seq", {
     // 1-Infinity of steps
   ],
 });
-export let delay = makeNode("delay", {
+export let delay = registerNode("delay", {
   ugen: "Delay",
   tags: ["fx"],
   description: "Delay line node",
@@ -345,7 +358,7 @@ export let delay = makeNode("delay", {
     { name: "time", default: 0 },
   ],
 });
-export let hold = makeNode("hold", {
+export let hold = registerNode("hold", {
   ugen: "Hold",
   tags: ["fx"],
   description: "Sample and hold",
@@ -358,10 +371,10 @@ export let hold = makeNode("hold", {
     { name: "trig", default: 0 },
   ],
 });
-/*export let midin = makeNode("MidiIn",{
+/*export let midin = registerNode("MidiIn",{
     ins: [],
 });*/
-export let midifreq = makeNode("midifreq", {
+export let midifreq = registerNode("midifreq", {
   ugen: "MidiFreq",
   tags: ["external", "midi"],
   description:
@@ -375,7 +388,7 @@ export let midifreq = makeNode("midifreq", {
     },
   ],
 });
-export let midigate = makeNode("midigate", {
+export let midigate = registerNode("midigate", {
   ugen: "MidiGate",
   tags: ["external", "midi"],
   description:
@@ -383,7 +396,7 @@ export let midigate = makeNode("midigate", {
   examples: [`midigate().lag(1).mul(sine(220)).out()`],
   ins: [{ name: "channel", default: -1 }],
 });
-export let midicc = makeNode("midicc", {
+export let midicc = registerNode("midicc", {
   ugen: "MidiCC",
   tags: ["external", "midi"],
   description: "outputs bipolar value of given midi cc number",
@@ -393,7 +406,7 @@ export let midicc = makeNode("midicc", {
     { name: "channel", default: -1 },
   ],
 });
-export let audioin = makeNode("audioin", {
+export let audioin = registerNode("audioin", {
   ugen: "AudioIn",
   tags: ["source", "external"],
   description: "External Audio Input, depends on your system input",
@@ -403,70 +416,70 @@ export let audioin = makeNode("audioin", {
 });
 
 // non-audio nodes
-export let log = makeNode("log", {
+export let log = registerNode("log", {
   tags: ["math"],
   description: "calculates the logarithm (base 10) of the input signal",
   ins: [{ name: "in" }],
   compile: (val) => `Math.log(${val})`,
 });
-export let exp = makeNode("exp", {
+export let exp = registerNode("exp", {
   tags: ["math"],
   description: "raises e to the power of the input signal",
   ins: [{ name: "in" }],
   compile: (val) => `Math.exp(${val})`,
 });
-export let pow = makeNode("pow", {
+export let pow = registerNode("pow", {
   tags: ["math"],
   description: "raises the input to the given power",
   ins: [{ name: "in" }, { name: "power" }],
   compile: (vars) => `Math.pow(${vars[0] || 0},${vars[1] || 1})`,
 });
-export let sin = makeNode("sin", {
+export let sin = registerNode("sin", {
   tags: ["math"],
   description: "calculates the sine of the input signal",
   ins: [{ name: "in" }],
   compile: (val) => `Math.sin(${val})`,
 });
-export let cos = makeNode("cos", {
+export let cos = registerNode("cos", {
   tags: ["math"],
   description: "calculates the cosine of the input signal",
   ins: [{ name: "in" }],
   compile: (val) => `Math.cos(${val})`,
 });
-export let mul = makeNode("mul", {
+export let mul = registerNode("mul", {
   tags: ["math"],
   description: "Multiplies the given signals.",
   examples: [`sine(220).mul( sine(4).range(.25,1) ).out()`],
   ins: [{ name: "in", dynamic: true }],
   compile: (vars) => vars.join(" * ") || 0,
 });
-export let add = makeNode("add", {
+export let add = registerNode("add", {
   tags: ["math"],
   description: "sums the given signals",
   examples: [`n([0,3,7,10]).add(60).midinote().sine().mix(2).out()`],
   ins: [{ name: "in", dynamic: true }],
   compile: (vars) => vars.join(" + ") || 0,
 });
-export let div = makeNode("div", {
+export let div = registerNode("div", {
   tags: ["math"],
   description: "adds the given signals",
   ins: [{ name: "in", dynamic: true }],
   compile: (vars) => vars.join(" / ") || 0,
 });
-export let sub = makeNode("sub", {
+export let sub = registerNode("sub", {
   tags: ["math"],
   description: "subtracts the given signals",
   ins: [{ name: "in", dynamic: true }],
   compile: (vars) => vars.join(" - ") || 0,
 });
-export let mod = makeNode("mod", {
+export let mod = registerNode("mod", {
   tags: ["math"],
   description: "calculates the modulo",
   examples: [`add(x=>x.add(.003).mod(1)).out()`],
   ins: [{ name: "in" }, { name: "modulo" }],
   compile: (vars) => vars.join(" % ") || 0,
 });
-export let range = makeNode("range", {
+export let range = registerNode("range", {
   tags: ["math"],
   description: "Scales the incoming bipolar value to the given range.",
   examples: [`sine(.5).range(.25,1).mul(sine(440)).out()`],
@@ -497,7 +510,7 @@ export let rangex = module(
   }
 );
 
-export let midinote = makeNode("midinote", {
+export let midinote = registerNode("midinote", {
   compile: (vars) => {
     const [note] = vars;
     return `(2 ** ((${note} - 69) / 12) * 440)`;
@@ -510,9 +523,9 @@ export let midinote = makeNode("midinote", {
 .midinote().sine().out()`,
   ],
 });
-export let dac = makeNode("dac");
-export let exit = makeNode("exit", { internal: true, compilerNoop: true });
-export let poly = makeNode("poly");
+export let dac = registerNode("dac");
+export let exit = registerNode("exit", { internal: true, compilerNoop: true });
+export let poly = registerNode("poly");
 export let PI = n(Math.PI);
 
 export let fork = register(

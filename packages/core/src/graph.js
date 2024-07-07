@@ -111,10 +111,8 @@ export function getInletName(type, index) {
   return schema.ins[index].name;
 }
 
-export let makeNode = (type, schema) => {
-  schema && nodeRegistry.set(type, schema);
-  return register(type, (...args) => getNode(type, ...args), schema);
-};
+export let registerNode = (type, schema) =>
+  register(type, (...args) => getNode(type, ...args), schema);
 
 ////////
 
