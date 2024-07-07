@@ -7,10 +7,20 @@ import {
   nodeRegistry,
 } from "./graph.js";
 
+let def = (name, value, comment) =>
+  `const ${name} = ${value};${comment ? ` /* ${comment} */` : ""}`;
+let defUgen = (meta, ...args) => {
+  return def(
+    meta.name,
+    `nodes[${meta.ugenIndex}].update(${args.join(",")})`,
+    meta.node.type
+  );
+};
+
 export let time = register("time", (code) => new Node("time", code), {
   tags: ["meta"],
   description: "Returns elapsed time in seconds",
-  compile: () => "time; // time",
+  compile: ({ name }) => def(name, "time;"),
 });
 
 export let raw = register(
@@ -27,7 +37,7 @@ export let raw = register(
     ],
     tags: ["meta"],
     description: "Raw code node, expects floats between -1 and 1",
-    compileRaw: (vars, node, name) => `let $input = ${vars[0]}; 
+    compile: ({ vars, node, name }) => `let $input = ${vars[0]}; 
 const ${name} = (${node.value}); // raw`,
     examples: [
       `sine(4).range(.5,1)
@@ -59,7 +69,7 @@ export let bytebeat = register(
 (t>>10^t>>11)%5*((t>>14&3^t>>15&1)+1)*t%99+((3+(t>>14&3)-(t>>16&1))/3*t%99&64)
 \`.out()`,
     ],
-    compileRaw: (vars, node, name) => `let t = ${vars[0]}; 
+    compile: ({ vars, node, name }) => `let t = ${vars[0]}; 
 const ${name} = ((${node.value}) & 255) / 127.5 - 1; // bytebeat`,
   }
 );
@@ -77,13 +87,11 @@ export let floatbeat = register(
     ],
     tags: ["meta"],
     description: "Raw code node, expects numbers from -1 to 1",
-    compileRaw: (vars, node, name) => {
+    compile: ({ vars, node, name }) => {
       return `let t = ${vars[0]}; const ${name} = (${node.value}); // floatbeat`;
     },
   }
 );
-
-let callUgen = (index, ...args) => `nodes[${index}].update(${args.join(",")})`;
 
 export let adsr = registerNode("adsr", {
   ugen: "ADSRNode",
@@ -101,10 +109,10 @@ export let adsr = registerNode("adsr", {
     { name: "sus", default: 0.2, description: "sustain level" },
     { name: "rel", default: 0.1, description: "release time" },
   ],
-  compile: (
-    [gate = 0, att = 0.02, dec = 0.1, sus = 0.2, rel = 0.1],
-    { ugenIndex }
-  ) => callUgen(ugenIndex, "time", gate, att, dec, sus, rel),
+  compile: ({
+    vars: [gate = 0, att = 0.02, dec = 0.1, sus = 0.2, rel = 0.1],
+    ...meta
+  }) => defUgen(meta, "time", gate, att, dec, sus, rel),
 });
 export let ad = module(
   "ad",
@@ -134,7 +142,7 @@ export let clock = registerNode("clock", {
       description: "clock tempo in bpm (beats per minute)",
     },
   ],
-  compile: ([bpm = 120], { ugenIndex }) => callUgen(ugenIndex, bpm),
+  compile: ({ vars: [bpm = 120], ...meta }) => defUgen(meta, bpm),
 });
 export let clockdiv = registerNode("clockdiv", {
   ugen: "ClockDiv",
@@ -145,8 +153,8 @@ export let clockdiv = registerNode("clockdiv", {
     { name: "clock", default: 0, description: "clock input" },
     { name: "divisor", default: 2, description: "tempo divisor" },
   ],
-  compile: ([clock = 0, divisor = 2], { ugenIndex }) =>
-    callUgen(ugenIndex, clock, divisor),
+  compile: ({ vars: [clock = 0, divisor = 2], ...meta }) =>
+    defUgen(meta, clock, divisor),
 });
 
 export let distort = registerNode("distort", {
@@ -162,8 +170,8 @@ export let distort = registerNode("distort", {
     { name: "in", default: 0 },
     { name: "amt", default: 0, description: "distortion amount" },
   ],
-  compile: ([input = 0, amt = 0], { ugenIndex }) =>
-    callUgen(ugenIndex, input, amt),
+  compile: ({ vars: [input = 0, amt = 0], ...meta }) =>
+    defUgen(meta, input, amt),
 });
 
 export let noise = registerNode("noise", {
@@ -172,7 +180,7 @@ export let noise = registerNode("noise", {
   description: "White noise source",
   examples: ["noise().mul(.25).out()"],
   ins: [],
-  compile: (_, { ugenIndex }) => callUgen(ugenIndex),
+  compile: defUgen,
 });
 
 // todo: how to show "pink" in reference?
@@ -182,7 +190,7 @@ export let pink = registerNode("pink", {
   description: "Pink noise source",
   examples: ["pink().mul(.5).out()"],
   ins: [],
-  compile: (_, { ugenIndex }) => callUgen(ugenIndex),
+  compile: defUgen,
 });
 
 export let brown = registerNode("brown", {
@@ -191,7 +199,7 @@ export let brown = registerNode("brown", {
   description: "Brown noise source",
   examples: ["brown().out()"],
   ins: [],
-  compile: (_, { ugenIndex }) => callUgen(ugenIndex),
+  compile: defUgen,
 });
 
 export let dust = registerNode("dust", {
@@ -202,7 +210,7 @@ export let dust = registerNode("dust", {
   ins: [
     { name: "density", default: 0, description: "average impulses per second" },
   ],
-  compile: ([density = 0], { ugenIndex }) => callUgen(ugenIndex, density),
+  compile: ({ vars: [density = 0], ...meta }) => defUgen(meta, density),
 });
 
 export let impulse = registerNode("impulse", {
@@ -214,8 +222,8 @@ export let impulse = registerNode("impulse", {
     { name: "freq", default: 0 },
     { name: "phase", default: 0 },
   ],
-  compile: ([freq = 0, phase = 0], { ugenIndex }) =>
-    callUgen(ugenIndex, freq, phase),
+  compile: ({ vars: [freq = 0, phase = 0], ...meta }) =>
+    defUgen(meta, freq, phase),
 });
 export let saw = registerNode("saw", {
   ugen: "SawOsc",
@@ -223,7 +231,7 @@ export let saw = registerNode("saw", {
   description: "Sawtooth wave oscillator",
   examples: ["saw(110).mul(.5).out()"],
   ins: [{ name: "freq", default: 0 }],
-  compile: ([freq = 0], { ugenIndex }) => callUgen(ugenIndex, freq),
+  compile: ({ vars: [freq = 0], ...meta }) => defUgen(meta, freq),
 });
 export let sine = registerNode("sine", {
   tags: ["regular", "waveform", "source"],
@@ -235,8 +243,8 @@ export let sine = registerNode("sine", {
     { name: "sync", default: 0, description: "sync input" },
     { name: "phase", default: 0, description: "phase offset" },
   ],
-  compile: ([freq = 0, sync = 0, phase = 0], { ugenIndex }) =>
-    callUgen(ugenIndex, freq, sync, phase),
+  compile: ({ vars: [freq = 0, sync = 0, phase = 0], ...meta }) =>
+    defUgen(meta, freq, sync, phase),
 });
 export let tri = registerNode("tri", {
   ugen: "TriOsc",
@@ -244,7 +252,7 @@ export let tri = registerNode("tri", {
   description: "Triangle wave oscillator",
   examples: ["tri(220).out()"],
   ins: [{ name: "freq", default: 0 }],
-  compile: ([freq = 0], { ugenIndex }) => callUgen(ugenIndex, freq),
+  compile: ({ vars: [freq = 0], ...meta }) => defUgen(meta, freq),
 });
 
 export let pulse = registerNode("pulse", {
@@ -256,8 +264,7 @@ export let pulse = registerNode("pulse", {
     { name: "freq", default: 0 },
     { name: "pw", default: 0.5, description: "pulse width 0 - 1" },
   ],
-  compile: ([freq = 0, pw = 0.5], { ugenIndex }) =>
-    callUgen(ugenIndex, freq, pw),
+  compile: ({ vars: [freq = 0, pw = 0.5], ...meta }) => defUgen(meta, freq, pw),
 });
 
 export let slide = registerNode("slide", {
@@ -273,8 +280,8 @@ export let slide = registerNode("slide", {
     { name: "in", default: 0 },
     { name: "rate", default: 1 },
   ],
-  compile: ([input = 0, rate = 1], { ugenIndex }) =>
-    callUgen(ugenIndex, input, rate),
+  compile: ({ vars: [input = 0, rate = 1], ...meta }) =>
+    defUgen(meta, input, rate),
 });
 export let lag = registerNode("lag", {
   ugen: "Lag",
@@ -288,8 +295,8 @@ export let lag = registerNode("lag", {
     { name: "in", default: 0 },
     { name: "rate", default: 1, description: "60 dB lag time in seconds" },
   ],
-  compile: ([input = 0, rate = 1], { ugenIndex }) =>
-    callUgen(ugenIndex, input, rate),
+  compile: ({ vars: [input = 0, rate = 1], ...meta }) =>
+    defUgen(meta, input, rate),
 });
 
 // feedback_write doesn't need a creation function, because it's created internally in dagify
@@ -297,21 +304,23 @@ nodeRegistry.set("feedback_write", {
   internal: true,
   tags: ["innards"],
   description: "Writes to the feedback buffer. Not intended for direct use",
-  compile: (vars, { node }) => `nodes[${node.to}].write(${vars[0]})`,
+  compile: ({ vars, node, name }) =>
+    def(name, `nodes[${node.to}].write(${vars[0]})`, "feedback_write"),
 });
 export let feedback_read = registerNode("feedback_read", {
   ugen: "Feedback",
   internal: true,
   description: "internal helper node to read the last feedback_write output",
   ins: [],
-  compile: (args, { nodes, id, ugenIndex }) => {
+  compile: ({ vars, ...meta }) => {
+    const { nodes, id, ugenIndex } = meta;
     // remap indices
     // we need to rewrite the "to" value to the audio node index (instead of flat node index)
     const writer = nodes.find(
       (node) => node.type === "feedback_write" && String(node.to) === id
     );
     writer.to = ugenIndex;
-    return callUgen(ugenIndex, ...args);
+    return defUgen(meta, ...vars);
   },
 });
 export let slew = registerNode("slew", {
@@ -333,8 +342,8 @@ export let slew = registerNode("slew", {
       description: "Maximum downward slope in units per second",
     },
   ],
-  compile: ([input = 0, up = 1, dn = 1], { ugenIndex }) =>
-    callUgen(ugenIndex, input, up, dn),
+  compile: ({ vars: [input = 0, up = 1, dn = 1], ...meta }) =>
+    defUgen(meta, input, up, dn),
 });
 export let filter = registerNode("filter", {
   ugen: "Filter",
@@ -347,8 +356,8 @@ export let filter = registerNode("filter", {
     { name: "cutoff", default: 1 },
     { name: "reso", default: 0 },
   ],
-  compile: ([input = 0, cutoff = 1, reso = 0], { ugenIndex }) =>
-    callUgen(ugenIndex, input, cutoff, reso),
+  compile: ({ vars: [input = 0, cutoff = 1, reso = 0], ...meta }) =>
+    defUgen(meta, input, cutoff, reso),
 });
 export let fold = registerNode("fold", {
   ugen: "Fold",
@@ -363,8 +372,8 @@ export let fold = registerNode("fold", {
     { name: "in", default: 0 },
     { name: "rate", default: 0 },
   ],
-  compile: ([input = 0, rate = 0], { ugenIndex }) =>
-    callUgen(ugenIndex, input, rate),
+  compile: ({ vars: [input = 0, rate = 0], ...meta }) =>
+    defUgen(meta, input, rate),
 });
 export let seq = registerNode("seq", {
   ugen: "Sequence",
@@ -379,7 +388,7 @@ export let seq = registerNode("seq", {
     { name: "step", default: 0, dynamic: true, description: "step inputs" },
     // 1-Infinity of steps
   ],
-  compile: (args, { ugenIndex }) => callUgen(ugenIndex, ...args),
+  compile: ({ vars, ...meta }) => defUgen(meta, ...vars),
 });
 export let delay = registerNode("delay", {
   ugen: "Delay",
@@ -393,8 +402,8 @@ export let delay = registerNode("delay", {
     { name: "in", default: 0 },
     { name: "time", default: 0 },
   ],
-  compile: ([input = 0, time = 0], { ugenIndex }) =>
-    callUgen(ugenIndex, input, time),
+  compile: ({ vars: [input = 0, time = 0], ...meta }) =>
+    defUgen(meta, input, time),
 });
 export let hold = registerNode("hold", {
   ugen: "Hold",
@@ -408,8 +417,8 @@ export let hold = registerNode("hold", {
     { name: "in", default: 0 },
     { name: "trig", default: 0 },
   ],
-  compile: ([input = 0, trig = 0], { ugenIndex }) =>
-    callUgen(ugenIndex, input, trig),
+  compile: ({ vars: [input = 0, trig = 0], ...meta }) =>
+    defUgen(meta, input, trig),
 });
 /*export let midin = registerNode("MidiIn",{
     ins: [],
@@ -427,7 +436,7 @@ export let midifreq = registerNode("midifreq", {
       description: "Channel filter. Defaults to all channels",
     },
   ],
-  compile: ([channel = -1], { ugenIndex }) => callUgen(ugenIndex, channel),
+  compile: ({ vars: [channel = -1], ...meta }) => defUgen(meta, channel),
 });
 export let midigate = registerNode("midigate", {
   ugen: "MidiGate",
@@ -436,7 +445,7 @@ export let midigate = registerNode("midigate", {
     "outputs gate of midi note in. Multiple instances will do voice allocation",
   examples: [`midigate().lag(1).mul(sine(220)).out()`],
   ins: [{ name: "channel", default: -1 }],
-  compile: ([channel = -1], { ugenIndex }) => callUgen(ugenIndex, channel),
+  compile: ({ vars: [channel = -1], ...meta }) => defUgen(meta, channel),
 });
 export let midicc = registerNode("midicc", {
   ugen: "MidiCC",
@@ -447,8 +456,8 @@ export let midicc = registerNode("midicc", {
     { name: "ccnumber", default: -1 },
     { name: "channel", default: -1 },
   ],
-  compile: ([ccnumber = -1, channel = -1], { ugenIndex }) =>
-    callUgen(ugenIndex, ccnumber, channel),
+  compile: ({ vars: [ccnumber = -1, channel = -1], ...meta }) =>
+    defUgen(meta, ccnumber, channel),
 });
 export let audioin = registerNode("audioin", {
   ugen: "AudioIn",
@@ -456,7 +465,7 @@ export let audioin = registerNode("audioin", {
   description: "External Audio Input, depends on your system input",
   examples: [`audioin().add(x=>x.delay(.1).mul(.8)).out()`],
   ins: [],
-  compile: (_, { ugenIndex }) => callUgen(ugenIndex, "input"),
+  compile: (meta) => defUgen(meta, "input"),
 });
 
 // non-audio nodes
@@ -464,77 +473,82 @@ export let log = registerNode("log", {
   tags: ["math"],
   description: "calculates the logarithm (base 10) of the input signal",
   ins: [{ name: "in" }],
-  compile: (val) => `Math.log(${val})`,
+  compile: ({ vars: [input = 0], name }) => def(name, `Math.log(${input})`),
 });
 export let exp = registerNode("exp", {
   tags: ["math"],
   description: "raises e to the power of the input signal",
   ins: [{ name: "in" }],
-  compile: (val) => `Math.exp(${val})`,
+  compile: ({ vars: [input = 0], name }) => def(name, `Math.exp(${input})`),
 });
 export let pow = registerNode("pow", {
   tags: ["math"],
   description: "raises the input to the given power",
   ins: [{ name: "in" }, { name: "power" }],
-  compile: (vars) => `Math.pow(${vars[0] || 0},${vars[1] || 1})`,
+  compile: ({ vars: [input = 0, power = 1], name }) =>
+    def(name, `Math.pow(${input},${power})`),
 });
 export let sin = registerNode("sin", {
   tags: ["math"],
   description: "calculates the sine of the input signal",
   ins: [{ name: "in" }],
-  compile: (val) => `Math.sin(${val})`,
+  compile: ({ vars: [input = 0], name }) => def(name, `Math.sin(${input})`),
 });
 export let cos = registerNode("cos", {
   tags: ["math"],
   description: "calculates the cosine of the input signal",
   ins: [{ name: "in" }],
-  compile: (val) => `Math.cos(${val})`,
+  compile: ({ vars: [input = 0], name }) => def(name, `Math.cos(${input})`),
 });
 export let mul = registerNode("mul", {
   tags: ["math"],
   description: "Multiplies the given signals.",
   examples: [`sine(220).mul( sine(4).range(.25,1) ).out()`],
   ins: [{ name: "in", dynamic: true }],
-  compile: (vars) => vars.join(" * ") || 0,
+  compile: ({ vars, name }) => def(name, vars.join(" * ") || 0),
 });
 export let add = registerNode("add", {
   tags: ["math"],
   description: "sums the given signals",
   examples: [`n([0,3,7,10]).add(60).midinote().sine().mix(2).out()`],
   ins: [{ name: "in", dynamic: true }],
-  compile: (vars) => vars.join(" + ") || 0,
+  compile: ({ vars, name }) => def(name, vars.join(" + ") || 0),
 });
 export let div = registerNode("div", {
   tags: ["math"],
   description: "adds the given signals",
   ins: [{ name: "in", dynamic: true }],
-  compile: (vars) => vars.join(" / ") || 0,
+  compile: ({ vars, name }) => def(name, vars.join(" / ") || 0),
 });
 export let sub = registerNode("sub", {
   tags: ["math"],
   description: "subtracts the given signals",
   ins: [{ name: "in", dynamic: true }],
-  compile: (vars) => vars.join(" - ") || 0,
+  compile: ({ vars, name }) => def(name, vars.join(" - ") || 0),
 });
 export let mod = registerNode("mod", {
   tags: ["math"],
   description: "calculates the modulo",
   examples: [`add(x=>x.add(.003).mod(1)).out()`],
   ins: [{ name: "in" }, { name: "modulo" }],
-  compile: (vars) => vars.join(" % ") || 0,
+  compile: ({ vars, name }) => def(name, vars.join(" % ") || 0),
 });
 export let range = registerNode("range", {
   tags: ["math"],
   description: "Scales the incoming bipolar value to the given range.",
   examples: [`sine(.5).range(.25,1).mul(sine(440)).out()`],
   ins: [{ name: "in" }, { name: "min" }, { name: "max" }],
-  compile: (vars) => {
+  compile: ({ vars, name }) => {
     const [bipolar, min, max, curve = 1] = vars;
     // bipolar [-1,1] to unipolar [0,1] => (v+1)/2
     const unipolar = `((${bipolar} + 1) * 0.5)`;
     const shaped = curve === 1 ? unipolar : `Math.pow(${unipolar}, ${curve})`;
-    return `${shaped} * (${max} - ${min}) + ${min}`;
+    return def(name, `${shaped} * (${max} - ${min}) + ${min}`);
   },
+});
+
+export let thru = registerNode("thru", {
+  compile: ({ name, vars }) => def(name, vars[0], "thru"),
 });
 
 export let rangex = module(
@@ -555,10 +569,8 @@ export let rangex = module(
 );
 
 export let midinote = registerNode("midinote", {
-  compile: (vars) => {
-    const [note] = vars;
-    return `(2 ** ((${note} - 69) / 12) * 440)`;
-  },
+  compile: ({ vars: [note], name }) =>
+    def(name, `(2 ** ((${note} - 69) / 12) * 440)`),
   tags: ["math"],
   description: "convert midi number to frequency",
   ins: [{ name: "midi" }],
@@ -569,7 +581,7 @@ export let midinote = registerNode("midinote", {
 });
 export let dac = registerNode("dac", {
   internal: true,
-  compileRaw: (vars) => {
+  compile: ({ vars }) => {
     let channels;
     if (!vars.length) {
       console.warn(`no input.. call .out() to play`);
@@ -587,7 +599,7 @@ export let dac = registerNode("dac", {
     return `return [${channels.map((chan) => `(${chan}*lvl)`).join(",")}]`;
   },
 });
-export let exit = registerNode("exit", { internal: true, compilerNoop: true });
+export let exit = registerNode("exit", { internal: true });
 export let poly = registerNode("poly");
 export let PI = n(Math.PI);
 
@@ -704,7 +716,7 @@ export let mix = register(
     return node("mix").withIns(...input.ins);
   },
   {
-    compile: (vars) => `(${vars.join(" + ")})`,
+    compile: ({ vars, name }) => def(name, `(${vars.join(" + ")})`),
     description: `mixes down multiple channels. Useful to make sure you get a mono or stereo signal out at the end. 
 When mixing down to 2 channels, the input channels are equally distributed over the stereo image, e.g. 3 channels are panned [-1,0,1]`,
     ins: [

@@ -1,47 +1,40 @@
 import { Node, nodeRegistry } from "./graph.js";
 
 export function compile(node, options = {}) {
-  const { log = false, ugenOffset = 0 } = options;
+  const {
+    log = false,
+    ugenOffset = 0,
+    fallbackType = "thru",
+    constType = "n",
+    varPrefix = "n",
+  } = options;
   log && console.log("compile", node);
   const nodes = node.flatten(true);
   // log && console.log("flat", nodes);
   const sorted = topoSort(nodes);
   let lines = [];
-  let v = (id) => (nodes[id].type === "n" ? nodes[id].value : `n${id}`);
-  let pushVar = (id, value, comment) =>
-    lines.push(
-      `const ${v(id)} = ${value};${comment ? ` /* ${comment} */` : ""}`
-    );
-  let thru = (id) => pushVar(id, v(nodes[id].ins[0]));
-
+  let v = (id) =>
+    nodes[id].type === constType ? nodes[id].value : `${varPrefix}${id}`;
   const ugens = [];
   for (let id of sorted) {
     const node = nodes[id];
     const vars = nodes[id].ins.map((inlet) => v(inlet));
     const ugenIndex = ugens.length + ugenOffset;
 
-    // is audio node?
-    const schema = nodeRegistry.get(node.type);
-    if (schema && schema.compile) {
-      pushVar(
-        id,
-        schema.compile(vars, { node, nodes, id, ugenIndex }),
-        node.type
+    let schema = nodeRegistry.get(node.type);
+    if (!schema) {
+      console.warn(
+        `unhandled node type "${nodes[id].type}". falling back to "${fallbackType}"`
       );
-      if (schema.ugen) {
-        ugens.push(schema.ugen);
-      }
-      continue;
+      schema = nodeRegistry.get(fallbackType);
     }
-    if (schema && schema.compileRaw) {
-      lines.push(schema.compileRaw(vars, node, v(id)));
-      continue;
+    if (schema.ugen) {
+      ugens.push(schema.ugen);
     }
-    if (schema && schema.compilerNoop) {
-      continue;
+    const meta = { vars, node, nodes, id, ugenIndex, name: v(id) };
+    if (schema.compile) {
+      lines.push(schema.compile(meta));
     }
-    console.warn(`unhandled node type ${nodes[id].type}`);
-    thru(id);
   }
 
   const src = lines.join("\n");
@@ -68,28 +61,18 @@ export function topoSort(nodes) {
 
     for (let i = 0; i < node.ins.length; ++i) {
       let edge = node.ins[i];
-
       if (!edge) continue;
-
       if (remEdges.has(edge)) continue;
-
       numIns++;
     }
 
     return numIns;
   }
 
-  // Set of nodes with no incoming edges
-  let S = [];
-
-  // List sorted in reverse topological order
-  let L = [];
-
-  // Map of input-side edges removed from the graph
-  let remEdges = new Set();
-
-  // Map of each node to a list of outgoing edges
-  let outEdges = new Map();
+  let S = []; // Set of nodes with no incoming edges
+  let L = []; // List sorted in reverse topological order
+  let remEdges = new Set(); // Map of input-side edges removed from the graph
+  let outEdges = new Map(); // Map of each node to a list of outgoing edges
 
   // Populate the initial list of nodes without input edges
   for (let nodeId in nodes) {

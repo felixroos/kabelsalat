@@ -174,7 +174,6 @@ nodeRegistry.set("n", {
   tags: ["math"],
   description: "Constant value node. Turns a number into a Node.",
   ins: [{ name: "value", default: 0 }],
-  compilerNoop: true,
 });
 export function n(value) {
   if (Array.isArray(value)) {
