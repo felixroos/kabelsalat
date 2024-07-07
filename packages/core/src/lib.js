@@ -263,7 +263,7 @@ nodeRegistry.set("feedback_write", {
   internal: true,
   tags: ["innards"],
   description: "Writes to the feedback buffer. Not intended for direct use",
-  compile: (vars, node) => `nodes[${node.to}].write(${vars[0]});`,
+  compile: (vars, node) => `nodes[${node.to}].write(${vars[0]})`,
 });
 export let feedback_read = makeNode("feedback_read", {
   ugen: "Feedback",
