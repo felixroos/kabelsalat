@@ -8,7 +8,7 @@ describe("compiler", () => {
     const unit = sine(200).out().exit().compile();
     expect(unit.src).toStrictEqual(
       `const n2 = nodes[0].update(200,0,0); /* sine */
-return [(n2*lvl), (n2*lvl)]`
+return [(n2*lvl),(n2*lvl)]`
     );
     expect(unit.ugens).toStrictEqual(["SineOsc"]);
   });
@@ -24,7 +24,7 @@ const n3 = nodes[1].update(200,0,0); /* sine */
 const n2 = n3 + n5; /* add */
 const n7 = n2 * 0.8; /* mul */
 const n6 = nodes[0].write(n7); /* feedback_write */
-return [(n2*lvl), (n2*lvl)]`
+return [(n2*lvl),(n2*lvl)]`
     );
     expect(unit.ugens).toStrictEqual(["Feedback", "SineOsc"]);
   });

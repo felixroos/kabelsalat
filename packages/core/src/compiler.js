@@ -1,7 +1,5 @@
 import { Node, nodeRegistry } from "./graph.js";
 
-// this compiler is actually not from noisecraft :)
-
 export function compile(node, options = {}) {
   const { log = false, ugenOffset = 0 } = options;
   log && console.log("compile", node);
@@ -17,7 +15,6 @@ export function compile(node, options = {}) {
   let thru = (id) => pushVar(id, v(nodes[id].ins[0]));
 
   const ugens = [];
-  let channels;
   for (let id of sorted) {
     const node = nodes[id];
     const vars = nodes[id].ins.map((inlet) => v(inlet));
@@ -43,35 +40,9 @@ export function compile(node, options = {}) {
     if (schema && schema.compilerNoop) {
       continue;
     }
-    if (node.type === "dac") {
-      if (channels) {
-        console.log("multiple uses of dac not allowed");
-        break;
-      }
-      if (!vars.length) {
-        console.warn(`no input.. call .out() to play`);
-        channels = [0, 0];
-        break;
-      }
-      channels = vars;
-      continue;
-    }
-
     console.warn(`unhandled node type ${nodes[id].type}`);
     thru(id);
   }
-
-  if (channels === undefined) {
-    console.log("no .dac() node used...");
-    channels = [0, 0];
-  } else if (channels.length === 1) {
-    // make mono if only one channel
-    channels = [channels[0], channels[0]];
-  } else if (channels.length > 2) {
-    console.warn("returned more than 2 channels.. using first 2");
-    channels = channels.slice(0, 2);
-  }
-  lines.push(`return [${channels.map((chan) => `(${chan}*lvl)`).join(", ")}]`);
 
   const src = lines.join("\n");
   if (log) {

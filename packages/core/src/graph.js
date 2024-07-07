@@ -358,7 +358,7 @@ function dagify(node) {
         const feedbackWriter = new Node("feedback_write");
         feedbackWriter.ins = [feedbackSource];
         feedbackWriter.to = feedbackReader;
-        node.ins.push(feedbackWriter);
+        node.ins.push(feedbackWriter); // don't unshift!
       });
       return;
     }
