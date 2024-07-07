@@ -58,7 +58,7 @@ export class AudioGraph {
     // disconnected nodes may get reconnected, and deleting things like
     // delay lines would lose their current state.
     // All nodes get garbage collected when the playback is stopped.
-    const types = unit.audioThreadNodes;
+    const types = unit.ugens;
     for (let i in types) {
       if (types[i] in UGENS) {
         const nodeClass = UGENS[types[i]];

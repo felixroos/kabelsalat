@@ -51,25 +51,22 @@ export class AudioView {
     this.ugenOffset = 0;
   }
   async updateGraph(node) {
-    const { src, audioThreadNodes } = node.compile({
+    const { src, ugens } = node.compile({
       log: false,
       ugenOffset: this.ugenOffset,
     });
-    if (
-      !this.midiInited &&
-      audioThreadNodes.some((node) => node.startsWith("midi"))
-    ) {
+    if (!this.midiInited && ugens.some((node) => node.startsWith("midi"))) {
       this.initMidi();
     }
-    if (!this.audioIn && audioThreadNodes.some((node) => node === "audioin")) {
+    if (!this.audioIn && ugens.some((node) => node === "audioin")) {
       await this.initAudioIn();
     }
 
     this.send({
       type: "NEW_UNIT",
-      unit: { src, audioThreadNodes, ugenOffset: this.ugenOffset },
+      unit: { src, ugens, ugenOffset: this.ugenOffset },
     });
-    this.ugenOffset += audioThreadNodes.length;
+    this.ugenOffset += ugens.length;
   }
 
   async initAudioIn() {

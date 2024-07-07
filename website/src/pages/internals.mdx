@@ -202,7 +202,7 @@ The compiler gives us this compiled `unit`:
 ```js
 {
     "src": "const n1 = nodes[0].update(200, 0); /* Sine */\nconst n0 = n1 * 0.5; /* Sine * n */\nreturn [(0*0.3), (0*0.3)]",
-    "audioThreadNodes": ["Sine"]
+    "ugens": ["Sine"]
 }
 ```
 
@@ -224,7 +224,7 @@ This is now the actual code that runs on the audio thread.
 ## Running the Compiled Code
 
 The `unit` returned by the compiler is sent to our `GraphWorklet` which hosts an instance of `AudioGraph`.
-The `AudioGraph` creates an `AudioNode` for each `type` in the `audioThreadNodes` Array.
+The `AudioGraph` creates an `AudioNode` for each `type` in the `ugens` Array.
 Each `AudioNode` has the ability to keep its own state, for example, `Sine` will keep track of its phase.
 The compiled `src` is used as the body of the `_genSample` function, which is ultimately called in `GraphWorklet.process` for each sample.
 

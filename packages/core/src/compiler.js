@@ -30,7 +30,7 @@ export function compile(node, options = {}) {
     exp: "exp",
   };
   const mathConstants = ["PI"];
-  const audioThreadNodes = [];
+  const ugens = [];
   let channels;
   for (let id of sorted) {
     const node = nodes[id];
@@ -85,8 +85,8 @@ export function compile(node, options = {}) {
         // but that might be bad for the jit compiler, as it needs to check for undefined values?
         passedVars = schema.ins.map((inlet, i) => vars[i] ?? inlet.default);
       }
-      const index = audioThreadNodes.length + ugenOffset;
-      audioThreadNodes.push(schema.ugen);
+      const index = ugens.length + ugenOffset;
+      ugens.push(schema.ugen);
       if (node.type === "feedback_read") {
         // remap indices
         // we need to rewrite the "to" value to the audio node index (instead of flat node index)
@@ -175,7 +175,7 @@ export function compile(node, options = {}) {
     console.log("compiled code:");
     console.log(src);
   }
-  return { src, nodes, audioThreadNodes, ugenOffset };
+  return { src, ugens, ugenOffset };
 }
 
 Node.prototype.compile = function (options) {
