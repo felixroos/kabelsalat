@@ -52,7 +52,7 @@ export class AudioView {
   }
   async updateGraph(node) {
     const { src, ugens } = node.compile({
-      log: false,
+      log: true,
       ugenOffset: this.ugenOffset,
     });
     if (!this.midiInited && ugens.some((node) => node.startsWith("midi"))) {
