@@ -26,7 +26,11 @@ export function compile(node, options = {}) {
     // is audio node?
     const schema = nodeRegistry.get(node.type);
     if (schema && schema.compile) {
-      pushVar(id, schema.compile(vars, node, ugenIndex), node.type);
+      pushVar(
+        id,
+        schema.compile(vars, { node, nodes, id, ugenIndex }),
+        node.type
+      );
       if (schema.ugen) {
         ugens.push(schema.ugen);
       }
@@ -37,29 +41,6 @@ export function compile(node, options = {}) {
       continue;
     }
     if (schema && schema.compilerNoop) {
-      continue;
-    }
-    if (schema && schema.ugen) {
-      const dynamic = schema.dynamic;
-      let passedVars = vars;
-      if (!dynamic) {
-        // defaults could theoretically also be set inside update function
-        // but that might be bad for the jit compiler, as it needs to check for undefined values?
-        passedVars = schema.ins.map((inlet, i) => vars[i] ?? inlet.default);
-      }
-      ugens.push(schema.ugen);
-      if (node.type === "feedback_read") {
-        // remap indices
-        // we need to rewrite the "to" value to the audio node index (instead of flat node index)
-        const writer = nodes.find(
-          (node) => node.type === "feedback_write" && String(node.to) === id
-        );
-        writer.to = ugenIndex;
-      }
-      const args = schema.args || []; // some nodes want time or inputs
-      const params = args.concat(passedVars);
-      const call = `nodes[${ugenIndex}].update(${params.join(", ")})`;
-      pushVar(id, call, node.type);
       continue;
     }
     if (node.type === "dac") {
