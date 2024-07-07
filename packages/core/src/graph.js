@@ -41,6 +41,13 @@ Node.prototype.inherit = function (parent) {
   return this;
 };
 
+Node.prototype.toObject = function () {
+  return JSON.parse(JSON.stringify(this));
+};
+Node.prototype.stringify = function () {
+  return JSON.stringify(this, null, 2).replaceAll('"', "'");
+};
+
 function getNode(type, ...args) {
   let maxExpansions = 1;
   args = args.map((arg) => {
@@ -309,11 +316,18 @@ function loopsToMe(node, me) {
     }
   }
 }
+Node.prototype.loopsToMe = function (node) {
+  return loopsToMe(node, this);
+};
 
 // GRAPH HELPERS
 
 // transforms the graph into a dag, where cycles are broken into feedback_read and feedback_write nodes
 function dagify(node) {
+  if (node.type !== "exit") {
+    // the crucial point is that "node" is not part of a cycle itself
+    throw new Error("dagify should be called on an exit node");
+  }
   let visitedNodes = [];
   function dfs(currentNode) {
     if (visitedNodes.includes(currentNode)) {
