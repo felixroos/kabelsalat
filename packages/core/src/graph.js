@@ -176,6 +176,7 @@ nodeRegistry.set("n", {
   tags: ["math"],
   description: "Constant value node. Turns a number into a Node.",
   ins: [{ name: "value", default: 0 }],
+  compilerNoop: true,
 });
 export function n(value) {
   if (Array.isArray(value)) {
@@ -197,6 +198,7 @@ Node.prototype.out = function () {
 };
 
 nodeRegistry.set("withIns", {
+  internal: true,
   tags: ["innards"],
   description: "Sets the inputs of a node. Returns the node itself",
   ins: [{ name: "in", dynamic: true }],
@@ -207,6 +209,7 @@ Node.prototype.withIns = function (...ins) {
 };
 
 nodeRegistry.set("flatten", {
+  internal: true,
   tags: ["innards"],
   description:
     "Flattens the node to a list of all nodes in the graph, where each Node's ins are now indices",
@@ -216,6 +219,7 @@ Node.prototype.flatten = function () {
 };
 
 nodeRegistry.set("dagify", {
+  internal: true,
   tags: ["innards"],
   description:
     "Removes all cycles and replaces them with feedback_read / feedback_write Node's",
@@ -243,6 +247,7 @@ Node.prototype.apply = function (fn) {
 };
 
 nodeRegistry.set("clone", {
+  internal: true,
   tags: ["innards"],
   description: "Clones the node",
 });

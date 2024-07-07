@@ -14,65 +14,13 @@ export function compile(node, options = {}) {
     lines.push(
       `const ${v(id)} = ${value};${comment ? ` /* ${comment} */` : ""}`
     );
-  let infix = (a, op, b) => `(${a} ${op} ${b})`;
   let thru = (id) => pushVar(id, v(nodes[id].ins[0]));
-  const infixOperators = {
-    add: "+",
-    mul: "*",
-    sub: "-",
-    div: "/",
-    mod: "%",
-  };
-  const mathFunctions = {
-    sin: "sin",
-    cos: "cos",
-    log: "log",
-    exp: "exp",
-  };
-  const mathConstants = ["PI"];
+
   const ugens = [];
   let channels;
   for (let id of sorted) {
     const node = nodes[id];
     const vars = nodes[id].ins.map((inlet) => v(inlet));
-    // is infix operator node?
-    if (infixOperators[node.type]) {
-      const op = infixOperators[node.type];
-      if (vars.length === 0) {
-        console.warn(
-          `infix node of type "${node.type}" (${id}) has no inputs! falling back to 0`
-        );
-        pushVar(id, "0", "ERROR!");
-        continue;
-      }
-      const calc = vars.join(` ${op} `);
-      const comment = nodes[id].ins
-        .map((inlet) => nodes[inlet].type)
-        .join(` ${op} `);
-      pushVar(id, calc, comment);
-      continue;
-    }
-    // is math function?
-    if (mathFunctions[node.type]) {
-      const fn = mathFunctions[node.type];
-      const calc = `Math.${fn}(${vars.join(", ")})`;
-      const comment = fn;
-      pushVar(id, calc, comment);
-      continue;
-    }
-    if (mathConstants.includes(node.type)) {
-      const calc = `Math.${node.type}`;
-      const comment = node.type;
-      pushVar(id, calc, comment);
-      continue;
-    }
-    if (node.type === "pow") {
-      const [base, exponent] = vars;
-      const calc = `Math.pow(${base},${exponent})`;
-      const comment = node.type;
-      pushVar(id, calc, comment);
-      continue;
-    }
 
     // is audio node?
     const schema = nodeRegistry.get(node.type);
@@ -101,63 +49,35 @@ export function compile(node, options = {}) {
       pushVar(id, call, comment);
       continue;
     }
-    if (["n", "exit"].includes(node.type)) {
-      // do nothing: n is handled directly, exit just joins dac and feedback targets
+    if (schema && schema.compile) {
+      pushVar(id, schema.compile(vars, node), node.type);
       continue;
     }
-    switch (node.type) {
-      case "range": {
-        const [bipolar, min, max, curve = 1] = vars;
-        // bipolar [-1,1] to unipolar [0,1] => (v+1)/2
-        const unipolar = infix(infix(bipolar, "+", 1), "*", 0.5);
-        const shaped =
-          curve === 1 ? unipolar : `Math.pow(${unipolar}, ${curve})`;
-
-        // var = val*(max-min)+min
-        const range = infix(max, "-", min);
-        const calc = infix(infix(shaped, "*", range), "+", min);
-        pushVar(id, calc, "range");
-        break;
-      }
-      case "mix": {
-        const calc = `(${vars.join(" + ")})`;
-        pushVar(id, calc, "mix");
-        break;
-      }
-      case "midinote": {
-        const [note] = vars;
-        const calc = `(2 ** ((${note} - 69) / 12) * 440)`;
-        pushVar(id, calc, "midinote");
-        break;
-      }
-      case "dac": {
-        if (channels) {
-          console.log("multiple uses of dac not allowed");
-          break;
-        }
-        if (!vars.length) {
-          console.warn(`no input.. call .out() to play`);
-          channels = [0, 0];
-          break;
-        }
-        channels = vars;
-        break;
-      }
-      case "feedback_write": {
-        // write to var because it's an input to dac (because otherwise the write node would not be part of the graph)
-        lines.push(
-          `const ${v(id)} = nodes[${node.to}].write(${
-            vars[0]
-          }); // feedback_write`
-        );
-        break;
-      }
-      default: {
-        console.warn(`unhandled node type ${nodes[id].type}`);
-        thru(id);
-      }
+    if (schema && schema.compileRaw) {
+      lines.push(schema.compileRaw(vars, node, v(id)));
+      continue;
     }
+    if (schema && schema.compilerNoop) {
+      continue;
+    }
+    if (node.type === "dac") {
+      if (channels) {
+        console.log("multiple uses of dac not allowed");
+        break;
+      }
+      if (!vars.length) {
+        console.warn(`no input.. call .out() to play`);
+        channels = [0, 0];
+        break;
+      }
+      channels = vars;
+      continue;
+    }
+
+    console.warn(`unhandled node type ${nodes[id].type}`);
+    thru(id);
   }
+
   if (channels === undefined) {
     console.log("no .dac() node used...");
     channels = [0, 0];

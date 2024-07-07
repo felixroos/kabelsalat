@@ -27,7 +27,7 @@ Node.prototype.render = async function (container, options = {}) {
     Math.trunc(value) === value ? value : value.toFixed(2);
 
   let getLabel = (node) => {
-    if (node.value !== undefined) {
+    if (typeof node.value === "number") {
       return getNumericLabel(node.value);
     }
     return node.type;

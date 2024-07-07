@@ -1,4 +1,80 @@
-import { makeNode, Node, register, module } from "./graph.js";
+import { n, makeNode, Node, register, module, nodeRegistry } from "./graph.js";
+
+export let time = register("time", (code) => new Node("time", code), {
+  tags: ["meta"],
+  description: "Returns elapsed time in seconds",
+  compile: () => "time; // time",
+});
+
+export let raw = register(
+  "raw",
+  (input, code) => new Node("raw", code).withIns(n(input)),
+  {
+    ins: [
+      { name: "in" },
+      {
+        name: "code",
+        description:
+          "expression with variable `t` being the elapsed time and `$input` the input.",
+      },
+    ],
+    tags: ["meta"],
+    description: "Raw code node, expects floats between -1 and 1",
+    compileRaw: (vars, node, name) => `let $input = ${vars[0]}; 
+const ${name} = (${node.value}); // raw`,
+    examples: [
+      `sine(4).range(.5,1)
+.raw("(time*110%1*2-1)*$input")
+.out()`,
+    ],
+  }
+);
+
+export let bytebeat = register(
+  "bytebeat",
+  (t, code) => new Node("bytebeat", code).withIns(n(t)),
+  {
+    ins: [
+      { name: "t", description: "time in samples" },
+      {
+        name: "code",
+        description: "bytebeat code with variable `t`",
+      },
+    ],
+    tags: ["meta"],
+    description: "Bytebeat node, expects numbers from 0 to 255",
+    examples: [
+      `time().mul(8000).bytebeat\`
+// Fractalized Past
+// by: lhphr
+// from: https://dollchan.net/btb/res/3.html#69
+
+(t>>10^t>>11)%5*((t>>14&3^t>>15&1)+1)*t%99+((3+(t>>14&3)-(t>>16&1))/3*t%99&64)
+\`.out()`,
+    ],
+    compileRaw: (vars, node, name) => `let t = ${vars[0]}; 
+const ${name} = ((${node.value}) & 255) / 127.5 - 1; // bytebeat`,
+  }
+);
+
+export let floatbeat = register(
+  "floatbeat",
+  (t, code) => new Node("bytebeat", code).withIns(n(t)),
+  {
+    ins: [
+      { name: "t", description: "time in samples" },
+      {
+        name: "code",
+        description: "floatbeat code with variable `t`",
+      },
+    ],
+    tags: ["meta"],
+    description: "Raw code node, expects numbers from -1 to 1",
+    compileRaw: (vars, node, name) => {
+      return `let t = ${vars[0]}; const ${name} = (${node.value}); // floatbeat`;
+    },
+  }
+);
 
 export let adsr = makeNode("adsr", {
   ugen: "ADSRNode",
@@ -182,7 +258,13 @@ export let lag = makeNode("lag", {
   ],
 });
 
-// feedback_write is a special case in the compiler, so it won't appear here..
+// feedback_write doesn't need a creation function, because it's created internally in dagify
+nodeRegistry.set("feedback_write", {
+  internal: true,
+  tags: ["innards"],
+  description: "Writes to the feedback buffer. Not intended for direct use",
+  compile: (vars, node) => `nodes[${node.to}].write(${vars[0]});`,
+});
 export let feedback_read = makeNode("feedback_read", {
   ugen: "Feedback",
   internal: true,
@@ -325,60 +407,77 @@ export let log = makeNode("log", {
   tags: ["math"],
   description: "calculates the logarithm (base 10) of the input signal",
   ins: [{ name: "in" }],
+  compile: (val) => `Math.log(${val})`,
 });
 export let exp = makeNode("exp", {
   tags: ["math"],
   description: "raises e to the power of the input signal",
   ins: [{ name: "in" }],
+  compile: (val) => `Math.exp(${val})`,
 });
 export let pow = makeNode("pow", {
   tags: ["math"],
   description: "raises the input to the given power",
   ins: [{ name: "in" }, { name: "power" }],
+  compile: (vars) => `Math.pow(${vars[0] || 0},${vars[1] || 1})`,
 });
 export let sin = makeNode("sin", {
   tags: ["math"],
   description: "calculates the sine of the input signal",
   ins: [{ name: "in" }],
+  compile: (val) => `Math.sin(${val})`,
 });
 export let cos = makeNode("cos", {
   tags: ["math"],
   description: "calculates the cosine of the input signal",
   ins: [{ name: "in" }],
+  compile: (val) => `Math.cos(${val})`,
 });
 export let mul = makeNode("mul", {
   tags: ["math"],
   description: "Multiplies the given signals.",
   examples: [`sine(220).mul( sine(4).range(.25,1) ).out()`],
   ins: [{ name: "in", dynamic: true }],
+  compile: (vars) => vars.join(" * ") || 0,
 });
 export let add = makeNode("add", {
   tags: ["math"],
   description: "sums the given signals",
   examples: [`n([0,3,7,10]).add(60).midinote().sine().mix(2).out()`],
   ins: [{ name: "in", dynamic: true }],
+  compile: (vars) => vars.join(" + ") || 0,
 });
 export let div = makeNode("div", {
   tags: ["math"],
   description: "adds the given signals",
   ins: [{ name: "in", dynamic: true }],
+  compile: (vars) => vars.join(" / ") || 0,
 });
 export let sub = makeNode("sub", {
   tags: ["math"],
   description: "subtracts the given signals",
   ins: [{ name: "in", dynamic: true }],
+  compile: (vars) => vars.join(" - ") || 0,
 });
 export let mod = makeNode("mod", {
   tags: ["math"],
   description: "calculates the modulo",
   examples: [`add(x=>x.add(.003).mod(1)).out()`],
   ins: [{ name: "in" }, { name: "modulo" }],
+  compile: (vars) => vars.join(" % ") || 0,
 });
 export let range = makeNode("range", {
   tags: ["math"],
   description: "Scales the incoming bipolar value to the given range.",
   examples: [`sine(.5).range(.25,1).mul(sine(440)).out()`],
   ins: [{ name: "in" }, { name: "min" }, { name: "max" }],
+  compile: (vars) => {
+    const [bipolar, min, max, curve = 1] = vars;
+    // bipolar [-1,1] to unipolar [0,1] => (v+1)/2
+    const unipolar = `((${bipolar} + 1) * 0.5)`;
+    const shaped = curve === 1 ? unipolar : `Math.pow(${unipolar}, ${curve})`;
+    return `${shaped} * (${max} - ${min}) + ${min}`;
+  },
 });
 
 export let rangex = module(
@@ -398,11 +497,23 @@ export let rangex = module(
   }
 );
 
-export let midinote = makeNode("midinote");
+export let midinote = makeNode("midinote", {
+  compile: (vars) => {
+    const [note] = vars;
+    return `(2 ** ((${note} - 69) / 12) * 440)`;
+  },
+  tags: ["math"],
+  description: "convert midi number to frequency",
+  ins: [{ name: "midi" }],
+  examples: [
+    `impulse(4).seq(0,3,7,12).add(60)
+.midinote().sine().out()`,
+  ],
+});
 export let dac = makeNode("dac");
-export let exit = makeNode("exit");
+export let exit = makeNode("exit", { internal: true, compilerNoop: true });
 export let poly = makeNode("poly");
-export let PI = new Node("PI");
+export let PI = n(Math.PI);
 
 export let fork = register(
   "fork",
@@ -517,6 +628,7 @@ export let mix = register(
     return node("mix").withIns(...input.ins);
   },
   {
+    compile: (vars) => `(${vars.join(" + ")})`,
     description: `mixes down multiple channels. Useful to make sure you get a mono or stereo signal out at the end. 
 When mixing down to 2 channels, the input channels are equally distributed over the stereo image, e.g. 3 channels are panned [-1,0,1]`,
     ins: [
