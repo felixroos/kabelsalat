@@ -47,44 +47,21 @@ export class AudioGraph {
   /**
    * Update the audio graph given a new compiled unit
    */
-  newUnit(unit) {
-    // Note that we don't delete any nodes, even if existing nodes are
-    // currently not listed in the compiled unit, because currently
-    // disconnected nodes may get reconnected, and deleting things like
-    // delay lines would lose their current state.
-    // All nodes get garbage collected when the playback is stopped.
-    const types = unit.ugens;
-    unit.nodes = [];
-    for (let i in types) {
-      if (types[i] in UGENS) {
-        const nodeClass = UGENS[types[i]];
-        const index = Number(i);
-        // TODO node reuse / graph diffing whatever / only create nodes that are not already created..
-        unit.nodes[index] = new nodeClass(
-          index,
-          {},
-          this.sampleRate,
-          this.send
-        );
-      } else {
-        console.warn(`unknown ugen "${types[i]}"`);
-      }
-    }
-
+  newUnit(schema) {
+    const unit = new Unit(schema, this.sampleRate, this.send);
     if (this.units.length > 0) {
       this.fadeOut();
     }
 
     // create and fade in new unit sample generator
-    unit.genSample = new Function("time", "nodes", "input", "lvl", unit.src);
     this.fadeIn(unit);
 
     // filter out finished units
     this.units = this.units.filter((unit) => unit.getLevel() > 0);
-    // console.log("units", this.units.length);
+
     this.units.push(unit);
     console.log(
-      `${types.length} ugens spawned, ${this.units.length} units alive`
+      `${schema.ugens.length} ugens spawned, ${this.units.length} units alive`
     );
   }
 
@@ -125,46 +102,11 @@ export class AudioGraph {
   }
 
   noteOn(msg) {
-    const { channel, note, velocity } = msg;
-    this.units.forEach((unit) => {
-      const midifreqs = unit.nodes.filter(
-        (node) =>
-          node.type === "midifreq" &&
-          (node.channel === -1 || node.channel === channel)
-      );
-      const midigates = unit.nodes.filter(
-        (node) =>
-          node.type === "midigate" &&
-          (node.channel === -1 || node.channel === channel)
-      );
-
-      if (velocity > 0) {
-        // get free voice or steal one
-        let freqNode = midifreqs.find((node) => node.isFree()) || midifreqs[0];
-        let gateNode = midigates.find((node) => node.isFree()) || midigates[0];
-        freqNode?.noteOn(note, velocity);
-        gateNode?.noteOn(note, velocity);
-      } else {
-        midifreqs.find((node) => node.note === note)?.noteOff();
-        midigates.find((node) => node.note === note)?.noteOff();
-      }
-    });
+    this.units.forEach((unit) => unit.noteOn(msg));
   }
 
   midiCC(msg) {
-    const { channel, cc, value } = msg;
-
-    this.units.forEach((unit) => {
-      unit.nodes.forEach((node) => {
-        if (
-          node.type === "midicc" &&
-          (node.channel === -1 || node.channel === channel) &&
-          node.ccnumber === cc
-        ) {
-          node.setValue(value);
-        }
-      });
-    });
+    this.units.forEach((unit) => unit.midiCC(msg));
   }
 
   /**
@@ -183,5 +125,68 @@ export class AudioGraph {
       sum[1] += channels[1];
     }
     return sum;
+  }
+}
+
+class Unit {
+  constructor(schema, sampleRate, send) {
+    this.sampleRate = sampleRate;
+    this.send = send;
+    this.nodes = [];
+
+    for (let i in schema.ugens) {
+      if (schema.ugens[i] in UGENS) {
+        const nodeClass = UGENS[schema.ugens[i]];
+        const index = Number(i);
+        // TODO node reuse / graph diffing whatever / only create nodes that are not already created..
+        this.nodes[index] = new nodeClass(
+          index,
+          {},
+          this.sampleRate,
+          this.send
+        );
+      } else {
+        console.warn(`unknown ugen "${schema.ugens[i]}"`);
+      }
+    }
+    this.genSample = new Function("time", "nodes", "input", "lvl", schema.src);
+  }
+
+  noteOn(msg) {
+    const { channel, note, velocity } = msg;
+    const midifreqs = this.nodes.filter(
+      (node) =>
+        node.type === "midifreq" &&
+        (node.channel === -1 || node.channel === channel)
+    );
+    const midigates = this.nodes.filter(
+      (node) =>
+        node.type === "midigate" &&
+        (node.channel === -1 || node.channel === channel)
+    );
+
+    if (velocity > 0) {
+      // get free voice or steal one
+      let freqNode = midifreqs.find((node) => node.isFree()) || midifreqs[0];
+      let gateNode = midigates.find((node) => node.isFree()) || midigates[0];
+      freqNode?.noteOn(note, velocity);
+      gateNode?.noteOn(note, velocity);
+    } else {
+      midifreqs.find((node) => node.note === note)?.noteOff();
+      midigates.find((node) => node.note === note)?.noteOff();
+    }
+  }
+
+  midiCC(msg) {
+    const { channel, cc, value } = msg;
+    this.nodes.forEach((node) => {
+      if (
+        node.type === "midicc" &&
+        (node.channel === -1 || node.channel === channel) &&
+        node.ccnumber === cc
+      ) {
+        node.setValue(value);
+      }
+    });
   }
 }
