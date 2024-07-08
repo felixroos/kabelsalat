@@ -18,26 +18,14 @@ export class AudioGraph {
     this.fadeTime = 0.1;
   }
 
-  fadeOut(unit = this.units[this.units.length - 1]) {
-    if (!unit) {
-      return;
+  fadeOutLastUnit() {
+    if (this.units.length) {
+      this.units[this.units.length - 1].fadeOut(this.playPos, this.fadeTime);
     }
-    const fadeStart = this.playPos;
-    const fadeEnd = this.playPos + this.fadeTime;
-    const fadeFrom = unit.getLevel();
-    unit.getLevel = () =>
-      lerp((this.playPos - fadeStart) / (fadeEnd - fadeStart), fadeFrom, 0);
-  }
-
-  fadeIn(unit) {
-    const fadeStart = this.playPos;
-    const fadeEnd = this.playPos + this.fadeTime;
-    unit.getLevel = () =>
-      lerp((this.playPos - fadeStart) / (fadeEnd - fadeStart), 0, 0.3);
   }
 
   stop() {
-    this.fadeOut();
+    this.fadeOutLastUnit();
     this.send({
       type: "STOP",
       fadeTime: this.fadeTime,
@@ -49,15 +37,13 @@ export class AudioGraph {
    */
   newUnit(schema) {
     const unit = new Unit(schema, this.sampleRate, this.send);
-    if (this.units.length > 0) {
-      this.fadeOut();
-    }
+    this.fadeOutLastUnit();
 
     // create and fade in new unit sample generator
-    this.fadeIn(unit);
+    unit.fadeIn(this.playPos, this.fadeTime);
 
     // filter out finished units
-    this.units = this.units.filter((unit) => unit.getLevel() > 0);
+    this.units = this.units.filter((unit) => unit.getLevel(this.playPos) > 0);
 
     this.units.push(unit);
     console.log(
@@ -119,7 +105,7 @@ export class AudioGraph {
     const sum = [0, 0];
     for (let i = 0; i < this.units.length; i++) {
       const unit = this.units[i];
-      const lvl = unit.getLevel();
+      const lvl = unit.getLevel(this.playPos);
       const channels = unit.genSample(this.playPos, unit.nodes, inputs, lvl);
       sum[0] += channels[0];
       sum[1] += channels[1];
@@ -188,5 +174,19 @@ class Unit {
         node.setValue(value);
       }
     });
+  }
+  fadeIn(time, fadeTime) {
+    const fadeStart = time;
+    const fadeEnd = time + fadeTime;
+    this.getLevel = (t) =>
+      lerp((t - fadeStart) / (fadeEnd - fadeStart), 0, 0.3);
+  }
+
+  fadeOut(time, fadeTime) {
+    const fadeStart = time;
+    const fadeEnd = time + fadeTime;
+    const fadeFrom = this.getLevel(time);
+    this.getLevel = (t) =>
+      lerp((t - fadeStart) / (fadeEnd - fadeStart), fadeFrom, 0);
   }
 }
