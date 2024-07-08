@@ -53,6 +53,9 @@ function getNode(type, ...args) {
   args = args.map((arg) => {
     // desugar array to poly node
     if (Array.isArray(arg)) {
+      if (arg.length === 1) {
+        return arg[0]; // don't poly for 1
+      }
       arg = new Node(polyType).withIns(...arg);
     }
     /* if (typeof arg === "function") {
