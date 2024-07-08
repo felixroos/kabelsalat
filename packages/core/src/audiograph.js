@@ -14,30 +14,25 @@ export class AudioGraph {
 
     // Method to send messages to the main thread
     this.send = send;
-
-    // Stateful audio processing nodes, indexed by nodeId
-    this.nodes = [];
-
-    this.generators = [];
-
+    this.units = [];
     this.fadeTime = 0.1;
   }
 
-  fadeOut(generator = this.generators[this.generators.length - 1]) {
-    if (!generator) {
+  fadeOut(unit = this.units[this.units.length - 1]) {
+    if (!unit) {
       return;
     }
     const fadeStart = this.playPos;
     const fadeEnd = this.playPos + this.fadeTime;
-    const fadeFrom = generator.getLevel();
-    generator.getLevel = () =>
+    const fadeFrom = unit.getLevel();
+    unit.getLevel = () =>
       lerp((this.playPos - fadeStart) / (fadeEnd - fadeStart), fadeFrom, 0);
   }
 
-  fadeIn(generator) {
+  fadeIn(unit) {
     const fadeStart = this.playPos;
     const fadeEnd = this.playPos + this.fadeTime;
-    generator.getLevel = () =>
+    unit.getLevel = () =>
       lerp((this.playPos - fadeStart) / (fadeEnd - fadeStart), 0, 0.3);
   }
 
@@ -59,54 +54,54 @@ export class AudioGraph {
     // delay lines would lose their current state.
     // All nodes get garbage collected when the playback is stopped.
     const types = unit.ugens;
+    unit.nodes = [];
     for (let i in types) {
       if (types[i] in UGENS) {
         const nodeClass = UGENS[types[i]];
-        const index = Number(i) + Number(unit.ugenOffset);
+        const index = Number(i);
         // TODO node reuse / graph diffing whatever / only create nodes that are not already created..
-        this.nodes[index] = new nodeClass(
+        unit.nodes[index] = new nodeClass(
           index,
           {},
           this.sampleRate,
           this.send
         );
-        // console.log("node", this.nodes[i]);
       } else {
         console.warn(`unknown ugen "${types[i]}"`);
       }
     }
-    console.log(
-      `${types.length} ugens spawned, ${Object.keys(this.nodes).length} total`
-    );
 
-    if (this.generators.length > 0) {
+    if (this.units.length > 0) {
       this.fadeOut();
     }
 
-    // create and fade in new generator
-    const generator = new Function("time", "nodes", "input", "lvl", unit.src);
-    this.fadeIn(generator);
+    // create and fade in new unit sample generator
+    unit.genSample = new Function("time", "nodes", "input", "lvl", unit.src);
+    this.fadeIn(unit);
 
-    // filter out finished generators
-    this.generators = this.generators.filter((gen) => gen.getLevel() > 0);
-    // console.log("generators", this.generators.length);
-    this.generators.push(generator);
+    // filter out finished units
+    this.units = this.units.filter((unit) => unit.getLevel() > 0);
+    // console.log("units", this.units.length);
+    this.units.push(unit);
+    console.log(
+      `${types.length} ugens spawned, ${this.units.length} units alive`
+    );
   }
 
   /**
    * Parse a message from the main thread
    */
   parseMsg(msg) {
-    let node = "nodeId" in msg ? this.nodes[msg.nodeId] : null;
+    // let node = "nodeId" in msg ? this.nodes[msg.nodeId] : null;
 
     switch (msg.type) {
       case "NEW_UNIT":
         this.newUnit(msg.unit);
         break;
 
-      case "SET_STATE":
+      /* case "SET_STATE":
         node.setState(msg.state);
-        break;
+        break; */
 
       case "NOTE_ON":
         this.noteOn(msg);
@@ -131,39 +126,44 @@ export class AudioGraph {
 
   noteOn(msg) {
     const { channel, note, velocity } = msg;
-    const midifreqs = this.nodes.filter(
-      (node) =>
-        node.type === "midifreq" &&
-        (node.channel === -1 || node.channel === channel)
-    );
-    const midigates = this.nodes.filter(
-      (node) =>
-        node.type === "midigate" &&
-        (node.channel === -1 || node.channel === channel)
-    );
+    this.units.forEach((unit) => {
+      const midifreqs = unit.nodes.filter(
+        (node) =>
+          node.type === "midifreq" &&
+          (node.channel === -1 || node.channel === channel)
+      );
+      const midigates = unit.nodes.filter(
+        (node) =>
+          node.type === "midigate" &&
+          (node.channel === -1 || node.channel === channel)
+      );
 
-    if (velocity > 0) {
-      // get free voice or steal one
-      let freqNode = midifreqs.find((node) => node.isFree()) || midifreqs[0];
-      let gateNode = midigates.find((node) => node.isFree()) || midigates[0];
-      freqNode?.noteOn(note, velocity);
-      gateNode?.noteOn(note, velocity);
-    } else {
-      midifreqs.find((node) => node.note === note)?.noteOff();
-      midigates.find((node) => node.note === note)?.noteOff();
-    }
+      if (velocity > 0) {
+        // get free voice or steal one
+        let freqNode = midifreqs.find((node) => node.isFree()) || midifreqs[0];
+        let gateNode = midigates.find((node) => node.isFree()) || midigates[0];
+        freqNode?.noteOn(note, velocity);
+        gateNode?.noteOn(note, velocity);
+      } else {
+        midifreqs.find((node) => node.note === note)?.noteOff();
+        midigates.find((node) => node.note === note)?.noteOff();
+      }
+    });
   }
 
   midiCC(msg) {
     const { channel, cc, value } = msg;
-    this.nodes.forEach((node) => {
-      if (
-        node.type === "midicc" &&
-        (node.channel === -1 || node.channel === channel) &&
-        node.ccnumber === cc
-      ) {
-        node.setValue(value);
-      }
+
+    this.units.forEach((unit) => {
+      unit.nodes.forEach((node) => {
+        if (
+          node.type === "midicc" &&
+          (node.channel === -1 || node.channel === channel) &&
+          node.ccnumber === cc
+        ) {
+          node.setValue(value);
+        }
+      });
     });
   }
 
@@ -171,14 +171,14 @@ export class AudioGraph {
    * Generate one [left, right] pair of audio samples
    */
   genSample(inputs) {
-    if (!this.generators.length) return [0, 0];
+    if (!this.units.length) return [0, 0];
     this.playPos += 1 / 44100;
 
     const sum = [0, 0];
-    for (let i = 0; i < this.generators.length; i++) {
-      const gen = this.generators[i];
-      const lvl = gen.getLevel();
-      const channels = gen(this.playPos, this.nodes, inputs, lvl);
+    for (let i = 0; i < this.units.length; i++) {
+      const unit = this.units[i];
+      const lvl = unit.getLevel();
+      const channels = unit.genSample(this.playPos, unit.nodes, inputs, lvl);
       sum[0] += channels[0];
       sum[1] += channels[1];
     }

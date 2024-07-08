@@ -77,7 +77,7 @@ function update(code) {
   try {
     const node = api.evaluate(code);
     const unit = node.compile();
-    audioGraph.parseMsg({ type: "NEW_UNIT", unit: { ...unit, ugenOffset: 0 } });
+    audioGraph.parseMsg({ type: "NEW_UNIT", unit });
   } catch (err) {
     console.log("evaluation error:");
     console.log(err);

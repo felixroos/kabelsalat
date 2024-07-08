@@ -47,13 +47,10 @@ if (match) {
 // console.log("workletUrl", workletUrl);
 
 export class AudioView {
-  constructor() {
-    this.ugenOffset = 0;
-  }
+  constructor() {}
   async updateGraph(node) {
     const { src, ugens } = node.compile({
       log: true,
-      ugenOffset: this.ugenOffset,
     });
     if (!this.midiInited && ugens.some((type) => type.startsWith("Midi"))) {
       this.initMidi();
@@ -64,9 +61,8 @@ export class AudioView {
 
     this.send({
       type: "NEW_UNIT",
-      unit: { src, ugens, ugenOffset: this.ugenOffset },
+      unit: { src, ugens },
     });
-    this.ugenOffset += ugens.length;
   }
 
   async initAudioIn() {

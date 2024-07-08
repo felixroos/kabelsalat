@@ -3,7 +3,6 @@ import { Node, nodeRegistry } from "./graph.js";
 export function compile(node, options = {}) {
   const {
     log = false,
-    ugenOffset = 0,
     fallbackType = "thru",
     constType = "n",
     varPrefix = "n",
@@ -19,7 +18,7 @@ export function compile(node, options = {}) {
   for (let id of sorted) {
     const node = nodes[id];
     const vars = nodes[id].ins.map((inlet) => v(inlet));
-    const ugenIndex = ugens.length + ugenOffset;
+    const ugenIndex = ugens.length;
 
     let schema = nodeRegistry.get(node.type);
     if (!schema) {
@@ -42,7 +41,7 @@ export function compile(node, options = {}) {
     console.log("compiled code:");
     console.log(src);
   }
-  return { src, ugens, ugenOffset };
+  return { src, ugens };
 }
 
 Node.prototype.compile = function (options) {
