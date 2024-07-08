@@ -16,9 +16,7 @@ export class SalatRepl {
     return api.evaluate(code);
   }
   async play(node) {
-    if (!this.audio.isRunning) {
-      await this.audio.init();
-    }
+    await this.audio.init();
     this.audio.updateGraph(node);
     this.onToggle?.(true);
   }

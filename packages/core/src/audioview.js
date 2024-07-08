@@ -50,7 +50,7 @@ export class AudioView {
   constructor() {}
   async updateGraph(node) {
     const { src, ugens } = node.compile({
-      log: true,
+      log: false,
     });
     if (!this.midiInited && ugens.some((type) => type.startsWith("Midi"))) {
       this.initMidi();
@@ -90,6 +90,7 @@ export class AudioView {
   send(msg) {
     assert(msg instanceof Object);
 
+    // make sure to init before callilng send..
     if (!this.audioWorklet) return;
 
     this.audioWorklet.port.postMessage(msg);
@@ -106,7 +107,7 @@ export class AudioView {
       sampleRate: 44100,
     });
     // This seems to be necessary for Safari
-    this.audioCtx.resume();
+    await this.audioCtx.resume();
 
     await this.audioCtx.audioWorklet.addModule(workletUrl);
 
@@ -127,10 +128,6 @@ export class AudioView {
       }
     };
     this.audioWorklet.connect(this.audioCtx.destination);
-  }
-
-  get isRunning() {
-    return !!this.audioCtx;
   }
 
   destroy() {
