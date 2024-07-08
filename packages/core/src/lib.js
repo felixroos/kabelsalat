@@ -20,7 +20,7 @@ let defUgen = (meta, ...args) => {
 export let time = register("time", (code) => new Node("time", code), {
   tags: ["meta"],
   description: "Returns elapsed time in seconds",
-  compile: ({ name }) => def(name, "time;"),
+  compile: ({ name }) => def(name, "time"),
 });
 
 export let raw = register(

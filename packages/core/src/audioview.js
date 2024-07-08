@@ -55,10 +55,10 @@ export class AudioView {
       log: true,
       ugenOffset: this.ugenOffset,
     });
-    if (!this.midiInited && ugens.some((node) => node.startsWith("midi"))) {
+    if (!this.midiInited && ugens.some((type) => type.startsWith("Midi"))) {
       this.initMidi();
     }
-    if (!this.audioIn && ugens.some((node) => node === "audioin")) {
+    if (!this.audioIn && ugens.some((type) => type === "AudioIn")) {
       await this.initAudioIn();
     }
 
