@@ -7,6 +7,7 @@ import { examples } from "../examples";
 import { persistentAtom } from "@nanostores/persistent";
 import { useStore } from "@nanostores/solid";
 import { History, addToHistory, $history } from "./History";
+import { Codemirror } from "./Codemirror";
 
 export const $hideWelcome = persistentAtom("hideWelcome", "false");
 const hideWelcome = () => $hideWelcome.set("true");
@@ -187,14 +188,7 @@ export function Repl() {
         </div>
       )}
       <div class="grid sm:grid-cols-2 flex-auto shrink grow overflow-hidden">
-        {!hideCode() && (
-          <textarea
-            class="resize-none bg-stone-900 shrink-0 p-4 focus:ring-0 outline-0 border-0"
-            spellcheck="false"
-            value={code()}
-            onInput={(e) => setCode(e.target.value)}
-          ></textarea>
-        )}
+        {!hideCode() && <Codemirror code={code()} onChange={setCode} />}
         <div
           class={`hidden sm:flex flex-col h-full overflow-hidden${
             hideCode() ? " col-span-2" : " border-l border-stone-800"
