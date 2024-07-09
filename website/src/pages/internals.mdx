@@ -211,7 +211,7 @@ Let's make the `src` more readable:
 ```js
 const n1 = nodes[0].update(200, 0); /* Sine */
 const n0 = n1 * 0.5; /* Sine * n */
-return [0 * 0.3, 0 * 0.3];
+return [n0 * 0.3, n0 * 0.3];
 ```
 
 This is now the actual code that runs on the audio thread.
