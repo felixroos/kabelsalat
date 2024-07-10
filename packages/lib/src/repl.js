@@ -1,13 +1,17 @@
-import { AudioView } from "./audioview.js";
-import * as api from "./index.js";
-import * as compiler from "./compiler.js";
+import { AudioView } from "../../core/src/audioview.js";
+import * as core from "../../core/src/index.js";
+import * as compiler from "../../core/src/compiler.js";
+import * as lib from "./lib.js";
+import { transpiler } from "@kabelsalat/transpiler";
 
 export class SalatRepl {
-  constructor({ onToggle } = {}) {
+  constructor({ onToggle, beforeEval } = {}) {
     this.audio = new AudioView();
     this.onToggle = onToggle;
+    this.beforeEval = beforeEval;
     if (typeof window !== "undefined") {
-      Object.assign(globalThis, api);
+      Object.assign(globalThis, core);
+      Object.assign(globalThis, lib);
       Object.assign(globalThis, compiler);
       Object.assign(globalThis, { audio: this.audio });
       // update state when sliders are moved
@@ -24,7 +28,9 @@ export class SalatRepl {
     }
   }
   evaluate(code) {
-    return api.evaluate(code);
+    const transpiled = transpiler(code);
+    this.beforeEval(transpiled);
+    return core.evaluate(transpiled.output);
   }
   async play(node) {
     await this.audio.init();

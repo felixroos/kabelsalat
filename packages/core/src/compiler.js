@@ -12,8 +12,15 @@ export function compile(node, options = {}) {
   // log && console.log("flat", nodes);
   const sorted = topoSort(nodes);
   let lines = [];
-  let v = (id) =>
-    nodes[id].type === constType ? nodes[id].value : `${varPrefix}${id}`;
+  let v = (id) => {
+    if (nodes[id].type !== constType) {
+      return `${varPrefix}${id}`;
+    }
+    if (typeof nodes[id].value === "string") {
+      return `"${nodes[id].value}"`;
+    }
+    return nodes[id].value;
+  };
   const ugens = [];
   for (let id of sorted) {
     const node = nodes[id];
@@ -27,12 +34,12 @@ export function compile(node, options = {}) {
       );
       schema = nodeRegistry.get(fallbackType);
     }
-    if (schema.ugen) {
-      ugens.push(schema.ugen);
-    }
     const meta = { vars, node, nodes, id, ugenIndex, name: v(id) };
     if (schema.compile) {
       lines.push(schema.compile(meta));
+    }
+    if (schema.ugen) {
+      ugens.push({ type: schema.ugen, inputs: vars });
     }
   }
 

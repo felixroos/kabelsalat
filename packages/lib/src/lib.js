@@ -5,7 +5,10 @@ import {
   register,
   module,
   nodeRegistry,
-} from "./graph.js";
+} from "@kabelsalat/core";
+import { registerWidgetType } from "@kabelsalat/transpiler";
+
+registerWidgetType("_");
 
 let def = (name, value, comment) =>
   `const ${name} = ${value};${comment ? ` /* ${comment} */` : ""}`;
@@ -459,14 +462,15 @@ export let midicc = registerNode("midicc", {
   compile: ({ vars: [ccnumber = -1, channel = -1], ...meta }) =>
     defUgen(meta, ccnumber, channel),
 });
-export let _ = registerNode("_", {
+
+export let cc = registerNode("cc", {
   ugen: "CC",
   tags: ["external"],
-  description: "Slider UI control",
-  examples: [`_(0).range(100, 200).sine().out()`],
+  description: "CC control",
   ins: [{ name: "value", default: 0 }],
-  compile: ({ vars: [input = 0], ...meta }) => defUgen(meta, input),
+  compile: (meta) => defUgen(meta),
 });
+
 export let audioin = registerNode("audioin", {
   ugen: "AudioIn",
   tags: ["source", "external"],

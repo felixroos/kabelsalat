@@ -128,18 +128,19 @@ class Unit {
     this.nodes = [];
 
     for (let i in schema.ugens) {
-      if (schema.ugens[i] in UGENS) {
-        const nodeClass = UGENS[schema.ugens[i]];
+      const ugen = schema.ugens[i];
+      if (ugen.type in UGENS) {
+        const nodeClass = UGENS[ugen.type];
         const index = Number(i);
         // TODO node reuse / graph diffing whatever / only create nodes that are not already created..
         this.nodes[index] = new nodeClass(
           index,
-          {},
+          ugen,
           this.sampleRate,
           this.send
         );
       } else {
-        console.warn(`unknown ugen "${schema.ugens[i]}"`);
+        console.warn(`unknown ugen "${ugen.type}"`);
       }
     }
     this.genSample = new Function("time", "nodes", "input", "lvl", schema.src);
@@ -185,12 +186,12 @@ class Unit {
 
   setControl(msg) {
     const { value, id } = msg;
-    this.nodes.forEach((node, i) => {
-      // PROBLEM: caller needs to know the index...
-      if (node.type === "cc" && i === id) {
-        node.setValue(value);
-      }
-    });
+    const match = this.nodes.find(
+      (node) => node.type === "cc" && node.id === id
+    );
+    if (match) {
+      match.setValue(value);
+    }
   }
   fadeIn(time, fadeTime) {
     const fadeStart = time;
