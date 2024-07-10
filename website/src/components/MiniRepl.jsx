@@ -1,6 +1,6 @@
 import { createSignal } from "solid-js";
 import "@kabelsalat/graphviz";
-import { SalatRepl } from "@kabelsalat/core";
+import { SalatRepl } from "@kabelsalat/lib";
 import { Icon } from "./Icon";
 
 let vizSettings = {

@@ -1,13 +1,14 @@
 import { Show, createSignal, onCleanup, onMount } from "solid-js";
 import "@kabelsalat/graphviz";
-import { SalatRepl } from "@kabelsalat/core";
+import { SalatRepl } from "@kabelsalat/lib";
 import { Icon } from "./Icon";
 import { Reference } from "./Reference";
 import { examples } from "../examples";
 import { persistentAtom } from "@nanostores/persistent";
 import { useStore } from "@nanostores/solid";
 import { History, addToHistory, $history } from "./History";
-import { Codemirror } from "./Codemirror";
+import { Codemirror, codemirrorView } from "./Codemirror";
+import { updateWidgets } from "./sliders";
 
 export const $hideWelcome = persistentAtom("hideWelcome", "false");
 const hideWelcome = () => $hideWelcome.set("true");
@@ -82,7 +83,12 @@ function updateCode(code) {
 
 export function Repl() {
   let [started, setStarted] = createSignal(false);
-  const repl = new SalatRepl({ onToggle: (_started) => setStarted(_started) });
+  const repl = new SalatRepl({
+    onToggle: (_started) => setStarted(_started),
+    beforeEval: (transpiled) => {
+      updateWidgets(codemirrorView(), transpiled.widgets);
+    },
+  });
 
   const activePanel = useStore($activePanel);
   const initialCode = getInitialCode();

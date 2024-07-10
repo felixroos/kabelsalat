@@ -28,8 +28,13 @@ function parseInput(input, node) {
   if (typeof input === "number" && !isNaN(input)) {
     return n(input);
   }
+  if (typeof input === "string") {
+    return n(input);
+  }
   console.log(
-    `invalid input type "${typeof input}" for node of type, falling back to 0. The input was:`,
+    `invalid input type "${typeof input}" for node of type "${
+      node.type
+    }", falling back to 0. The input was:`,
     input
   );
   return 0;

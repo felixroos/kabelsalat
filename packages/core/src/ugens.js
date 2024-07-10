@@ -667,6 +667,22 @@ export class MidiFreq extends MidiIn {
   }
 }
 
+export class CC extends AudioNode {
+  constructor(id, state, sampleRate, send) {
+    super(id, state, sampleRate, send);
+    this.type = "cc";
+    const [_id, value] = state.inputs;
+    this.id = _id;
+    this.value = value;
+  }
+  setValue(value) {
+    this.value = value;
+  }
+  update() {
+    return this.value;
+  }
+}
+
 export class MidiCC extends AudioNode {
   constructor(id, state, sampleRate, send) {
     super(id, state, sampleRate, send);

@@ -1,5 +1,5 @@
 {
-  "name": "@kabelsalat/core",
+  "name": "@kabelsalat/lib",
   "version": "0.0.6",
   "type": "module",
   "module": "src/index.js",
@@ -17,5 +17,9 @@
   "devDependencies": {
     "vite": "^5.2.0",
     "vitest": "^1.6.0"
+  },
+  "dependencies": {
+    "@kabelsalat/core": "workspace:*",
+    "@kabelsalat/transpiler": "workspace:*"
   }
 }
