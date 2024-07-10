@@ -1,7 +1,8 @@
 import { EditorView, minimalSetup } from "codemirror";
 import { kabelsalatTheme } from "./theme.js";
 import { javascript } from "@codemirror/lang-javascript";
-import { createEffect } from "solid-js";
+import { createEffect, createSignal } from "solid-js";
+import { sliderPlugin } from "./sliders.js";
 
 export function initEditor({ root, code, onChange, onEvaluate, onStop }) {
   let editor = new EditorView({
@@ -9,6 +10,7 @@ export function initEditor({ root, code, onChange, onEvaluate, onStop }) {
       //basicSetup,
       minimalSetup,
       kabelsalatTheme,
+      sliderPlugin,
       EditorView.lineWrapping,
       javascript(),
       EditorView.updateListener.of((v) => {
@@ -41,6 +43,9 @@ export function initEditor({ root, code, onChange, onEvaluate, onStop }) {
   return { setCode, getCode, editor };
 }
 
+const [view, setView] = createSignal();
+export const codemirrorView = view;
+
 export function Codemirror(props) {
   let cm;
   createEffect(() => {
@@ -57,6 +62,7 @@ export function Codemirror(props) {
             root: el,
             ...props,
           });
+          setView(cm.editor);
         }}
       ></div>
     </div>

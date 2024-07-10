@@ -52,10 +52,13 @@ export class AudioView {
     const { src, ugens } = node.compile({
       log: false,
     });
-    if (!this.midiInited && ugens.some((type) => type.startsWith("Midi"))) {
+    if (
+      !this.midiInited &&
+      ugens.some((ugen) => ugen.type.startsWith("Midi"))
+    ) {
       this.initMidi();
     }
-    if (!this.audioIn && ugens.some((type) => type === "AudioIn")) {
+    if (!this.audioIn && ugens.some((ugen) => ugen.type === "AudioIn")) {
       await this.initAudioIn();
     }
 

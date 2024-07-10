@@ -74,6 +74,9 @@ export class AudioGraph {
         this.midiCC(msg);
         break;
 
+      case "SET_CONTROL":
+        this.setControl(msg);
+        break;
       case "FADE_TIME":
         this.fadeTime = Number(msg.fadeTime);
         break;
@@ -93,6 +96,10 @@ export class AudioGraph {
 
   midiCC(msg) {
     this.units.forEach((unit) => unit.midiCC(msg));
+  }
+
+  setControl(msg) {
+    this.units.forEach((unit) => unit.setControl(msg));
   }
 
   /**
@@ -121,18 +128,19 @@ class Unit {
     this.nodes = [];
 
     for (let i in schema.ugens) {
-      if (schema.ugens[i] in UGENS) {
-        const nodeClass = UGENS[schema.ugens[i]];
+      const ugen = schema.ugens[i];
+      if (ugen.type in UGENS) {
+        const nodeClass = UGENS[ugen.type];
         const index = Number(i);
         // TODO node reuse / graph diffing whatever / only create nodes that are not already created..
         this.nodes[index] = new nodeClass(
           index,
-          {},
+          ugen,
           this.sampleRate,
           this.send
         );
       } else {
-        console.warn(`unknown ugen "${schema.ugens[i]}"`);
+        console.warn(`unknown ugen "${ugen.type}"`);
       }
     }
     this.genSample = new Function("time", "nodes", "input", "lvl", schema.src);
@@ -174,6 +182,16 @@ class Unit {
         node.setValue(value);
       }
     });
+  }
+
+  setControl(msg) {
+    const { value, id } = msg;
+    const match = this.nodes.find(
+      (node) => node.type === "cc" && node.id === id
+    );
+    if (match) {
+      match.setValue(value);
+    }
   }
   fadeIn(time, fadeTime) {
     const fadeStart = time;

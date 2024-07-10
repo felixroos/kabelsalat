@@ -41,7 +41,47 @@ importers:
         version: 2.10.2(solid-js@1.8.17)(vite@5.3.1)
 
   packages/core:
+    devDependencies:
+      vite:
+        specifier: ^5.2.0
+        version: 5.3.1
+      vitest:
+        specifier: ^1.6.0
+        version: 1.6.0
+
+  packages/graphviz:
     dependencies:
+      '@kabelsalat/core':
+        specifier: workspace:*
+        version: link:../core
+
+  packages/lib:
+    dependencies:
+      '@kabelsalat/core':
+        specifier: workspace:*
+        version: link:../core
+      '@kabelsalat/transpiler':
+        specifier: workspace:*
+        version: link:../transpiler
+    devDependencies:
+      vite:
+        specifier: ^5.2.0
+        version: 5.3.1
+      vitest:
+        specifier: ^1.6.0
+        version: 1.6.0
+
+  packages/transpiler:
+    dependencies:
+      acorn:
+        specifier: ^8.12.1
+        version: 8.12.1
+      escodegen:
+        specifier: ^2.1.0
+        version: 2.1.0
+      estree-walker:
+        specifier: ^3.0.3
+        version: 3.0.3
       vitest:
         specifier: ^1.6.0
         version: 1.6.0
@@ -49,12 +89,6 @@ importers:
       vite:
         specifier: ^5.2.0
         version: 5.3.1
-
-  packages/graphviz:
-    dependencies:
-      '@kabelsalat/core':
-        specifier: workspace:*
-        version: link:../core
 
   website:
     dependencies:
@@ -73,12 +107,21 @@ importers:
       '@codemirror/language':
         specifier: ^6.0.1
         version: 6.10.2
+      '@codemirror/state':
+        specifier: ^6.4.1
+        version: 6.4.1
+      '@codemirror/view':
+        specifier: ^6.28.4
+        version: 6.28.4
       '@kabelsalat/core':
         specifier: workspace:*
         version: link:../packages/core
       '@kabelsalat/graphviz':
         specifier: workspace:*
         version: link:../packages/graphviz
+      '@kabelsalat/lib':
+        specifier: workspace:*
+        version: link:../packages/lib
       '@lezer/highlight':
         specifier: ^1.2.0
         version: 1.2.0
@@ -1064,6 +1107,11 @@ packages:
     engines: {node: '>=0.4.0'}
     hasBin: true
 
+  acorn@8.12.1:
+    resolution: {integrity: sha512-tcpGyI9zbizT9JbV6oYE477V6mTlXvvi0T0G3SNIYE2apm/G5huBa1+K89VGeovbg+jycCrfhl3ADxErOuO6Jg==}
+    engines: {node: '>=0.4.0'}
+    hasBin: true
+
   add-stream@1.0.0:
     resolution: {integrity: sha512-qQLMr+8o0WC4FZGQTcJiKBVC59JylcPSrTtk6usvmIDFUOCKegapy1VHQwRbFMOFyb/inzUVqHs+eMYKDM1YeQ==}
 
@@ -1719,10 +1767,19 @@ packages:
     resolution: {integrity: sha512-/veY75JbMK4j1yjvuUxuVsiS/hr/4iHs9FTT6cgTexxdE0Ly/glccBAkloH/DofkjRbZU3bnoj38mOmhkZ0lHw==}
     engines: {node: '>=12'}
 
+  escodegen@2.1.0:
+    resolution: {integrity: sha512-2NlIDTwUWJN0mRPQOdtQBzbUHvdGY2P1VXSyU83Q3xKxM7WHX2Ql8dKq782Q9TgQUNOLEzEYu9bzLNj1q88I5w==}
+    engines: {node: '>=6.0'}
+    hasBin: true
+
   esprima@4.0.1:
     resolution: {integrity: sha512-eGuFFw7Upda+g4p+QHvnW0RyTX/SVeJBDM/gCtMARO0cLuT2HcEKnTPvhjV6aGeqrCB/sbNop0Kszm0jsaWU4A==}
     engines: {node: '>=4'}
     hasBin: true
+
+  estraverse@5.3.0:
+    resolution: {integrity: sha512-MMdARuVEQziNTeJD8DgMqmhwR11BRQ/cBP+pLtYdSTnf3MIO8fFeiINEbX36ZdNlfU/7A9f3gUw49B3oQsvwBA==}
+    engines: {node: '>=4.0'}
 
   estree-util-attach-comments@3.0.0:
     resolution: {integrity: sha512-cKUwm/HUcTDsYh/9FgnuFqpfquUbwIqwKM26BVCGDPVgvaCl/nDCCjUfiLlx6lsEZ3Z4RFxNbOQ60pkaEwFxGw==}
@@ -1741,6 +1798,10 @@ packages:
 
   estree-walker@3.0.3:
     resolution: {integrity: sha512-7RUKfXgSMMkzt6ZuXmqapOurLGPPfgj6l9uRZ7lRGolvk0y2yocc35LdcxKC5PQZdn2DMqioAQ2NoWcrTKmm6g==}
+
+  esutils@2.0.3:
+    resolution: {integrity: sha512-kVscqXk4OCp68SZ0dkgEKVi6/8ij300KBWTJq32P/dYeWTSwK41WyTxalN1eRmA5Z9UU/LX9D7FWSmV9SAYx6g==}
+    engines: {node: '>=0.10.0'}
 
   eventemitter3@4.0.7:
     resolution: {integrity: sha512-8guHBZCwKnFhYdHr2ysuRWErTwhoN2X8XELRlrRwpmfeY2jjuUN4taQMsULKUVo1K4DvZl+0pgfyoysHxvmvEw==}
@@ -5283,6 +5344,8 @@ snapshots:
 
   acorn@8.12.0: {}
 
+  acorn@8.12.1: {}
+
   add-stream@1.0.0: {}
 
   agent-base@6.0.2:
@@ -6014,7 +6077,17 @@ snapshots:
 
   escape-string-regexp@5.0.0: {}
 
+  escodegen@2.1.0:
+    dependencies:
+      esprima: 4.0.1
+      estraverse: 5.3.0
+      esutils: 2.0.3
+    optionalDependencies:
+      source-map: 0.6.1
+
   esprima@4.0.1: {}
+
+  estraverse@5.3.0: {}
 
   estree-util-attach-comments@3.0.0:
     dependencies:
@@ -6043,6 +6116,8 @@ snapshots:
   estree-walker@3.0.3:
     dependencies:
       '@types/estree': 1.0.5
+
+  esutils@2.0.3: {}
 
   eventemitter3@4.0.7: {}
 
