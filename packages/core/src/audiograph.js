@@ -74,6 +74,9 @@ export class AudioGraph {
         this.midiCC(msg);
         break;
 
+      case "SET_CONTROL":
+        this.setControl(msg);
+        break;
       case "FADE_TIME":
         this.fadeTime = Number(msg.fadeTime);
         break;
@@ -93,6 +96,10 @@ export class AudioGraph {
 
   midiCC(msg) {
     this.units.forEach((unit) => unit.midiCC(msg));
+  }
+
+  setControl(msg) {
+    this.units.forEach((unit) => unit.setControl(msg));
   }
 
   /**
@@ -171,6 +178,16 @@ class Unit {
         (node.channel === -1 || node.channel === channel) &&
         node.ccnumber === cc
       ) {
+        node.setValue(value);
+      }
+    });
+  }
+
+  setControl(msg) {
+    const { value, id } = msg;
+    this.nodes.forEach((node, i) => {
+      // PROBLEM: caller needs to know the index...
+      if (node.type === "cc" && i === id) {
         node.setValue(value);
       }
     });

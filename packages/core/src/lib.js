@@ -459,6 +459,14 @@ export let midicc = registerNode("midicc", {
   compile: ({ vars: [ccnumber = -1, channel = -1], ...meta }) =>
     defUgen(meta, ccnumber, channel),
 });
+export let _ = registerNode("_", {
+  ugen: "CC",
+  tags: ["external"],
+  description: "Slider UI control",
+  examples: [`_(0).range(100, 200).sine().out()`],
+  ins: [{ name: "value", default: 0 }],
+  compile: ({ vars: [input = 0], ...meta }) => defUgen(meta, input),
+});
 export let audioin = registerNode("audioin", {
   ugen: "AudioIn",
   tags: ["source", "external"],
