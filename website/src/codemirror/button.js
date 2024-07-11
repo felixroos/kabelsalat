@@ -11,7 +11,8 @@ export class ButtonWidget extends WidgetType {
     this.id = from;
     this.from = from; // will be changed from the outside..
     this.size = 16;
-    this.padding = 4;
+    this.sizeCanvas = this.size;
+    this.size = this.sizeCanvas * window.devicePixelRatio;
     this.render(this.pressed);
   }
 
@@ -31,9 +32,21 @@ export class ButtonWidget extends WidgetType {
     const color = this.pressed ? "#0d9488" : "#1c1917";
     this.ctx.fillStyle = color;
     this.ctx.strokeStyle = "#0d9488";
-    this.ctx.strokeWidth = 1;
-    this.ctx.fillRect(1, 1, this.size, this.size);
-    this.ctx.strokeRect(1, 1, this.size, this.size);
+    const lineWidth = 2;
+    this.ctx.lineWidth = lineWidth;
+    const dim = this.canvas.width - 6;
+    const crossMin = lineWidth * 2;
+    const crossMax = dim - lineWidth;
+    if (this.pressed) {
+      this.ctx.moveTo(crossMin, crossMin);
+      this.ctx.lineTo(crossMax, crossMax);
+      this.ctx.moveTo(crossMin, crossMax);
+      this.ctx.lineTo(crossMax, crossMin);
+      this.ctx.stroke();
+    } else {
+      this.ctx.fillRect(1, 1, dim, dim);
+    }
+    this.ctx.strokeRect(1, 1, dim, dim);
   }
 
   updateValue(e) {
@@ -77,11 +90,11 @@ export class ButtonWidget extends WidgetType {
     let canvas = document.createElement("canvas");
     canvas.style.imageRendering = "pixelated";
     canvas.className = "ks-button";
-    canvas.width = this.size + this.padding;
-    canvas.height = this.size + this.padding;
+    canvas.width = this.size;
+    canvas.height = this.size;
     canvas.style = [
-      `height:${canvas.height}px`,
-      `width:${canvas.width}px`,
+      `height:${this.sizeCanvas}px`,
+      `width:${this.sizeCanvas}px`,
       `display:inline`,
       `cursor:pointer`,
       `padding-bottom:0px`,
