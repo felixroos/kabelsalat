@@ -1,0 +1,19 @@
+{
+  "name": "@kabelsalat/codemirror",
+  "version": "0.0.6",
+  "private": true,
+  "type": "module",
+  "description": "",
+  "main": "src/index.js",
+  "keywords": [],
+  "author": "Felix Roos <flix91@gmail.com>",
+  "license": "AGPL-3.0-or-later",
+  "dependencies": {
+    "@codemirror/lang-javascript": "^6.2.2",
+    "@codemirror/language": "^6.0.1",
+    "@codemirror/state": "^6.4.1",
+    "@codemirror/view": "^6.28.4",
+    "codemirror": "^6.0.1",
+    "@lezer/highlight": "^1.2.0"
+  }
+}

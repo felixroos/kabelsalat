@@ -1,5 +1,5 @@
 import { createEffect, createSignal } from "solid-js";
-import { initEditor } from "../codemirror/codemirror";
+import { initEditor } from "@kabelsalat/codemirror";
 
 const [view, setView] = createSignal();
 export const codemirrorView = view;
