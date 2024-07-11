@@ -46,6 +46,9 @@ if (match) {
 
 // console.log("workletUrl", workletUrl);
 
+import recorderUrl from "./recorder.js?worker&url";
+import { audioBuffersToWav } from "./wav.js";
+
 export class AudioView {
   constructor() {}
   async updateGraph(node) {
@@ -119,6 +122,7 @@ export class AudioView {
     }
 
     await this.audioCtx.audioWorklet.addModule(workletUrl);
+    await this.audioCtx.audioWorklet.addModule(recorderUrl);
 
     this.audioWorklet = new AudioWorkletNode(
       this.audioCtx,
@@ -136,12 +140,34 @@ export class AudioView {
         setTimeout(() => this.destroy(), msg.data.fadeTime * 1000 + lash);
       }
     };
-    this.audioWorklet.connect(this.audioCtx.destination);
+
+    this.recorder = new window.AudioWorkletNode(this.audioCtx, 'recorder');
+    this.audioWorklet.connect(this.recorder);
+    this.recorder.connect(this.audioCtx.destination);
+
+    this.recorder.port.onmessage = (e) => {
+      if (e.data.eventType === 'data') {
+        this.recordedBuffers.push(e.data.audioBuffer);
+      }
+      if (e.data.eventType === 'stop') {
+        console.log("recording stopped");
+        const bytes = audioBuffersToWav(this.recordedBuffers, this.audioCtx.sampleRate, 2);
+        const blob = new Blob([bytes], {type: "audio/wav"});
+        const link = document.createElement('a');
+        link.href = window.URL.createObjectURL(blob);
+        link.download = "kabelsalat.wav";
+        link.click();
+        this.recordedBuffers = [];
+      }
+    };
   }
 
   destroy() {
     this.audioWorklet?.disconnect();
     this.audioWorklet = null;
+
+    this.recorder?.disconnect();
+    this.recorder = null;
 
     this.audioCtx?.close();
     this.audioCtx = null;
@@ -152,6 +178,24 @@ export class AudioView {
    */
   stop() {
     this.audioCtx && this.send({ type: "STOP" });
+  }
+
+  record() {
+    if (!this.audioCtx) {
+      return;
+    }
+
+    this.recordedBuffers = [];
+    this.recorder.parameters.get('isRecording').setValueAtTime(1, 0);
+    console.log("recording started");
+  }
+
+  stopRecording() {
+    if (!this.audioCtx) {
+      return;
+    }
+
+    this.recorder.parameters.get('isRecording').setValueAtTime(0, 0);
   }
 
   set fadeTime(fadeTime) {
