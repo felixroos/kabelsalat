@@ -1,6 +1,7 @@
 import { Decoration, ViewPlugin } from "@codemirror/view";
 import { StateEffect } from "@codemirror/state";
 import { SliderWidget } from "./slider.js";
+import { ButtonWidget } from "./button.js";
 
 export const clamp = (num, min, max) => {
   [min, max] = [Math.min(min, max), Math.max(min, max)];
@@ -19,7 +20,7 @@ export const updateWidgets = (view, widgets) => {
 
 let widgetClasses = {
   _: SliderWidget,
-  T: SliderWidget,
+  B: ButtonWidget,
 };
 
 export const widgetPlugin = ViewPlugin.fromClass(

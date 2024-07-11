@@ -107,6 +107,7 @@ export class SliderWidget extends WidgetType {
 
   toDOM() {
     let canvas = document.createElement("canvas");
+    canvas.style.imageRendering = "pixelated";
     canvas.className = "ks-slider";
     canvas.width = 64;
     canvas.height = 16;
