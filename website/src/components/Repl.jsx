@@ -8,7 +8,7 @@ import { persistentAtom } from "@nanostores/persistent";
 import { useStore } from "@nanostores/solid";
 import { History, addToHistory, $history } from "./History";
 import { Codemirror, codemirrorView } from "./Codemirror";
-import { updateWidgets } from "./sliders";
+import { updateWidgets } from "./widgets";
 
 export const $hideWelcome = persistentAtom("hideWelcome", "false");
 const hideWelcome = () => $hideWelcome.set("true");
