@@ -1,5 +1,5 @@
 import { WidgetType } from "@codemirror/view";
-import { clamp } from "./utils";
+import { clamp } from "./widgets.js";
 
 export class SliderWidget extends WidgetType {
   constructor({ value, view, from, to, min, max, step, type }) {

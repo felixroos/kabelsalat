@@ -10,6 +10,7 @@ import {
 import { registerWidgetType } from "@kabelsalat/transpiler";
 
 registerWidgetType("_");
+registerWidgetType("T");
 
 let def = (name, value, comment) =>
   `const ${name} = ${value};${comment ? ` /* ${comment} */` : ""}`;

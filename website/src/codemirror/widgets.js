@@ -1,6 +1,11 @@
 import { Decoration, ViewPlugin } from "@codemirror/view";
 import { StateEffect } from "@codemirror/state";
-import { SliderWidget } from "./slider";
+import { SliderWidget } from "./slider.js";
+
+export const clamp = (num, min, max) => {
+  [min, max] = [Math.min(min, max), Math.max(min, max)];
+  return Math.min(Math.max(num, min), max);
+};
 
 export const addWidget = StateEffect.define({
   map: ({ from, to }, change) => {
