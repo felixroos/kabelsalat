@@ -1,14 +1,19 @@
 import { Decoration, ViewPlugin, WidgetType } from "@codemirror/view";
 import { StateEffect } from "@codemirror/state";
 
-export const clamp = (num, min, max) => Math.min(Math.max(num, min), max);
+export const clamp = (num, min, max) => {
+  [min, max] = [Math.min(min, max), Math.max(min, max)];
+  return Math.min(Math.max(num, min), max);
+};
 
 class SliderWidget extends WidgetType {
-  constructor(id, value, view, from, to) {
+  constructor({ value, view, from, to, min, max, step }) {
     super();
-    this.id = id;
+    this.min = min ?? 0;
+    this.max = max ?? 1;
+    this.step = step ?? 0;
     this.valueString = value;
-    this.value = clamp(Number(value), 0, 1);
+    this.value = clamp(Number(value), this.min, this.max);
     this.view = view;
     this.id = from;
     this.from = from; // will be changed from the outside..
@@ -21,7 +26,8 @@ class SliderWidget extends WidgetType {
       return;
     }
     value = isNaN(value) ? 0 : value;
-    value = Math.min(Math.max(0, value), 1);
+    value = clamp(value, this.min, this.max);
+    value = (value - this.min) / (this.max - this.min);
     this.ctx.fillStyle = "#1c1917";
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
     const color = "#0d9488"; //"#d97706";
@@ -46,7 +52,7 @@ class SliderWidget extends WidgetType {
 
   updateValue(value, e) {
     // console.log("updateValue", value);
-    value = clamp(value, 0, 1);
+    value = clamp(value, this.min, this.max);
 
     this.render(value);
     e?.stopPropagation();
@@ -55,14 +61,10 @@ class SliderWidget extends WidgetType {
     window.postMessage({ type: "KABELSALAT_SET_CONTROL", value, id: this.id });
   }
 
-  getValueString(value) {
-    return value.toFixed(2);
-  }
-
   replaceNumber(value) {
     const from = this.from + 2; // skip "_("
     const to = from + this.valueString.length;
-    this.valueString = this.getValueString(value);
+    this.valueString = Number(value).toFixed(2);
     let change = { from, to, insert: this.valueString };
     this.view.dispatch({ changes: change });
   }
@@ -71,18 +73,23 @@ class SliderWidget extends WidgetType {
     return false;
   }
 
+  getValue(unipolar) {
+    unipolar = clamp(unipolar, 0, 1);
+    const scaled = unipolar * (this.max - this.min) + this.min;
+    return scaled;
+  }
+
   handleMouseMove(e) {
     if (this.mouseDown) {
       const canvasX = e.clientX - this.canvas.offsetLeft;
-      const value = clamp(canvasX / this.canvas.width, 0, 1);
+      const value = this.getValue(canvasX / this.canvas.width);
       this.updateValue(value, e);
       this.replaceNumber(value);
     }
   }
   handleMouseDown(e) {
     const canvasX = e.clientX - this.canvas.offsetLeft;
-    const value = clamp(canvasX / this.canvas.width, 0, 1);
-
+    const value = this.getValue(canvasX / this.canvas.width);
     this.mouseDown = true;
     this.updateValue(value, e);
     this.replaceNumber(value);
@@ -167,12 +174,23 @@ export const sliderPlugin = ViewPlugin.fromClass(
         }
         for (let e of tr.effects) {
           if (e.is(addWidget)) {
-            const widgets = e.value.map(({ from, to, value }) => {
-              return Decoration.widget({
-                widget: new SliderWidget(from, value, this.view, from, to),
-                side: 1,
-              }).range(from);
-            });
+            const widgets = e.value.map(
+              ({ from, to, value, min, max, step }) => {
+                return Decoration.widget({
+                  widget: new SliderWidget({
+                    from,
+                    value,
+                    view: this.view,
+                    from,
+                    to,
+                    min,
+                    max,
+                    step,
+                  }),
+                  side: 1,
+                }).range(from);
+              }
+            );
             this.decorations = Decoration.set(widgets);
           }
         }

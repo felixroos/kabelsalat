@@ -5,6 +5,7 @@ import {
   register,
   module,
   nodeRegistry,
+  assert,
 } from "@kabelsalat/core";
 import { registerWidgetType } from "@kabelsalat/transpiler";
 
@@ -467,8 +468,21 @@ export let cc = registerNode("cc", {
   ugen: "CC",
   tags: ["external"],
   description: "CC control",
-  ins: [{ name: "value", default: 0 }],
-  compile: (meta) => defUgen(meta),
+  ins: [
+    { name: "value", default: 0 },
+    { name: "min", default: 0 },
+    { name: "max", default: 1 },
+    { name: "step", default: 0 },
+  ],
+  compile: ({ vars, ...meta }) => {
+    // const [_, value, min, max, step] = vars;
+    const types = vars.map((v) => typeof v);
+    assert(
+      !types.find((type) => !["number", "undefined"].includes(type)),
+      "_ only accepts static numbers"
+    );
+    return defUgen(meta);
+  },
 });
 
 export let audioin = registerNode("audioin", {

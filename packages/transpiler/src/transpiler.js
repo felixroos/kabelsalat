@@ -28,7 +28,10 @@ export function transpiler(input, options = {}) {
           to: node.end,
           index,
           type,
-          value: node.arguments[0]?.raw,
+          value: node.arguments[0]?.raw, // we need the exact string!
+          min: node.arguments[1]?.value,
+          max: node.arguments[2]?.value,
+          step: node.arguments[3]?.value,
         };
         widgets.push(widgetConfig);
         return this.replace(widgetWithLocation(node, widgetConfig));
