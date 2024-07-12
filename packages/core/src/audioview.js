@@ -152,11 +152,7 @@ export class AudioView {
       if (e.data.eventType === 'stop') {
         console.log("recording stopped");
         const bytes = audioBuffersToWav(this.recordedBuffers, this.audioCtx.sampleRate, 2);
-        const blob = new Blob([bytes], {type: "audio/wav"});
-        const link = document.createElement('a');
-        link.href = window.URL.createObjectURL(blob);
-        link.download = "kabelsalat.wav";
-        link.click();
+        this.downloadFile(bytes, "kabelsalat.wav", "audio/wav");
         this.recordedBuffers = [];
       }
     };
@@ -196,6 +192,14 @@ export class AudioView {
     }
 
     this.recorder.parameters.get('isRecording').setValueAtTime(0, 0);
+  }
+
+  downloadFile(bytes, filename, mimeType) {
+    const blob = new Blob([bytes], {type: mimeType});
+    const link = document.createElement('a');
+    link.href = window.URL.createObjectURL(blob);
+    link.download = filename;
+    link.click();
   }
 
   set fadeTime(fadeTime) {
