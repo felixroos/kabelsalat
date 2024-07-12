@@ -89,32 +89,37 @@ export class SliderWidget extends WidgetType {
     this.replaceNumber(value);
   }
 
-  handleMouseMove(e) {
+  handleMove(e) {
+    // console.log("mousemove", this.mouseDown);
     if (this.mouseDown) {
       this.handleEventOffset(e);
     }
   }
-  handleMouseDown(e) {
+  handleDown(e) {
+    // console.log("mousedown");
     this.mouseDown = true;
     this.handleEventOffset(e);
   }
-  handleMouseUp(e) {
+  handleUp(e) {
+    // console.log("mouseup");
     this.mouseDown = false;
   }
 
   attachListeners() {
-    this.canvas.addEventListener("mousedown", this.handleMouseDown.bind(this));
-    this.canvas.addEventListener("touchstart", this.handleMouseDown.bind(this));
-    document.addEventListener("mouseup", this.handleMouseUp.bind(this));
-    document.addEventListener("mousemove", this.handleMouseMove.bind(this));
-    this.canvas.addEventListener("touchmove", this.handleMouseMove.bind(this));
+    this.canvas.addEventListener("mousedown", this.handleDown.bind(this));
+    this.canvas.addEventListener("touchstart", this.handleDown.bind(this));
+    this.canvas.addEventListener("touchend", this.handleUp.bind(this));
+    document.addEventListener("mouseup", this.handleUp.bind(this));
+    document.addEventListener("mousemove", this.handleMove.bind(this));
+    document.addEventListener("touchmove", this.handleMove.bind(this));
   }
   detachListeners() {
-    this.canvas.removeEventListener("mousedown", this.handleMouseDown);
-    this.canvas.addEventListener("touchstart", this.handleMouseDown);
-    document.removeEventListener("mouseup", this.handleMouseUp);
-    document.removeEventListener("mousemove", this.handleMouseMove);
-    document.removeEventListener("touchmove", this.handleMouseMove);
+    this.canvas.removeEventListener("mousedown", this.handleDown);
+    this.canvas.removeEventListener("touchstart", this.handleDown);
+    this.canvas.removeEventListener("touchend", this.handleUp);
+    document.removeEventListener("mouseup", this.handleUp);
+    document.removeEventListener("mousemove", this.handleMove);
+    document.removeEventListener("touchmove", this.handleMove);
   }
 
   toDOM() {
