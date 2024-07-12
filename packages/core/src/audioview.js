@@ -1,5 +1,5 @@
 import "./compiler.js"; // Node.prototype.compile
-import { assert } from "./utils.js";
+import { assert, downloadFile } from "./utils.js";
 import { MIDI, parseMidiMessage } from "./midi.js";
 
 // what follows are attempts at importing the worklet as a url
@@ -152,10 +152,14 @@ export class AudioView {
       if (e.data.eventType === 'stop') {
         console.log("recording stopped");
         const bytes = audioBuffersToWav(this.recordedBuffers, this.audioCtx.sampleRate, 2);
-        this.downloadFile(bytes, "kabelsalat.wav", "audio/wav");
+        downloadFile(bytes, "kabelsalat.wav", "audio/wav");
         this.recordedBuffers = [];
       }
     };
+
+    if(this.recordOnPlay) {
+      this.record();
+    }
   }
 
   destroy() {
@@ -192,14 +196,6 @@ export class AudioView {
     }
 
     this.recorder.parameters.get('isRecording').setValueAtTime(0, 0);
-  }
-
-  downloadFile(bytes, filename, mimeType) {
-    const blob = new Blob([bytes], {type: mimeType});
-    const link = document.createElement('a');
-    link.href = window.URL.createObjectURL(blob);
-    link.download = filename;
-    link.click();
   }
 
   set fadeTime(fadeTime) {
