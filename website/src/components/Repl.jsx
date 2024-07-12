@@ -163,7 +163,7 @@ export function Repl() {
             {!recording() ? (
               <>
                 <Icon type="play" />
-                <span class="animate-pulse hidden sm:block">record</span>
+                <span class="hidden sm:block">record</span>
               </>
             ) : (
               <>

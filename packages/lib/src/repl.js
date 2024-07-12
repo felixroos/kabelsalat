@@ -39,6 +39,7 @@ export class SalatRepl {
     this.onToggle?.(true);
   }
   stop() {
+    this.stopRecording();
     this.audio.stop();
     this.onToggle?.(false);
   }

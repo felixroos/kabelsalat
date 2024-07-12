@@ -182,6 +182,7 @@ export class AudioView {
 
   record() {
     if (!this.audioCtx) {
+      this.recordOnPlay = true;
       return;
     }
 
@@ -191,6 +192,8 @@ export class AudioView {
   }
 
   stopRecording() {
+    this.recordOnPlay = false;
+
     if (!this.audioCtx) {
       return;
     }
