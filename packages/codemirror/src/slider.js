@@ -1,6 +1,8 @@
 import { WidgetType } from "@codemirror/view";
 import { clamp } from "./widgets.js";
 
+const pixelRatio = window.devicePixelRatio;
+
 export class SliderWidget extends WidgetType {
   constructor({ value, view, from, to, min, max, step, type }) {
     super();
@@ -29,9 +31,9 @@ export class SliderWidget extends WidgetType {
     const color = "#0d9488"; //"#d97706";
     this.ctx.fillStyle = color;
     this.ctx.strokeStyle = color;
-    const strokeWidth = 2;
-    const paddingBottom = 2;
-    this.ctx.strokeWidth = strokeWidth;
+    const strokeWidth = 3;
+    const paddingBottom = 4;
+    this.ctx.lineWidth = strokeWidth;
     this.ctx.fillRect(
       value * (this.canvas.width - strokeWidth),
       0,
@@ -75,20 +77,22 @@ export class SliderWidget extends WidgetType {
     return scaled;
   }
 
+  handleEventOffset(e) {
+    const offset = e.clientX ?? e.layerX;
+    const canvasX = offset - this.canvas.offsetLeft;
+    const value = this.getValue((canvasX / this.canvas.width) * pixelRatio);
+    this.updateValue(value, e);
+    this.replaceNumber(value);
+  }
+
   handleMouseMove(e) {
     if (this.mouseDown) {
-      const canvasX = e.clientX - this.canvas.offsetLeft;
-      const value = this.getValue(canvasX / this.canvas.width);
-      this.updateValue(value, e);
-      this.replaceNumber(value);
+      this.handleEventOffset(e);
     }
   }
   handleMouseDown(e) {
-    const canvasX = e.clientX - this.canvas.offsetLeft;
-    const value = this.getValue(canvasX / this.canvas.width);
     this.mouseDown = true;
-    this.updateValue(value, e);
-    this.replaceNumber(value);
+    this.handleEventOffset(e);
   }
   handleMouseUp(e) {
     this.mouseDown = false;
@@ -96,24 +100,28 @@ export class SliderWidget extends WidgetType {
 
   attachListeners() {
     this.canvas.addEventListener("mousedown", this.handleMouseDown.bind(this));
+    this.canvas.addEventListener("touchstart", this.handleMouseDown.bind(this));
     document.addEventListener("mouseup", this.handleMouseUp.bind(this));
     document.addEventListener("mousemove", this.handleMouseMove.bind(this));
+    this.canvas.addEventListener("touchmove", this.handleMouseMove.bind(this));
   }
   detachListeners() {
     this.canvas.removeEventListener("mousedown", this.handleMouseDown);
+    this.canvas.addEventListener("touchstart", this.handleMouseDown);
     document.removeEventListener("mouseup", this.handleMouseUp);
     document.removeEventListener("mousemove", this.handleMouseMove);
+    document.removeEventListener("touchmove", this.handleMouseMove);
   }
 
   toDOM() {
     let canvas = document.createElement("canvas");
     canvas.style.imageRendering = "pixelated";
     canvas.className = "ks-slider";
-    canvas.width = 64;
-    canvas.height = 16;
+    canvas.width = 64 * pixelRatio;
+    canvas.height = 16 * pixelRatio;
     canvas.style = [
-      `height:${canvas.height}px`,
-      `width:${canvas.width}px`,
+      `height:${canvas.height / pixelRatio}px`,
+      `width:${canvas.width / pixelRatio}px`,
       `display:inline`,
       `cursor:pointer`,
       `padding-bottom:0px`,

@@ -22,7 +22,7 @@ let colors = {
 let theme = EditorView.theme(
   {
     "&": {
-      color: colors.teal,
+      color: colors.teal600,
       overflow: "hidden",
       backgroundColor: "transparent",
       fontSize: "16px",

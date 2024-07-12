@@ -34,7 +34,7 @@ export class ButtonWidget extends WidgetType {
     this.ctx.strokeStyle = "#0d9488";
     const lineWidth = 2;
     this.ctx.lineWidth = lineWidth;
-    const dim = this.canvas.width - 6;
+    const dim = this.canvas.width - 2;
     const crossMin = lineWidth * 2;
     const crossMax = dim - lineWidth;
     if (this.pressed) {
@@ -101,6 +101,8 @@ export class ButtonWidget extends WidgetType {
       `margin-right:-10px`,
       `z-index:100`,
       `position:relative`,
+      "vertical-align: middle",
+      "margin-top:-3px",
     ].join(";");
     const ctx = canvas.getContext("2d");
     this.ctx = ctx;

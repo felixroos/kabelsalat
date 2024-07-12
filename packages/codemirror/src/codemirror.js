@@ -34,7 +34,8 @@ export function initEditor({ root, code, onChange, onEvaluate, onStop }) {
 
   root.addEventListener("keydown", (e) => {
     if (e.ctrlKey && e.code === "Enter") {
-      onEvaluate?.();
+      const code = editor.state.doc.toString();
+      onEvaluate?.(code);
     } else if (e.ctrlKey && e.key === ".") {
       onStop?.();
     }
