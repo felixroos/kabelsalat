@@ -112,6 +112,12 @@ export class AudioView {
     // This seems to be necessary for Safari
     await this.audioCtx.resume();
 
+    if (!this.audioCtx.audioWorklet) {
+      throw new Error(
+        "Audio cannot be loaded: non-secure origin? (AudioContext.audioWorklet is undefined)"
+      );
+    }
+
     await this.audioCtx.audioWorklet.addModule(workletUrl);
 
     this.audioWorklet = new AudioWorkletNode(
