@@ -64,8 +64,12 @@ class RecorderWorklet extends AudioWorkletProcessor {
     const outChannel0 = output[0];
     const outChannel1 = output[1];
 
-    for (let i = 0; i < isRecordingValues.length; i++) {
-      const shouldRecord = isRecordingValues[i] === 1;
+    let shouldRecord = false;
+    for (let i = 0; i < outChannel0.length; i++) {
+      if(i < isRecordingValues.length) {
+        shouldRecord = isRecordingValues[i] === 1;
+      }
+
       if (!shouldRecord && !this._isBufferEmpty()) {
         this._flush();
         this._recordingStopped();
