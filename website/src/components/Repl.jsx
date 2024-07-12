@@ -168,7 +168,7 @@ export function Repl() {
             ) : (
               <>
                 <Icon type="stop" />
-                <span class="hidden sm:block">stop recording</span>
+                <span class="hidden sm:block">r.stop</span>
               </>
             )}
           </button>
