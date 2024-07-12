@@ -78,8 +78,12 @@ export class SliderWidget extends WidgetType {
   }
 
   handleEventOffset(e) {
-    const offset = e.clientX ?? e.layerX;
-    const canvasX = offset - this.canvas.offsetLeft;
+    let canvasX;
+    if (e.clientX !== undefined) {
+      canvasX = e.clientX - this.canvas.offsetLeft;
+    } else {
+      canvasX = e.layerX;
+    }
     const value = this.getValue((canvasX / this.canvas.width) * pixelRatio);
     this.updateValue(value, e);
     this.replaceNumber(value);
