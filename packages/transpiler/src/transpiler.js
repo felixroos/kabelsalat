@@ -2,9 +2,11 @@ import { parse } from "acorn";
 import escodegen from "escodegen";
 import { walk } from "estree-walker";
 
-let widgetMethods = [];
-export function registerWidgetType(type) {
-  widgetMethods.push(type);
+let widgetMethods = new Map();
+// type = function name of input code
+// functionName = function name of transpiled code
+export function registerWidgetType(type, functionName) {
+  widgetMethods.set(type, functionName);
 }
 
 export function transpiler(input, options = {}) {
@@ -57,15 +59,15 @@ function isWidgetMethod(node) {
     node.type === "CallExpression" &&
     node.callee &&
     // widgetMethods.includes(node.callee.property?.name)
-    widgetMethods.includes(node.callee.name)
+    widgetMethods.has(node.callee.name)
   );
 }
 
 function widgetWithLocation(node, widgetConfig) {
+  const functionName = widgetMethods.get(node.callee.name);
+  node.callee.name = functionName;
+
   const id = widgetConfig.from; // this location is also deducable by codemirror
-  node.callee.name = "cc";
-  // add loc as identifier to first argument
-  // the sliderWithID function is assumed to be sliderWithID(id, value, min?, max?)
   node.arguments.unshift({
     type: "Literal",
     value: id,

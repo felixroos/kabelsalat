@@ -12,6 +12,7 @@ Node.prototype.render = async function (container, options = {}) {
     dagify = false, // if true, cycles will be transformed to feedback nodes
     resolveModules = false, // if false, module innards are ignored
     inlineNumerics = true,
+    renderExit = true,
     rankdir = "TB",
     size = 0,
   } = options;
@@ -19,7 +20,7 @@ Node.prototype.render = async function (container, options = {}) {
 
   if (dagify) {
     this.dagify();
-  } else if (node.type === "exit") {
+  } else if (!renderExit && node.type === "exit") {
     node = node.ins[0]; // don't render exit helper node
   }
 

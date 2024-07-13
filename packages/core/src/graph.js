@@ -407,14 +407,22 @@ function flatten(node) {
 
 export function evaluate(code) {
   // make sure to call Object.assign(globalThis, api);
-  let nodes = [];
+  let nodes = [],
+    portals = [];
   Node.prototype.out = function () {
     nodes.push(this);
   };
+  const ogsend = globalThis.send;
+  globalThis.send = function (...args) {
+    const node = ogsend(...args);
+    portals.push(node);
+    return node;
+  };
   try {
     Function(code)();
-    const node = dac(...nodes).exit();
-    return node;
+    const exit = dac(...nodes).exit();
+    exit.ins = exit.ins.concat(portals);
+    return exit;
   } catch (err) {
     console.error(err);
     return n(0);

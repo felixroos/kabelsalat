@@ -137,7 +137,8 @@ class Unit {
           index,
           ugen,
           this.sampleRate,
-          this.send
+          this.send,
+          schema.ugens
         );
       } else {
         console.warn(`unknown ugen "${ugen.type}"`);

@@ -686,6 +686,39 @@ export class CC extends AudioNode {
   }
 }
 
+// receiver
+export class Receive extends AudioNode {
+  constructor(id, state, sampleRate, send, ugens) {
+    super(id, state, sampleRate, send);
+    const [_id, inputId = _id] = state.inputs;
+    this.id = _id;
+    this.senderIndex = ugens.findIndex(
+      (ugen) => ugen.type === "Send" && ugen.inputs[0] === inputId
+    );
+  }
+  setSenderIndex(senderIndex) {
+    this.senderIndex = senderIndex;
+  }
+  update(nodes) {
+    return nodes[this.senderIndex].value;
+  }
+}
+
+// sender
+export class Send extends AudioNode {
+  constructor(id, state, sampleRate, send) {
+    super(id, state, sampleRate, send);
+    const [_id] = state.inputs;
+    this.id = _id;
+    this.value = 0;
+    // console.log("create send", _id);
+  }
+  update(value) {
+    this.value = value;
+    return value;
+  }
+}
+
 export class MidiCC extends AudioNode {
   constructor(id, state, sampleRate, send) {
     super(id, state, sampleRate, send);

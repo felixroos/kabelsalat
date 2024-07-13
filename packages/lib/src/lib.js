@@ -9,8 +9,10 @@ import {
 } from "@kabelsalat/core";
 import { registerWidgetType } from "@kabelsalat/transpiler";
 
-registerWidgetType("_");
-registerWidgetType("B");
+registerWidgetType("_", "cc");
+registerWidgetType("B", "cc");
+registerWidgetType("I", "receive");
+registerWidgetType("O", "send");
 
 let def = (name, value, comment) =>
   `const ${name} = ${value};${comment ? ` /* ${comment} */` : ""}`;
@@ -21,6 +23,24 @@ let defUgen = (meta, ...args) => {
     meta.node.type
   );
 };
+
+export let receive = registerNode("receive", {
+  ugen: "Receive",
+  ins: [],
+  compile: (meta, ...args) => {
+    args.unshift("nodes");
+    return def(
+      meta.name,
+      `nodes[${meta.ugenIndex}].update(${args.join(",")})`,
+      meta.node.type
+    );
+  },
+});
+export let send = registerNode("send", {
+  ugen: "Send",
+  ins: [],
+  compile: ({ vars: [_, input = 0], ...meta }) => defUgen(meta, input),
+});
 
 export let time = register("time", (code) => new Node("time", code), {
   tags: ["meta"],
