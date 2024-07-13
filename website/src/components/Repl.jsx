@@ -162,12 +162,12 @@ export function Repl() {
           >
             {!recording() ? (
               <>
-                <Icon type="play" />
+                <Icon type="record" />
                 <span class="hidden sm:block">record</span>
               </>
             ) : (
               <>
-                <Icon type="stop" />
+                <Icon type="recordstop" />
                 <span class="hidden sm:block">r.stop</span>
               </>
             )}
