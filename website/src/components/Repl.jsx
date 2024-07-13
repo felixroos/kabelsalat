@@ -117,14 +117,15 @@ export function Repl() {
       setHideCode((hide) => !hide);
     }
   };
+  // todo: make sure clicking anchor links doesn't trigger this..
   let handlePopState = () => setCode(getURLCode());
   onMount(() => {
     document.addEventListener("keydown", handleKeydown);
-    window.addEventListener("popstate", handlePopState);
+    // window.addEventListener("popstate", handlePopState);
   });
   onCleanup(() => {
     document.removeEventListener("keydown", handleKeydown);
-    window.removeEventListener("popstate", handlePopState);
+    // window.removeEventListener("popstate", handlePopState);
   });
 
   return (
