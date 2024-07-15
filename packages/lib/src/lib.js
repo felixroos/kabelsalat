@@ -777,7 +777,7 @@ Node.prototype.feedback = function (fn) {
 export let feedback = (fn) => add(fn);
 
 // todo: remaining noisecraft nodes
-// Greater, ClockOut, Scope, BitCrush?
+// ClockOut, Scope, BitCrush?
 
 /* Scope: {
     ins: [{ name: "", default: 0 }],
