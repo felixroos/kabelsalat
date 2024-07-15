@@ -560,6 +560,17 @@ export let mod = registerNode("mod", {
   ins: [{ name: "in" }, { name: "modulo" }],
   compile: ({ vars, name }) => def(name, vars.join(" % ") || 0),
 });
+export let greater = registerNode("greater", {
+  tags: ["math"],
+  description: "returns 1 if input is greater then threshold",
+  ins: [{ name: "in" }, { name: "threshold" }],
+  examples: [
+    `greater(sine(1),0)
+.bipolar().range(100,200)
+.sine().out()`,
+  ],
+  compile: ({ vars: [a = 0, b = 0], name }) => def(name, `${a} > ${b}`),
+});
 export let range = registerNode("range", {
   tags: ["math"],
   description: "Scales the incoming bipolar value to the given range.",
