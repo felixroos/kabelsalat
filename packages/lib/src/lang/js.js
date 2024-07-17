@@ -16,3 +16,5 @@ export let returnLine = (channels) =>
 export let feedbackWrite = (to, value) => {
   return `nodes[${to}].write(${value})`;
 };
+
+export let midinote = (note) => `(2 ** ((${note} - 69) / 12) * 440)`;

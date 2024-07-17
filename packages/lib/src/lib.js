@@ -533,7 +533,7 @@ export let cos = registerNode("cos", {
   description: "calculates the cosine of the input signal",
   ins: [{ name: "in" }],
   compile: ({ vars: [input = 0], name, lang }) =>
-    langs[lang].def(name, defCos(input)),
+    langs[lang].def(name, langs[lang].defCos(input)),
 });
 export let mul = registerNode("mul", {
   tags: ["math"],
@@ -622,7 +622,7 @@ export let rangex = module(
 
 export let midinote = registerNode("midinote", {
   compile: ({ vars: [note], name, lang }) =>
-    langs[lang].def(name, `(2 ** ((${note} - 69) / 12) * 440)`),
+    langs[lang].def(name, langs[lang].midinote(note)),
   tags: ["math"],
   description: "convert midi number to frequency",
   ins: [{ name: "midi" }],

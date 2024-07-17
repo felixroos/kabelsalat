@@ -32,7 +32,7 @@ async function main() {
   const unit = node.compile({ lang: "c" });
   const cCode = ks2c(unit, ugenCode);
   const outFileName = file + ".c";
-  console.log(cCode);
+  // console.log(cCode);
   try {
     await fs.writeFile(outFileName, cCode);
 

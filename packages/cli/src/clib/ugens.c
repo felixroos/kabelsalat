@@ -3,6 +3,7 @@
 
 #include <math.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 #define SAMPLE_RATE 44100
 #define MAX_DELAY_TIME 10
@@ -516,10 +517,6 @@ typedef struct DustOsc
 {
 } DustOsc;
 
-void DustOsc_init(DustOsc *self)
-{
-}
-
 double DustOsc_update(DustOsc *self, float density)
 {
   return RANDOM_FLOAT < density * SAMPLE_TIME ? RANDOM_FLOAT : 0;
@@ -528,7 +525,248 @@ double DustOsc_update(DustOsc *self, float density)
 void *DustOsc_create()
 {
   DustOsc *node = (DustOsc *)malloc(sizeof(DustOsc));
-  DustOsc_init(node);
+  return (void *)node;
+}
+
+// ClockDiv
+
+typedef struct ClockDiv
+{
+  // Last clock sign at the input (positive/negative)
+  bool inSgn;
+  // Current clock sign at the output (positive/negative)
+  // We start high to trigger immediately upon starting,
+  // just like the Clock node
+  bool outSgn;
+  int clockCnt;
+
+} ClockDiv;
+
+void ClockDiv_init(ClockDiv *self)
+{
+  self->inSgn = true;
+  self->outSgn = true;
+  self->clockCnt = 0;
+}
+
+double ClockDiv_update(ClockDiv *self, float clock, float factor)
+{
+
+  // Current clock sign at the input
+  bool curSgn = clock > 0;
+
+  // If the input clock sign just flipped
+  if (self->inSgn != curSgn)
+  {
+    // Count all edges, both rising and falling
+    self->clockCnt++;
+
+    // If we've reached the division factor
+    // if (self->clockCnt >= factor) // <- og
+    if (self->clockCnt >= factor)
+    {
+      // Reset the clock count
+      self->clockCnt = 0;
+
+      // Flip the output clock sign
+      self->outSgn = !self->outSgn;
+    }
+  }
+
+  self->inSgn = curSgn;
+
+  return self->outSgn ? 1 : 0;
+}
+
+void *ClockDiv_create()
+{
+  ClockDiv *node = (ClockDiv *)malloc(sizeof(ClockDiv));
+  ClockDiv_init(node);
+  return (void *)node;
+}
+
+// Distort
+
+typedef struct Distort
+{
+} Distort;
+
+double Distort_update(Distort *self, float input, float amount)
+{
+  amount = MIN(MAX(amount, 0), 1);
+  amount -= 0.01;
+
+  float k = (2 * amount) / (1 - amount);
+  float y = ((1 + k) * input) / (1 + k * fabs(input));
+  return y;
+}
+
+void *Distort_create()
+{
+  Distort *node = (Distort *)malloc(sizeof(Distort));
+  return (void *)node;
+}
+
+// Hold
+
+typedef struct Hold
+{
+  float value;
+  bool trigSgn;
+} Hold;
+
+void Hold_init(Hold *self)
+{
+  self->value = 0;
+  self->trigSgn = false;
+}
+
+double Hold_update(Hold *self, float input, float trig)
+{
+  if (!self->trigSgn && trig > 0)
+    self->value = input;
+
+  self->trigSgn = trig > 0;
+  return self->value;
+}
+
+void *Hold_create()
+{
+  Hold *node = (Hold *)malloc(sizeof(Hold));
+  Hold_init(node);
+  return (void *)node;
+}
+
+// PulseOsc
+
+typedef struct PulseOsc
+{
+  float phase;
+} PulseOsc;
+
+void PulseOsc_init(PulseOsc *self)
+{
+  self->phase = 0;
+}
+
+double PulseOsc_update(PulseOsc *self, float freq, float duty)
+{
+
+  self->phase += SAMPLE_TIME * freq;
+  if (self->phase >= 1.0)
+    self->phase -= 1.0; // Keeping phase in [0, 1)
+
+  return self->phase < duty ? 1 : -1;
+}
+
+void *PulseOsc_create()
+{
+  PulseOsc *node = (PulseOsc *)malloc(sizeof(PulseOsc));
+  PulseOsc_init(node);
+  return (void *)node;
+}
+
+// TriOsc
+
+typedef struct TriOsc
+{
+  float phase;
+} TriOsc;
+
+void TriOsc_init(TriOsc *self)
+{
+  self->phase = 0;
+}
+
+double TriOsc_update(TriOsc *self, float freq)
+{
+  self->phase += SAMPLE_TIME * freq;
+  if (self->phase >= 1.0)
+    self->phase -= 1.0; // Keeping phase in [0, 1)
+  return self->phase < 0.5 ? 2 * self->phase : 1 - 2 * (self->phase - 0.5);
+}
+
+void *TriOsc_create()
+{
+  TriOsc *node = (TriOsc *)malloc(sizeof(TriOsc));
+  TriOsc_init(node);
+  return (void *)node;
+}
+
+// Slew
+
+typedef struct Slew
+{
+  float last;
+} Slew;
+
+void Slew_init(Slew *self)
+{
+  self->last = 0;
+}
+
+double Slew_update(Slew *self, float input, float up, float dn)
+{
+  float upStep = up * SAMPLE_TIME;
+  float downStep = dn * SAMPLE_TIME;
+
+  float delta = input - self->last;
+  if (delta > upStep)
+  {
+    delta = upStep;
+  }
+  else if (delta < -downStep)
+  {
+    delta = -downStep;
+  }
+  self->last += delta;
+  return self->last;
+}
+
+void *Slew_create()
+{
+  Slew *node = (Slew *)malloc(sizeof(Slew));
+  Slew_init(node);
+  return (void *)node;
+}
+
+// Sequence
+
+typedef struct Sequence
+{
+  bool clockSgn;
+  int step;
+  int steps;
+  float *sequence;
+  bool first;
+} Sequence;
+
+void Sequence_init(Sequence *self)
+{
+  self->clockSgn = true;
+  self->step = 0;
+  self->first = true;
+}
+
+double Sequence_update(Sequence *self, float clock, int len, float *sequence)
+{
+
+  if (!self->clockSgn && clock > 0)
+  {
+    self->step = (self->step + 1);
+    if (self->step >= len)
+      self->step -= len;
+    self->clockSgn = clock > 0;
+    return 0; // set first sample to zero to retrigger gates on step change...
+  }
+  self->clockSgn = clock > 0;
+  return sequence[self->step];
+}
+
+void *Sequence_create()
+{
+  Sequence *node = (Sequence *)malloc(sizeof(Sequence));
+  Sequence_init(node);
   return (void *)node;
 }
 
@@ -541,15 +779,15 @@ void *DustOsc_create()
 - [x] BrownNoiseOsc
 - [-] CC
 - [-] Clock
-- [ ] ClockDiv
+- [x] ClockDiv
 - [-] ClockOut
 - [x] Delay
-- [ ] Distort
+- [x] Distort
 - [x] DustOsc
 - [x] Feedback
 - [x] Filter
 - [x] Fold
-- [ ] Hold
+- [x] Hold
 - [x] ImpulseOsc
 - [x] Lag
 - [-] MidiCC
@@ -558,13 +796,13 @@ void *DustOsc_create()
 - [-] MidiIn
 - [x] NoiseOsc
 - [x] PinkNoise
-- [ ] PulseOsc
+- [x] PulseOsc
 - [x] SawOsc
-- [ ] Sequence
+- [x] Sequence
 - [x] SineOsc
-- [ ] Slew
-- [ ] Slide
-- [ ] TriOsc
+- [x] Slew
+- [x] Slide
+- [x] TriOsc
 
 */
 
