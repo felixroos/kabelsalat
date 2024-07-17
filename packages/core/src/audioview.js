@@ -68,6 +68,15 @@ export class AudioView {
     });
   }
 
+  // ugen is expected to be a class
+  registerUgen(ugen) {
+    this.send({
+      type: "ADD_UGEN",
+      className: ugen.name,
+      ugen: ugen + "",
+    });
+  }
+
   async initAudioIn() {
     console.log("init audio input...");
     const stream = await navigator.mediaDevices.getUserMedia({
@@ -92,9 +101,11 @@ export class AudioView {
    */
   send(msg) {
     assert(msg instanceof Object);
-
     // make sure to init before callilng send..
-    if (!this.audioWorklet) return;
+    if (!this.audioWorklet) {
+      console.warn("message sent before audioworklet was ready...", msg);
+      return;
+    }
 
     this.audioWorklet.port.postMessage(msg);
   }

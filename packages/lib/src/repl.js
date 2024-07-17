@@ -14,6 +14,9 @@ export class SalatRepl {
       Object.assign(globalThis, lib);
       Object.assign(globalThis, compiler);
       Object.assign(globalThis, { audio: this.audio });
+      Object.assign(globalThis, {
+        addUgen: this.registerUgen.bind(this),
+      });
       // update state when sliders are moved
       // TODO: remove listener?
       window.addEventListener("message", (e) => {
@@ -27,6 +30,12 @@ export class SalatRepl {
       });
     }
   }
+
+  registerUgen(type, implementation) {
+    this.audio.registerUgen(implementation);
+    return lib.registerUgen(type, implementation.name);
+  }
+
   evaluate(code) {
     const transpiled = transpiler(code);
     this.beforeEval?.(transpiled);

@@ -1,5 +1,7 @@
 import { assert, lerp } from "./utils.js";
-import * as UGENS from "./ugens.js";
+import * as ugens from "./ugens.js";
+
+const UGENS = new Map(Object.entries(ugens));
 
 /**
  * Stateful graph that generates audio samples
@@ -84,6 +86,9 @@ export class AudioGraph {
       case "STOP":
         this.stop();
         break;
+      case "ADD_UGEN":
+        this.addUgen(msg.className, msg.ugen);
+        break;
 
       default:
         throw new TypeError(`unknown message type ${msg.type}`);
@@ -119,6 +124,10 @@ export class AudioGraph {
     }
     return sum;
   }
+  addUgen(className, implementation) {
+    const nodeClass = new Function(`${implementation};return ${className}`)();
+    UGENS.set(className, nodeClass);
+  }
 }
 
 class Unit {
@@ -129,8 +138,8 @@ class Unit {
 
     for (let i in schema.ugens) {
       const ugen = schema.ugens[i];
-      if (ugen.type in UGENS) {
-        const nodeClass = UGENS[ugen.type];
+      if (UGENS.has(ugen.type)) {
+        const nodeClass = UGENS.get(ugen.type);
         const index = Number(i);
         // TODO node reuse / graph diffing whatever / only create nodes that are not already created..
         this.nodes[index] = new nodeClass(

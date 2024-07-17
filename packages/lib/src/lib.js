@@ -7,20 +7,22 @@ import {
   nodeRegistry,
   assert,
 } from "@kabelsalat/core";
-import { registerWidgetType } from "@kabelsalat/transpiler";
 
-registerWidgetType("_");
-registerWidgetType("B");
-
-let def = (name, value, comment) =>
+export let def = (name, value, comment) =>
   `const ${name} = ${value};${comment ? ` /* ${comment} */` : ""}`;
-let defUgen = (meta, ...args) => {
+export let defUgen = (meta, ...args) => {
   return def(
     meta.name,
     `nodes[${meta.ugenIndex}].update(${args.join(",")})`,
     meta.node.type
   );
 };
+
+export const registerUgen = (type, className) =>
+  registerNode(type, {
+    ugen: className,
+    compile: ({ vars, ...meta }) => defUgen(meta, ...vars),
+  });
 
 export let time = register("time", (code) => new Node("time", code), {
   tags: ["meta"],
@@ -561,15 +563,31 @@ export let mod = registerNode("mod", {
   compile: ({ vars, name }) => def(name, vars.join(" % ") || 0),
 });
 export let greater = registerNode("greater", {
-  tags: ["math"],
+  tags: ["logic"],
   description: "returns 1 if input is greater then threshold",
   ins: [{ name: "in" }, { name: "threshold" }],
-  examples: [
-    `greater(sine(1),0)
-.bipolar().range(100,200)
-.sine().out()`,
-  ],
   compile: ({ vars: [a = 0, b = 0], name }) => def(name, `${a} > ${b}`),
+});
+export let xor = registerNode("xor", {
+  tags: ["logic"],
+  description: "returns 1 if exactly one of the inputs is 1",
+  ins: [{ name: "a" }, { name: "b" }],
+  compile: ({ vars: [a = 0, b = 0], name }) =>
+    def(name, `${a} != ${b} ? 1 : 0`),
+});
+export let and = registerNode("and", {
+  tags: ["logic"],
+  description: "returns 1 if both inputs are 1",
+  ins: [{ name: "a" }, { name: "b" }],
+  compile: ({ vars: [a = 0, b = 0], name }) =>
+    def(name, `${a} && ${b} ? 1 : 0`),
+});
+export let or = registerNode("or", {
+  tags: ["logic"],
+  description: "returns 1 if one or both inputs are 1",
+  ins: [{ name: "a" }, { name: "b" }],
+  compile: ({ vars: [a = 0, b = 0], name }) =>
+    def(name, `${a} || ${b} ? 1 : 0`),
 });
 export let range = registerNode("range", {
   tags: ["math"],
@@ -785,3 +803,161 @@ export let feedback = (fn) => add(fn);
     sendSize: 5,
     historyLen: 150,
   }, */
+/* 
+function quantize(value, scale) {
+  const scaleLength = scale.length;
+  const octave = 12;
+
+  // Normalize the value to be within 0 to 11
+  let normalizedValue = ((value % octave) + octave) % octave;
+
+  // Find the closest scale value
+  let closest = scale.reduce((prev, curr) => {
+    return Math.abs(curr - normalizedValue) < Math.abs(prev - normalizedValue)
+      ? curr
+      : prev;
+  });
+
+  // Adjust the closest value to account for the original octave
+  let adjustment = Math.floor(value / octave) * octave;
+  let result = closest + adjustment;
+
+  // Ensure the result is closest to the original value considering the overflow
+  if (result - value > 6) result -= octave;
+  if (value - result > 6) result += octave;
+
+  return result;
+}
+
+// Examples
+console.log(quantize(2, [0, 3, 5, 7, 10])); // 3
+console.log(quantize(13, [0, 3, 5, 7, 10])); // 12
+console.log(quantize(-3, [0, 3, 5, 7, 10])); // -2
+
+/////////////
+
+function quantize(value, scale) {
+  const octave = 12;
+
+  // Normalize the value to be within 0 to 11
+  let normalizedValue = ((value % octave) + octave) % octave;
+
+  // Find the closest scale value
+  let closest = scale[0];
+  let minDistance = Math.abs(normalizedValue - closest);
+
+  for (let i = 1; i < scale.length; i++) {
+    let distance = Math.abs(normalizedValue - scale[i]);
+    if (distance < minDistance) {
+      minDistance = distance;
+      closest = scale[i];
+    }
+  }
+
+  // Adjust the closest value to account for the original octave
+  let adjustment = Math.floor(value / octave) * octave;
+  let result = closest + adjustment;
+
+  // Ensure the result is closest to the original value considering the overflow
+  if (result - value > 6) result -= octave;
+  if (value - result > 6) result += octave;
+
+  return result;
+}
+
+// Examples
+console.log(quantize(2, [0, 3, 5, 7, 10])); // 3
+console.log(quantize(13, [0, 3, 5, 7, 10])); // 12
+console.log(quantize(-3, [0, 3, 5, 7, 10])); // -2
+
+//////////
+function quantize(value, scale) {
+  const octave = 12;
+
+  // Normalize the value to be within 0 to 11
+  let normalizedValue = ((value % octave) + octave) % octave;
+
+  // Find the closest scale value
+  let closest = scale[0];
+  let minDistance = Math.abs(normalizedValue - closest);
+
+  for (let i = 1; i < scale.length; i++) {
+    let distance = Math.abs(normalizedValue - scale[i]);
+    if (distance < minDistance) {
+      minDistance = distance;
+      closest = scale[i];
+    }
+  }
+
+  // Adjust the closest value to account for the original octave
+  let adjustment = Math.floor(value / octave) * octave;
+  let result = closest + adjustment;
+
+  // Ensure the result is closest to the original value considering the overflow
+  if (result - value > 6) result -= octave;
+  if (value - result > 6) result += octave;
+
+  return result;
+}
+
+// Examples
+console.log(quantize(2, [0, 3, 5, 7, 10])); // 3
+console.log(quantize(13, [0, 3, 5, 7, 10])); // 12
+console.log(quantize(-3, [0, 3, 5, 7, 10])); // -2
+
+//////
+
+function quantize(value, scale) {
+  const octave = 12;
+
+  // Normalize the value to be within 0 to 11
+  let normalizedValue = value % octave;
+  if (normalizedValue < 0) {
+    normalizedValue += octave;
+  }
+
+  // Binary search to find the closest scale value
+  let low = 0;
+  let high = scale.length - 1;
+  let closest = scale[0];
+
+  while (low <= high) {
+    let mid = (low + high) >> 1; // Same as Math.floor((low + high) / 2)
+    let midVal = scale[mid];
+
+    if (midVal === normalizedValue) {
+      closest = midVal;
+      break;
+    } else if (midVal < normalizedValue) {
+      low = mid + 1;
+    } else {
+      high = mid - 1;
+    }
+
+    // Update the closest value
+    if (
+      Math.abs(midVal - normalizedValue) < Math.abs(closest - normalizedValue)
+    ) {
+      closest = midVal;
+    }
+  }
+
+  // Adjust the closest value to account for the original octave
+  let adjustment = Math.floor(value / octave) * octave;
+  let result = closest + adjustment;
+
+  // Simplified overflow/underflow adjustment
+  if (result - value > 6) {
+    result -= octave;
+  } else if (value - result > 6) {
+    result += octave;
+  }
+
+  return result;
+}
+
+// Examples
+console.log(quantize(2, [0, 3, 5, 7, 10])); // 3
+console.log(quantize(13, [0, 3, 5, 7, 10])); // 12
+console.log(quantize(-3, [0, 3, 5, 7, 10])); // -2
+ */
