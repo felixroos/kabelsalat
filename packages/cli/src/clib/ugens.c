@@ -510,6 +510,28 @@ void *NoiseOsc_create()
   return (void *)node;
 }
 
+// DustOsc
+
+typedef struct DustOsc
+{
+} DustOsc;
+
+void DustOsc_init(DustOsc *self)
+{
+}
+
+double DustOsc_update(DustOsc *self, float density)
+{
+  return RANDOM_FLOAT < density * SAMPLE_TIME ? RANDOM_FLOAT : 0;
+}
+
+void *DustOsc_create()
+{
+  DustOsc *node = (DustOsc *)malloc(sizeof(DustOsc));
+  DustOsc_init(node);
+  return (void *)node;
+}
+
 #endif // UGENS_H
 
 /*
@@ -523,7 +545,7 @@ void *NoiseOsc_create()
 - [-] ClockOut
 - [x] Delay
 - [ ] Distort
-- [ ] DustOsc
+- [x] DustOsc
 - [x] Feedback
 - [x] Filter
 - [x] Fold
