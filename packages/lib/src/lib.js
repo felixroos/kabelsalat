@@ -12,15 +12,73 @@ import { registerWidgetType } from "@kabelsalat/transpiler";
 registerWidgetType("_");
 registerWidgetType("B");
 
-let def = (name, value, comment) =>
+// JS
+
+let defSinJS = (input) => `Math.sin(${input})`;
+let defCosJS = (input) => `Math.cos(${input})`;
+let defJS = (name, value, comment) =>
   `const ${name} = ${value};${comment ? ` /* ${comment} */` : ""}`;
-let defUgen = (meta, ...args) => {
-  return def(
+
+let defUgenJS = (meta, ...args) => {
+  return defJS(
     meta.name,
     `nodes[${meta.ugenIndex}].update(${args.join(",")})`,
     meta.node.type
   );
 };
+let returnLineJS = (channels) =>
+  `return [${channels.map((chan) => `(${chan}*lvl)`).join(",")}]`;
+
+let feedbackWriteJS = (to, value) => {
+  return `nodes[${to}].write(${value})`;
+};
+
+// C
+
+let defSinC = (input) => `sin(${input})`;
+let defCosC = (input) => `cos(${input})`;
+let defC = (name, value, comment) =>
+  `float ${name} = ${value};${comment ? ` /* ${comment} */` : ""}`;
+
+let defUgenC = (meta, ...args) => {
+  console.log("def", meta.ugen, args);
+  args.unshift(`nodes[${meta.ugenIndex}]`);
+  return defC(meta.name, `${meta.ugen}_update(${args.join(",")})`, meta.ugen);
+};
+let returnLineC = (channels) =>
+  `float left = ${channels[0]}; float right = ${channels[1]};`;
+
+let feedbackWriteC = (to, value) => {
+  return `Feedback_write(nodes[${to}], ${value})`;
+};
+
+const langs = {
+  js: {
+    def: defJS,
+    defUgen: defUgenJS,
+    returnLine: returnLineJS,
+    feedbackWrite: feedbackWriteJS,
+    defSin: defSinJS,
+    defCos: defCosJS,
+  },
+  c: {
+    def: defC,
+    defUgen: defUgenC,
+    returnLine: returnLineC,
+    feedbackWrite: feedbackWriteC,
+    defSin: defSinC,
+    defCos: defCosC,
+  },
+};
+
+let lang = "c";
+
+let def = langs[lang].def;
+let defUgen = langs[lang].defUgen;
+let returnLine = langs[lang].returnLine;
+let feedbackWrite = langs[lang].feedbackWrite;
+let defSin = langs[lang].defSin;
+let defCos = langs[lang].defCos;
 
 export let time = register("time", (code) => new Node("time", code), {
   tags: ["meta"],
@@ -310,7 +368,7 @@ nodeRegistry.set("feedback_write", {
   tags: ["innards"],
   description: "Writes to the feedback buffer. Not intended for direct use",
   compile: ({ vars, node, name }) =>
-    def(name, `nodes[${node.to}].write(${vars[0]})`, "feedback_write"),
+    def(name, feedbackWrite(node.to, vars[0]), "feedback_write"),
 });
 export let feedback_read = registerNode("feedback_read", {
   ugen: "Feedback",
@@ -519,13 +577,13 @@ export let sin = registerNode("sin", {
   tags: ["math"],
   description: "calculates the sine of the input signal",
   ins: [{ name: "in" }],
-  compile: ({ vars: [input = 0], name }) => def(name, `Math.sin(${input})`),
+  compile: ({ vars: [input = 0], name }) => def(name, defSin(input)),
 });
 export let cos = registerNode("cos", {
   tags: ["math"],
   description: "calculates the cosine of the input signal",
   ins: [{ name: "in" }],
-  compile: ({ vars: [input = 0], name }) => def(name, `Math.cos(${input})`),
+  compile: ({ vars: [input = 0], name }) => def(name, defCos(input)),
 });
 export let mul = registerNode("mul", {
   tags: ["math"],
@@ -634,7 +692,7 @@ export let dac = registerNode("dac", {
       console.warn("returned more than 2 channels.. using first 2");
       channels = channels.slice(0, 2);
     }
-    return `return [${channels.map((chan) => `(${chan}*lvl)`).join(",")}]`;
+    return returnLine(channels);
   },
 });
 export let exit = registerNode("exit", { internal: true });
