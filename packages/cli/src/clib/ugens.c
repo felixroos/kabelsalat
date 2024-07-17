@@ -10,6 +10,7 @@
 #define SAMPLE_TIME (1.0 / SAMPLE_RATE)
 #define MAX(x, y) (((x) > (y)) ? (x) : (y))
 #define MIN(x, y) (((x) < (y)) ? (x) : (y))
+#define RANDOM_FLOAT ((float)arc4random() / (float)UINT32_MAX)
 
 // helpers
 
@@ -403,19 +404,123 @@ void *Fold_create()
   return (void *)node;
 }
 
+// BrownNoiseOsc
+
+typedef struct BrownNoiseOsc
+{
+  float out;
+} BrownNoiseOsc;
+
+void BrownNoiseOsc_init(BrownNoiseOsc *self)
+{
+  self->out = 0;
+}
+
+double BrownNoiseOsc_update(BrownNoiseOsc *self)
+{
+  float white = RANDOM_FLOAT * 2.0 - 1.0;
+  self->out = (self->out + 0.02 * white) / 1.02;
+  return self->out;
+}
+
+void *BrownNoiseOsc_create()
+{
+  BrownNoiseOsc *node = (BrownNoiseOsc *)malloc(sizeof(BrownNoiseOsc));
+  BrownNoiseOsc_init(node);
+  return (void *)node;
+}
+
+// PinkNoise
+
+typedef struct PinkNoise
+{
+  float b0;
+  float b1;
+  float b2;
+  float b3;
+  float b4;
+  float b5;
+  float b6;
+} PinkNoise;
+
+void PinkNoise_init(PinkNoise *self)
+{
+
+  self->b0 = 0;
+  self->b1 = 0;
+  self->b2 = 0;
+  self->b3 = 0;
+  self->b4 = 0;
+  self->b5 = 0;
+  self->b6 = 0;
+}
+
+double PinkNoise_update(PinkNoise *self)
+{
+
+  float white = RANDOM_FLOAT * 2 - 1;
+
+  self->b0 = 0.99886 * self->b0 + white * 0.0555179;
+  self->b1 = 0.99332 * self->b1 + white * 0.0750759;
+  self->b2 = 0.969 * self->b2 + white * 0.153852;
+  self->b3 = 0.8665 * self->b3 + white * 0.3104856;
+  self->b4 = 0.55 * self->b4 + white * 0.5329522;
+  self->b5 = -0.7616 * self->b5 - white * 0.016898;
+
+  float pink =
+      self->b0 +
+      self->b1 +
+      self->b2 +
+      self->b3 +
+      self->b4 +
+      self->b5 +
+      self->b6 +
+      white * 0.5362;
+  self->b6 = white * 0.115926;
+
+  return pink * 0.11;
+}
+
+void *PinkNoise_create()
+{
+  PinkNoise *node = (PinkNoise *)malloc(sizeof(PinkNoise));
+  PinkNoise_init(node);
+  return (void *)node;
+}
+
+// NoiseOsc
+
+typedef struct NoiseOsc
+{
+} NoiseOsc;
+
+void NoiseOsc_init(NoiseOsc *self)
+{
+}
+
+double NoiseOsc_update(NoiseOsc *self)
+{
+  return RANDOM_FLOAT * 2 - 1;
+}
+
+void *NoiseOsc_create()
+{
+  NoiseOsc *node = (NoiseOsc *)malloc(sizeof(NoiseOsc));
+  NoiseOsc_init(node);
+  return (void *)node;
+}
+
 #endif // UGENS_H
 
 /*
 
 - [x] ADSRNode
-- [ ] AudioIn
-- [ ] BrownNoiseOsc
-- [ ] CC
-- [ ] CLOCK_PPQ
-- [ ] CLOCK_PPS
-- [ ] Clock
+- [-] AudioIn
+- [x] BrownNoiseOsc
+- [-] CC
+- [-] Clock
 - [ ] ClockDiv
-- [ ] ClockOut
+- [-] ClockOut
 - [x] Delay
 - [ ] Distort
 - [ ] DustOsc
@@ -425,12 +530,12 @@ void *Fold_create()
 - [ ] Hold
 - [x] ImpulseOsc
 - [x] Lag
-- [ ] MidiCC
-- [ ] MidiFreq
-- [ ] MidiGate
-- [ ] MidiIn
-- [ ] NoiseOsc
-- [ ] PinkNoise
+- [-] MidiCC
+- [-] MidiFreq
+- [-] MidiGate
+- [-] MidiIn
+- [x] NoiseOsc
+- [x] PinkNoise
 - [ ] PulseOsc
 - [x] SawOsc
 - [ ] Sequence

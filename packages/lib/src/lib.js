@@ -179,7 +179,7 @@ export let noise = registerNode("noise", {
   description: "White noise source",
   examples: ["noise().mul(.25).out()"],
   ins: [],
-  compile: ({ lang, meta }) => langs[lang].defUgen(meta),
+  compile: ({ lang, ...meta }) => langs[lang].defUgen(meta),
 });
 
 // todo: how to show "pink" in reference?
@@ -189,7 +189,7 @@ export let pink = registerNode("pink", {
   description: "Pink noise source",
   examples: ["pink().mul(.5).out()"],
   ins: [],
-  compile: ({ lang, meta }) => langs[lang].defUgen(meta),
+  compile: ({ lang, ...meta }) => langs[lang].defUgen(meta),
 });
 
 export let brown = registerNode("brown", {
@@ -198,7 +198,7 @@ export let brown = registerNode("brown", {
   description: "Brown noise source",
   examples: ["brown().out()"],
   ins: [],
-  compile: ({ lang, meta }) => langs[lang].defUgen(meta),
+  compile: ({ lang, ...meta }) => langs[lang].defUgen(meta),
 });
 
 export let dust = registerNode("dust", {
