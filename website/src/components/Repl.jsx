@@ -1,6 +1,6 @@
 import { Show, createSignal, onCleanup, onMount } from "solid-js";
 import "@kabelsalat/graphviz";
-import { SalatRepl } from "@kabelsalat/lib";
+import { SalatRepl } from "@kabelsalat/web";
 import { Icon } from "./Icon";
 import { Reference } from "./Reference";
 import { examples } from "../examples";
