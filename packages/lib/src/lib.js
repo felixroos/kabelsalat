@@ -66,7 +66,7 @@ const langs = {
   },
 };
 
-let lang = "js";
+let lang = "c";
 
 let def = langs[lang].def;
 let defUgen = langs[lang].defUgen;
