@@ -1,0 +1,154 @@
+---
+title: Web Audio Iceberg
+layout: ../layouts/doc.astro
+---
+
+# The Web Audio Iceberg
+
+| method          | static | dynamic | ar feedback | portability | difficulty |
+| --------------- | ------ | ------- | ----------- | ----------- | ---------- |
+| Tone.js         | 🟢     | 🔴      | 🔴          | 🔴          | 🟢         |
+| Web Audio Nodes | 🟢     | 🟡      | 🔴          | 🔴          | 🟡         |
+| AudioWorklet    | 🟢     | ❔      | 🟢          | 🟢          | 🔴         |
+
+## Tone.js
+
+Tone.js is the go to Web Audio framework. It has a wide variety of synths and FX
+Under the hood, it uses Web Audio API Nodes.
+
+- 🔴 **dynamic graph**: It is not designed for "fire and forget", so spawning new synths and FX at runtime will not work.
+- 🔴 **audio-rate feedback**: Because it's based on Web Audio Nodes, feedback is only at control rate.
+- 🔴 **portable**: It only runs on the web
+
+```js
+const synth = new Tone.Synth().toDestination();
+const now = Tone.now();
+synth.triggerAttackRelease("A4", "8n", now);
+synth.triggerAttackRelease("C4", "8n", now + 0.5);
+synth.triggerAttackRelease("E4", "8n", now + 1);
+```
+
+[tonejs.github.io](https://tonejs.github.io/)
+
+## Web Audio Nodes
+
+The Web Audio API comes with a decent number of Nodes that can be used to do audio processing, e.g. `OscillatorNode`, `BiquadFilterNode` etc..
+
+- 🟡 **dynamic graph**: It is designed for "fire and forget", so spawning new synths and FX at runtime is possible, tho still inefficient. This is what Strudel does.
+- 🔴 **audio-rate feedback**: The Web Audio Nodes will only let you do feedback at control rate.
+- 🔴 **portability**: It is a web-only API, although [node-web-audio-api](https://github.com/ircam-ismm/node-web-audio-api) exists. Still a huge API surface for portability.
+
+```js
+const ctx = new AudioContext();
+const osc = new OscillatorNode(ctx);
+osc.connect(ctx.destination);
+osc.start();
+const now = ctx.currentTime + 0.1;
+osc.frequency.setValueAtTime(440, now);
+osc.frequency.setValueAtTime(550, now + 0.5);
+osc.frequency.setValueAtTime(660, now + 1);
+osc.frequency.setValueAtTime(0, now + 1.5);
+```
+
+you can paste the above code in the browser console!
+
+[Web Audio API on MDN](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API)
+
+## AudioWorklet
+
+The AudioWorkletNode is also part of the Web Audio, but special in the sense that it let's you calculate your audio samples the way you like.
+
+- ❔ **dynamic graph**: It remains to be tested how well dynamic graphs work within AudioWorklets.
+- 🟢 **audio-rate feedback**: Is possible
+- 🟢 **portability**: The ties to the Web are minimal when the whole Audio DSP is running in a single AudioWorklet, so porting (and testing) is easy. You can even combine them with WASM, which means sky is the limit.
+
+<details>
+<summary>show boilerplate code</summary>
+
+```js
+let ac;
+document.addEventListener("click", function initAudio() {
+  ac = new AudioContext();
+  ac.resume();
+  document.removeEventListener("click", initAudio);
+});
+
+async function getSimpleDynamicWorklet(ac, code, hz = ac.sampleRate) {
+  const name = `simple-custom-${Date.now()}`;
+  let srcSampleRate = hz || ac.sampleRate;
+  const workletCode = `${code}
+        class MyProcessor extends AudioWorkletProcessor {
+  constructor() {
+    super();
+    this.t = 0;
+    this.stopped = false;
+    this.port.onmessage = (e) => {
+      if(e.data==='stop') {
+        this.stopped = true;
+      }
+    };
+  }
+  process(inputs, outputs, parameters) {
+    const output = outputs[0];
+    for (let i = 0; i < output[0].length; i++) {
+      const out = dsp(this.t / ${ac.sampleRate});
+      output.forEach((channel) => {
+        channel[i] = out;
+      });
+      this.t++;
+    }
+    return !this.stopped;
+  }
+}
+registerProcessor('${name}', MyProcessor);
+  `;
+  const base64String = btoa(workletCode);
+  const dataURL = `data:text/javascript;base64,${base64String}`;
+  if (!ac.audioWorklet) {
+    console.error(
+      "You need to be on a secure origin (https or localhost) site!"
+    );
+  }
+  await ac.audioWorklet.addModule(dataURL);
+  const node = new AudioWorkletNode(ac, name);
+  const stop = () => node.port.postMessage("stop");
+  return { node, stop };
+}
+
+// control
+let worklet,
+  hz = 44100;
+const stop = async () => {
+  worklet?.stop();
+  worklet?.node?.disconnect();
+};
+const update = async (code) => {
+  ac = ac || new AudioContext();
+  await ac.resume();
+  stop();
+  worklet = await getSimpleDynamicWorklet(ac, code, hz);
+  worklet.node.connect(ac.destination);
+};
+```
+
+</details>
+
+you can paste the above boilerplate code in the browser console! Then you can run any DSP with `update`:
+
+```js
+update(`
+let time;
+let sin = (x) => Math.sin(2 * Math.PI * time * x)
+let seq = (speed, items) => items[Math.floor(time*speed)%items.length]
+function dsp(t) {
+  time = t;
+  return sin(seq(1, [440, 550, 660]))*0.4
+}
+`);
+```
+
+To stop, run `stop()`
+
+[doughbeat](https://github.com/felixroos/doughbeat)
+
+[kabelsalat unit running in doughbeat](https://felixroos.github.io/doughbeat/#bGV0IHNhbXBsZVRpbWUgPSAxLzQ0MTAwOwoKY2xhc3MgU2luZU9zYyB7CiAgY29uc3RydWN0b3IoKSB7CiAgICB0aGlzLnBoYXNlID0gMDsKICB9CiAgdXBkYXRlKGZyZXEpIHsKICAgIGxldCBjeWNsZVBvcyA9IHRoaXMucGhhc2UgJSAxOwogICAgdGhpcy5waGFzZSArPSBzYW1wbGVUaW1lICogZnJlcTsKICAgIHJldHVybiBNYXRoLnNpbihjeWNsZVBvcyAqIDIgKiBNYXRoLlBJKTsKICB9Cn0KCmNvbnN0IHVnZW5zID0ge1NpbmVPc2N9Cgpjb25zdCB1bml0ID0geyJzcmMiOiJjb25zdCBuNSA9IG5vZGVzWzBdLnVwZGF0ZSg0LDAsMCk7IC8qIHNpbmUgKi9cbmNvbnN0IG40ID0gKChuNSArIDEpICogMC41KSAqICgxLjEgLSAxKSArIDE7XG5jb25zdCBuMyA9IG40ICogMjAwO1xuY29uc3QgbjIgPSBub2Rlc1sxXS51cGRhdGUobjMsMCwwKTsgLyogc2luZSAqL1xucmV0dXJuIFsobjIqbHZsKSwobjIqbHZsKV0iLCJ1Z2VucyI6W3sidHlwZSI6IlNpbmVPc2MiLCJpbnB1dHMiOls0XX0seyJ0eXBlIjoiU2luZU9zYyIsImlucHV0cyI6WyJuMyJdfV19Cgpjb25zdCBub2RlcyA9IHVuaXQudWdlbnMubWFwKHVnZW4gPT4gbmV3IHVnZW5zW3VnZW4udHlwZV0oKSkKY29uc3QgY2FsbGJhY2sgPSBuZXcgRnVuY3Rpb24oInRpbWUiLCAibm9kZXMiLCAiaW5wdXQiLCAibHZsIiwgdW5pdC5zcmMpCgpmdW5jdGlvbiBkc3AodGltZSkgewogIHJldHVybiBjYWxsYmFjayh0aW1lLG5vZGVzLDAsLjMpWzBdCn0K)
