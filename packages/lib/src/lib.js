@@ -7,10 +7,6 @@ import {
   nodeRegistry,
   assert,
 } from "@kabelsalat/core";
-import { registerWidgetType } from "@kabelsalat/transpiler";
-
-registerWidgetType("_");
-registerWidgetType("B");
 
 // JS
 
@@ -41,7 +37,6 @@ let defC = (name, value, comment) =>
   `float ${name} = ${value};${comment ? ` /* ${comment} */` : ""}`;
 
 let defUgenC = (meta, ...args) => {
-  console.log("def", meta.ugen, args);
   args.unshift(`nodes[${meta.ugenIndex}]`);
   return defC(meta.name, `${meta.ugen}_update(${args.join(",")})`, meta.ugen);
 };

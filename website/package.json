@@ -18,6 +18,7 @@
     "@kabelsalat/core": "workspace:*",
     "@kabelsalat/graphviz": "workspace:*",
     "@kabelsalat/lib": "workspace:*",
+    "@kabelsalat/web": "workspace:*",
     "@kabelsalat/codemirror": "workspace:*",
     "@nanostores/persistent": "^0.10.1",
     "@nanostores/solid": "^0.4.2",
