@@ -404,3 +404,64 @@ void *Fold_create()
 }
 
 #endif // UGENS_H
+
+/*
+
+- [x] ADSRNode
+- [ ] AudioIn
+- [ ] BrownNoiseOsc
+- [ ] CC
+- [ ] CLOCK_PPQ
+- [ ] CLOCK_PPS
+- [ ] Clock
+- [ ] ClockDiv
+- [ ] ClockOut
+- [x] Delay
+- [ ] Distort
+- [ ] DustOsc
+- [x] Feedback
+- [x] Filter
+- [x] Fold
+- [ ] Hold
+- [x] ImpulseOsc
+- [x] Lag
+- [ ] MidiCC
+- [ ] MidiFreq
+- [ ] MidiGate
+- [ ] MidiIn
+- [ ] NoiseOsc
+- [ ] PinkNoise
+- [ ] PulseOsc
+- [x] SawOsc
+- [ ] Sequence
+- [x] SineOsc
+- [ ] Slew
+- [ ] Slide
+- [ ] TriOsc
+
+*/
+
+/*
+
+// Template
+
+typedef struct Template
+{
+} Template;
+
+void Template_init(Template *self)
+{
+}
+
+double Template_update(Template *self)
+{
+}
+
+void *Template_create()
+{
+  Template *node = (Template *)malloc(sizeof(Template));
+  Template_init(node);
+  return (void *)node;
+}
+
+*/
