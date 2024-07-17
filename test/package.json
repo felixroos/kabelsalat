@@ -1,0 +1,20 @@
+{
+  "name": "@kabelsalat/test",
+  "private": true,
+  "version": "0.0.6",
+  "type": "module",
+  "author": "Felix Roos <flix91@gmail.com>",
+  "license": "AGPL-3.0-or-later",
+  "scripts": {
+    "test": "vitest"
+  },
+  "dependencies": {
+    "@kabelsalat/core": "workspace:*",
+    "@kabelsalat/transpiler": "workspace:*",
+    "@kabelsalat/lib": "workspace:*"
+  },
+  "devDependencies": {
+    "vite": "^5.2.0",
+    "vitest": "^1.6.0"
+  }
+}
