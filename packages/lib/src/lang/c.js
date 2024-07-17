@@ -23,4 +23,4 @@ export let feedbackWrite = (to, value) => {
   return `Feedback_write(nodes[${to}], ${value})`;
 };
 
-export let midinote = (note) => `(pow(2, ((${note} - 69) / 12) * 440))`;
+export let midinote = (note) => `pow(2.0, ((${note} - 69.0) / 12.0)) * 440.0`;

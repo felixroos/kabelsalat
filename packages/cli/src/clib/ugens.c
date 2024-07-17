@@ -7,6 +7,7 @@
 
 #define SAMPLE_RATE 44100
 #define MAX_DELAY_TIME 10
+#define CLOCK_PPQ 24
 #define DELAY_BUFFER_LENGTH (MAX_DELAY_TIME * SAMPLE_RATE)
 #define SAMPLE_TIME (1.0 / SAMPLE_RATE)
 #define MAX(x, y) (((x) > (y)) ? (x) : (y))
@@ -796,6 +797,38 @@ void *Slide_create()
   Slide *env = (Slide *)malloc(sizeof(Slide));
   Slide_init(env);
   return (void *)env;
+}
+
+// Clock
+
+typedef struct Clock
+{
+  float phase;
+} Clock;
+
+void Clock_init(Clock *self)
+{
+  self->phase = 0;
+}
+
+double Clock_update(Clock *self, float bpm)
+{
+  float freq = (CLOCK_PPQ * bpm) / 60;
+  float duty = 0.5;
+  self->phase += SAMPLE_TIME * freq;
+  if (self->phase >= 1)
+    self->phase -= 1;
+
+  // Note that the clock starts high so that it will
+  // trigger immediately upon starting
+  return self->phase < duty ? 1 : -1;
+}
+
+void *Clock_create()
+{
+  Clock *node = (Clock *)malloc(sizeof(Clock));
+  Clock_init(node);
+  return (void *)node;
 }
 
 #endif // UGENS_H
