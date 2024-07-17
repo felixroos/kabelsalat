@@ -7,63 +7,12 @@ import {
   nodeRegistry,
   assert,
 } from "@kabelsalat/core";
-
-// JS
-
-let defSinJS = (input) => `Math.sin(${input})`;
-let defCosJS = (input) => `Math.cos(${input})`;
-let defJS = (name, value, comment) =>
-  `const ${name} = ${value};${comment ? ` /* ${comment} */` : ""}`;
-
-let defUgenJS = (meta, ...args) => {
-  return defJS(
-    meta.name,
-    `nodes[${meta.ugenIndex}].update(${args.join(",")})`,
-    meta.node.type
-  );
-};
-let returnLineJS = (channels) =>
-  `return [${channels.map((chan) => `(${chan}*lvl)`).join(",")}]`;
-
-let feedbackWriteJS = (to, value) => {
-  return `nodes[${to}].write(${value})`;
-};
-
-// C
-
-let defSinC = (input) => `sin(${input})`;
-let defCosC = (input) => `cos(${input})`;
-let defC = (name, value, comment) =>
-  `float ${name} = ${value};${comment ? ` /* ${comment} */` : ""}`;
-
-let defUgenC = (meta, ...args) => {
-  args.unshift(`nodes[${meta.ugenIndex}]`);
-  return defC(meta.name, `${meta.ugen}_update(${args.join(",")})`, meta.ugen);
-};
-let returnLineC = (channels) =>
-  `float left = ${channels[0]}; float right = ${channels[1]};`;
-
-let feedbackWriteC = (to, value) => {
-  return `Feedback_write(nodes[${to}], ${value})`;
-};
+import * as js from "./lang/js.js";
+import * as c from "./lang/c.js";
 
 const langs = {
-  js: {
-    def: defJS,
-    defUgen: defUgenJS,
-    returnLine: returnLineJS,
-    feedbackWrite: feedbackWriteJS,
-    defSin: defSinJS,
-    defCos: defCosJS,
-  },
-  c: {
-    def: defC,
-    defUgen: defUgenC,
-    returnLine: returnLineC,
-    feedbackWrite: feedbackWriteC,
-    defSin: defSinC,
-    defCos: defCosC,
-  },
+  js,
+  c,
 };
 
 export let time = register("time", (code) => new Node("time", code), {
