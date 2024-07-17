@@ -505,21 +505,21 @@ export let log = registerNode("log", {
   description: "calculates the logarithm (base 10) of the input signal",
   ins: [{ name: "in" }],
   compile: ({ vars: [input = 0], name, lang }) =>
-    langs[lang].def(name, `Math.log(${input})`),
+    langs[lang].def(name, langs[lang].log(input)),
 });
 export let exp = registerNode("exp", {
   tags: ["math"],
   description: "raises e to the power of the input signal",
   ins: [{ name: "in" }],
   compile: ({ vars: [input = 0], name, lang }) =>
-    langs[lang].def(name, `Math.exp(${input})`),
+    langs[lang].def(name, langs[lang].exp(input)),
 });
 export let pow = registerNode("pow", {
   tags: ["math"],
   description: "raises the input to the given power",
   ins: [{ name: "in" }, { name: "power" }],
   compile: ({ vars: [input = 0, power = 1], name, lang }) =>
-    langs[lang].def(name, `Math.pow(${input},${power})`),
+    langs[lang].def(name, langs[lang].pow(input, power)),
 });
 export let sin = registerNode("sin", {
   tags: ["math"],
@@ -594,7 +594,7 @@ export let range = registerNode("range", {
     const [bipolar, min, max, curve = 1] = vars;
     // bipolar [-1,1] to unipolar [0,1] => (v+1)/2
     const unipolar = `((${bipolar} + 1) * 0.5)`;
-    const shaped = curve === 1 ? unipolar : `Math.pow(${unipolar}, ${curve})`;
+    const shaped = curve === 1 ? unipolar : langs[lang].pow(unipolar, curve);
     return langs[lang].def(name, `${shaped} * (${max} - ${min}) + ${min}`);
   },
 });

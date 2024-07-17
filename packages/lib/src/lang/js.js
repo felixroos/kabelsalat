@@ -18,3 +18,6 @@ export let feedbackWrite = (to, value) => {
 };
 
 export let midinote = (note) => `(2 ** ((${note} - 69) / 12) * 440)`;
+export let pow = (a, b) => `${a} ** ${b}`;
+export let exp = (input) => `Math.exp(${input})`;
+export let log = (input) => `Math.log(${input})`;
