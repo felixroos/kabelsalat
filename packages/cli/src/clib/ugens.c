@@ -770,6 +770,34 @@ void *Sequence_create()
   return (void *)node;
 }
 
+// Slide
+
+typedef struct Slide
+{
+  double s;
+} Slide;
+
+void Slide_init(Slide *self)
+{
+  self->s = 0;
+}
+
+double Slide_update(Slide *self, double input, double rate)
+{
+  rate = rate * 1000;
+  if (rate < 1)
+    rate = 1;
+  self->s += (1 / rate) * (input - self->s);
+  return self->s;
+}
+
+void *Slide_create()
+{
+  Slide *env = (Slide *)malloc(sizeof(Slide));
+  Slide_init(env);
+  return (void *)env;
+}
+
 #endif // UGENS_H
 
 /*
