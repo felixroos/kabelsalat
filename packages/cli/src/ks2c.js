@@ -29,7 +29,7 @@ async function main() {
   Object.assign(globalThis, core);
   Object.assign(globalThis, lib);
   const node = core.evaluate(ksCode);
-  const unit = node.compile();
+  const unit = node.compile({ lang: "c" });
   const cCode = ks2c(unit, ugenCode);
   const outFileName = file + ".c";
   console.log(cCode);
