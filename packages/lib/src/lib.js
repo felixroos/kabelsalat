@@ -571,7 +571,7 @@ export let mod = registerNode("mod", {
   examples: [`add(x=>x.add(.003).mod(1)).out()`],
   ins: [{ name: "in" }, { name: "modulo" }],
   compile: ({ vars, name, lang }) =>
-    langs[lang].def(name, vars.join(" % ") || 0),
+    langs[lang].def(name, langs[lang].mod(...vars) || 0),
 });
 export let greater = registerNode("greater", {
   tags: ["math"],
@@ -800,3 +800,7 @@ export let feedback = (fn) => add(fn);
     sendSize: 5,
     historyLen: 150,
   }, */
+
+// no-widget fallback
+export let B = n;
+export let _ = n;
