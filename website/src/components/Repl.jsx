@@ -164,7 +164,7 @@ export function Repl() {
           </button>
           <a
             class="items-center flex space-x-1 hover:opacity-50"
-            href="/kabelsalat/learn"
+            href="/learn"
           >
             <Icon type="learn" />
             <span class="hidden sm:block">learn</span>
@@ -177,7 +177,7 @@ export function Repl() {
             <p>
               👋 welcome to kabelsalat, a very experimental audio graph live
               coding prototype.{" "}
-              <a class="underline" href="/kabelsalat/learn">
+              <a class="underline" href="/learn">
                 learn more
               </a>
             </p>
