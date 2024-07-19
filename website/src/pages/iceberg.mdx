@@ -54,9 +54,56 @@ you can paste the above code in the browser console!
 
 [Web Audio API on MDN](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API)
 
-## AudioWorklet
+### superdough
 
-The AudioWorkletNode is also part of the Web Audio, but special in the sense that it let's you calculate your audio samples the way you like.
+superdough is the audio engine of strudel and it uses Web Audio Nodes as well.
+There is only a single function called `superdough` to trigger sounds:
+
+```js
+const t = getAudioContext().currentTime;
+superdough({ freq: 440 }, t, 0.5);
+superdough({ freq: 550 }, t + 0.5, 0.5);
+superdough({ freq: 660 }, t + 1.5);
+```
+
+The same function can also play samples + apply effects etc..
+
+[Demo](https://codesandbox.io/p/sandbox/superdough-demo-forked-sf8djh?file=%2Fsrc%2Findex.js%3A12%2C4)
+
+## One Sample At A Time Please
+
+All the above methods are just abstractions over abstractions.. If we dive down the audio iceberg, we have to deal with cold hard numbers 🥶
+
+### ScriptProcessorNode
+
+This Node is a special Web Audio Node to give you an audio callback to calculate your own audio samples / speaker positions:
+
+```js
+document.onclick = () => {
+  let ctx = new AudioContext(),
+    sn = ctx.createScriptProcessor(),
+    t = 0, // global time
+    isr = 1 / 44100; // time of one sample
+  sn.connect(ctx.destination);
+  sn.onaudioprocess = (e) => {
+    let o = e.outputBuffer,
+      l = o.getChannelData(0), // left channel
+      r = o.getChannelData(1); // right channel
+    let dsp = (t) => ((55 * t) % 1) / 10; // write dsp here!
+    for (let s = 0; s < o.length; s++) {
+      // loop through buffer
+      l[s] = r[s] = dsp(t);
+      t += isr; // advance time
+    }
+  };
+};
+```
+
+While it is nice and short, it is now deprecated, in favor of..
+
+### AudioWorklet
+
+The AudioWorkletNode also lets you calculate audio samples by yourself, but on a separate audio thread! This means better performance..
 
 - ❔ **dynamic graph**: It remains to be tested how well dynamic graphs work within AudioWorklets.
 - 🟢 **audio-rate feedback**: Is possible
@@ -138,7 +185,7 @@ you can paste the above boilerplate code in the browser console! Then you can ru
 ```js
 update(`
 let time;
-let sin = (x) => Math.sin(2 * Math.PI * time * x)
+let sin = (freq) => Math.sin(freq * time * 2 * Math.PI)
 let seq = (speed, items) => items[Math.floor(time*speed)%items.length]
 function dsp(t) {
   time = t;
@@ -149,6 +196,100 @@ function dsp(t) {
 
 To stop, run `stop()`
 
-[doughbeat](https://github.com/felixroos/doughbeat)
+### doughbeat
 
-[kabelsalat unit running in doughbeat](https://felixroos.github.io/doughbeat/#bGV0IHNhbXBsZVRpbWUgPSAxLzQ0MTAwOwoKY2xhc3MgU2luZU9zYyB7CiAgY29uc3RydWN0b3IoKSB7CiAgICB0aGlzLnBoYXNlID0gMDsKICB9CiAgdXBkYXRlKGZyZXEpIHsKICAgIGxldCBjeWNsZVBvcyA9IHRoaXMucGhhc2UgJSAxOwogICAgdGhpcy5waGFzZSArPSBzYW1wbGVUaW1lICogZnJlcTsKICAgIHJldHVybiBNYXRoLnNpbihjeWNsZVBvcyAqIDIgKiBNYXRoLlBJKTsKICB9Cn0KCmNvbnN0IHVnZW5zID0ge1NpbmVPc2N9Cgpjb25zdCB1bml0ID0geyJzcmMiOiJjb25zdCBuNSA9IG5vZGVzWzBdLnVwZGF0ZSg0LDAsMCk7IC8qIHNpbmUgKi9cbmNvbnN0IG40ID0gKChuNSArIDEpICogMC41KSAqICgxLjEgLSAxKSArIDE7XG5jb25zdCBuMyA9IG40ICogMjAwO1xuY29uc3QgbjIgPSBub2Rlc1sxXS51cGRhdGUobjMsMCwwKTsgLyogc2luZSAqL1xucmV0dXJuIFsobjIqbHZsKSwobjIqbHZsKV0iLCJ1Z2VucyI6W3sidHlwZSI6IlNpbmVPc2MiLCJpbnB1dHMiOls0XX0seyJ0eXBlIjoiU2luZU9zYyIsImlucHV0cyI6WyJuMyJdfV19Cgpjb25zdCBub2RlcyA9IHVuaXQudWdlbnMubWFwKHVnZW4gPT4gbmV3IHVnZW5zW3VnZW4udHlwZV0oKSkKY29uc3QgY2FsbGJhY2sgPSBuZXcgRnVuY3Rpb24oInRpbWUiLCAibm9kZXMiLCAiaW5wdXQiLCAibHZsIiwgdW5pdC5zcmMpCgpmdW5jdGlvbiBkc3AodGltZSkgewogIHJldHVybiBjYWxsYmFjayh0aW1lLG5vZGVzLDAsLjMpWzBdCn0K)
+[doughbeat](https://github.com/felixroos/doughbeat) is a single html file bytebeat/dsp editor.
+
+[dsp lvl 1](https://loophole-letters.netlify.app/dsp-lvl1/)
+
+## Audio Graphs
+
+graphs are everywhere..
+
+- pure data
+- max
+- supercollider
+- glicol
+- web audio api
+- [noisecraft](https://noisecraft.app/)
+
+maybe it is a good abstraction...
+
+### kabelsalat
+
+This is where kabelsalat comes in..
+
+import { MiniRepl } from "../components/MiniRepl";
+
+<MiniRepl
+  code="impulse(2).seq(440, 550, 660).sine().out()"
+  client:visible="solid"
+/>
+
+[kabelsalat intro](/kabelsalat/learn/)
+
+## bytebeat
+
+```c
+// bytebeat.c
+#include <stdio.h>
+int main() {
+  int t = 0;
+  while(1) {
+    putchar(t&t>>8);
+    t++;
+  }
+}
+```
+
+or short version:
+
+```c
+#include <stdio.h>
+int main(t) {for(;;t++)putchar(
+(t&t&t>>8) // <--- replace this line with any bytebeat
+);}
+```
+
+- install `sox` (e.g. `brew install sox` on MacOS)
+- compile via `gcc -o bytebeat bytebeat.c`
+- run `./bytebeat | sox -traw -r8000 -b8 -e unsigned-integer - -tcoreaudio` (replace 8000 with sample rate)
+- replace `i&i>>8` with any bytebeat code!
+  - `(t*5&t>>7)|(t*3&t>>10)` 8000
+  - `(int)(t/1e7*t*t+t)%127|t>>4|t>>5|t%127+(t>>16)|t` 8000
+  - `((t*("36364689"[t>>13&7]&15))/12&128)+(((((t>>12)^(t>>12)-2)%11*t)/4|t>>13)&127)` 44100
+
+[Bytebeat Video](https://www.youtube.com/watch?v=tCRPUv8V22o)
+
+### bytebeat in the browser
+
+```js
+document.onclick = () => {
+  let ctx = new AudioContext(),
+    sn = ctx.createScriptProcessor(),
+    t = 0,
+    isr = 1 / 44100;
+  sn.connect(ctx.destination);
+  let bytebeat = (code, hz) => (t) =>
+    (new Function("t", `return ${code}`)(t * hz) & 255) / 127.5 - 1;
+  let floatbeat = (code, hz) => (t) =>
+    new Function("t", `return ${code}`)(t * hz);
+  let dsp = bytebeat(
+    '((t*("36364689"[t>>13&7]&15))/12&128)+(((((t>>12)^(t>>12)-2)%11*t)/4|t>>13)&127)',
+    44100
+  );
+  sn.onaudioprocess = (e) => {
+    let o = e.outputBuffer;
+    let l = o.getChannelData(0);
+    let r = o.getChannelData(1);
+    for (let s = 0; s < o.length; s++) {
+      l[s] = r[s] = dsp(t) / 4;
+      t += isr;
+    }
+  };
+};
+```
+
+## compiling kabelsalat patches to c
+
+diving deeper..
