@@ -71,8 +71,11 @@ export class AudioView {
   async initAudioIn() {
     console.log("init audio input...");
     const stream = await navigator.mediaDevices.getUserMedia({
-      video: false,
-      audio: true,
+      audio: {
+        echoCancellation: false,
+        noiseSuppression: false,
+        autoGainControl: false,
+      },
     });
     const inputNode = this.audioCtx.createMediaStreamSource(stream);
     inputNode.connect(this.audioWorklet);
