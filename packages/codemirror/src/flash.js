@@ -12,7 +12,7 @@ export const flashField = StateField.define({
         if (e.is(setFlash)) {
           if (e.value && tr.newDoc.length > 0) {
             const mark = Decoration.mark({
-              attributes: { style: `background-color: #FFCA2880` },
+              attributes: { style: `background-color: #d9770680` },
             });
             flash = Decoration.set([mark.range(0, tr.newDoc.length)]);
           } else {
