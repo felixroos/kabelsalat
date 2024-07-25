@@ -42,6 +42,11 @@ let theme = EditorView.theme(
     ".cm-cursorLayer": {
       // "animation-name": "inherit !important;", // disables blinking
     },
+    ".cm-matchingBracket": {
+      "text-decoration": "underline 0.12rem",
+      "text-underline-offset": "0.24rem",
+      "text-decoration-color": colors.fuchsia300,
+    },
   },
   { dark: true }
 );

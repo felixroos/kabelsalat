@@ -8,6 +8,7 @@ import {
   highlightActiveLineGutter,
   highlightActiveLine,
 } from "@codemirror/view";
+import { bracketMatching } from "@codemirror/language";
 
 export function initEditor({ root, code, onChange, onEvaluate, onStop }) {
   let editor = new EditorView({
@@ -15,6 +16,7 @@ export function initEditor({ root, code, onChange, onEvaluate, onStop }) {
       //basicSetup,
       lineNumbers(),
       [highlightActiveLine(), highlightActiveLineGutter()],
+      bracketMatching({ brackets: "()[]{}<>" }),
       minimalSetup,
       kabelsalatTheme,
       flashField,
