@@ -94,7 +94,6 @@ export function Repl() {
   const activePanel = useStore($activePanel);
   const initialCode = getInitialCode();
   let [code, setCode] = createSignal(initialCode);
-  let [hideCode, setHideCode] = createSignal(false);
   let [zen, setZen] = createSignal(false);
   let [graph, setGraph] = createSignal();
   const welcomeHidden = useStore($hideWelcome);
@@ -122,8 +121,6 @@ export function Repl() {
     } else if (e.code === "Period" && (e.ctrlKey || e.altKey)) {
       repl.stop();
       e.preventDefault();
-    } else if (e.key === "l" && e.ctrlKey) {
-      setHideCode((hide) => !hide);
     }
   };
   // todo: make sure clicking anchor links doesn't trigger this..
@@ -223,12 +220,10 @@ export function Repl() {
           zen() ? `sm:grid-cols-1` : "sm:grid-cols-2"
         }`}
       >
-        {!hideCode() && <Codemirror code={code()} onChange={setCode} />}
+        <Codemirror code={code()} onChange={setCode} />
         <Show when={!zen()}>
           <div
-            class={`hidden sm:flex flex-col h-full overflow-hidden${
-              hideCode() ? " col-span-2" : " border-l border-stone-800"
-            }`}
+            class={`hidden sm:flex flex-col h-full overflow-hidden border-l border-stone-800"`}
           >
             <nav class={`border-b border-stone-800 py-0 px-4 flex space-x-4`}>
               <For each={panels}>
