@@ -187,7 +187,7 @@ export function Repl() {
       <Show when={zen()}>
         <div
           class="font-bold font-mono text-xl
-        bg-gradient-to-r from-teal-400 to-fuchsia-300 inline-block text-transparent bg-clip-text cursor-pointer fixed top-2 right-2 z-10"
+        bg-gradient-to-r from-teal-400 to-fuchsia-300 inline-block text-transparent bg-clip-text cursor-pointer fixed top-2 right-4 z-10"
           onClick={() => setZen((z) => !z)}
         >
           🔌

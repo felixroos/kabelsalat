@@ -28,12 +28,16 @@ let theme = EditorView.theme(
       fontSize: "16px",
       height: "100%",
     },
+    ".cm-gutters": {
+      "background-color": "transparent",
+      color: colors.stone500,
+    },
     ".cm-cursor": {
       "border-left-color": "#d9770696",
       "border-left-width": "11px",
     },
     ".cm-activeLine": {
-      backgroundColor: "#ddd",
+      "background-color": "#aaaaaa20",
     },
     ".cm-cursorLayer": {
       // "animation-name": "inherit !important;", // disables blinking
