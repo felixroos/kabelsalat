@@ -299,7 +299,7 @@ export function Repl() {
         </Show>
       </div>
       {!!error() && (
-        <div class="px-4 py-2 border-t border-stone-800 grow-0 text-sm text-red-400 flex items-center justify-between">
+        <div class="px-4 py-4 animate-pulse border-t border-stone-800 grow-0 text-sm text-red-500 flex items-center justify-between">
           {error()}
         </div>
       )}

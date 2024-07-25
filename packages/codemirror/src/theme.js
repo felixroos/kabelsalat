@@ -36,7 +36,7 @@ let theme = EditorView.theme(
       "border-left-color": "#d9770696",
       "border-left-width": "11px",
     },
-    ".cm-activeLine": {
+    ".cm-activeLine, .cm-activeLineGutter": {
       "background-color": "#aaaaaa20",
     },
     ".cm-cursorLayer": {
