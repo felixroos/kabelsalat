@@ -96,6 +96,9 @@ export function Repl() {
   let [code, setCode] = createSignal(initialCode);
   let [zen, setZen] = createSignal(false);
   let [graph, setGraph] = createSignal();
+  let [error, setError] = createSignal();
+  let handleError = (err) => setError(err.message);
+  let clearError = (err) => setError();
   const welcomeHidden = useStore($hideWelcome);
 
   let evaluate = () => {
@@ -106,13 +109,19 @@ export function Repl() {
 
   let container;
   async function run(_code = code()) {
-    // reset fadeTime?
-    setCode(_code);
-    await repl.audio.init();
-    const node = evaluate();
-    node.render(container, vizSettings); // update viz
-    updateCode(_code);
-    repl.play(node);
+    try {
+      // reset fadeTime?
+      setCode(_code);
+      await repl.audio.init();
+      const node = evaluate();
+      node.render(container, vizSettings); // update viz
+      updateCode(_code);
+      repl.play(node);
+      clearError();
+    } catch (err) {
+      handleError(err);
+      console.error(err);
+    }
   }
   let handleKeydown = (e) => {
     // console.log("key", e.code);
@@ -223,7 +232,7 @@ export function Repl() {
         <Codemirror code={code()} onChange={setCode} />
         <Show when={!zen()}>
           <div
-            class={`hidden sm:flex flex-col h-full overflow-hidden border-l border-stone-800"`}
+            class={`hidden sm:flex flex-col h-full overflow-hidden border-l border-stone-800`}
           >
             <nav class={`border-b border-stone-800 py-0 px-4 flex space-x-4`}>
               <For each={panels}>
@@ -249,8 +258,13 @@ export function Repl() {
                 <div
                   ref={(el) => {
                     container = el;
-                    const node = graph() || evaluate();
-                    node.render(container, vizSettings);
+                    try {
+                      const node = graph() || evaluate();
+                      node.render(container, vizSettings);
+                      clearError();
+                    } catch (err) {
+                      handleError(err);
+                    }
                   }}
                 ></div>
               </Show>
@@ -284,6 +298,11 @@ export function Repl() {
           </div>
         </Show>
       </div>
+      {!!error() && (
+        <div class="px-4 py-2 border-t border-stone-800 grow-0 text-sm text-red-400 flex items-center justify-between">
+          {error()}
+        </div>
+      )}
     </div>
   );
 }
