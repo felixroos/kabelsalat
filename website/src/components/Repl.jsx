@@ -8,7 +8,7 @@ import { persistentAtom } from "@nanostores/persistent";
 import { useStore } from "@nanostores/solid";
 import { History, addToHistory, $history } from "./History";
 import { Codemirror, codemirrorView } from "./Codemirror";
-import { updateWidgets } from "@kabelsalat/codemirror";
+import { updateWidgets, flash } from "@kabelsalat/codemirror";
 
 export const $hideWelcome = persistentAtom("hideWelcome", "false");
 const hideWelcome = () => $hideWelcome.set("true");
@@ -87,24 +87,41 @@ export function Repl() {
     onToggle: (_started) => setStarted(_started),
     beforeEval: (transpiled) => {
       updateWidgets(codemirrorView(), transpiled.widgets);
+      flash(codemirrorView());
     },
   });
 
   const activePanel = useStore($activePanel);
   const initialCode = getInitialCode();
   let [code, setCode] = createSignal(initialCode);
-  let [hideCode, setHideCode] = createSignal(false);
+  let [zen, setZen] = createSignal(false);
+  let [graph, setGraph] = createSignal();
+  let [error, setError] = createSignal();
+  let handleError = (err) => setError(err.message);
+  let clearError = (err) => setError();
   const welcomeHidden = useStore($hideWelcome);
+
+  let evaluate = () => {
+    const node = repl.evaluate(code());
+    setGraph(node);
+    return node;
+  };
 
   let container;
   async function run(_code = code()) {
-    // reset fadeTime?
-    setCode(_code);
-    await repl.audio.init();
-    const node = repl.evaluate(_code);
-    node.render(container, vizSettings); // update viz
-    updateCode(_code);
-    repl.play(node);
+    try {
+      // reset fadeTime?
+      setCode(_code);
+      await repl.audio.init();
+      const node = evaluate();
+      node.render(container, vizSettings); // update viz
+      updateCode(_code);
+      repl.play(node);
+      clearError();
+    } catch (err) {
+      handleError(err);
+      console.error(err);
+    }
   }
   let handleKeydown = (e) => {
     // console.log("key", e.code);
@@ -113,8 +130,6 @@ export function Repl() {
     } else if (e.code === "Period" && (e.ctrlKey || e.altKey)) {
       repl.stop();
       e.preventDefault();
-    } else if (e.key === "l" && e.ctrlKey) {
-      setHideCode((hide) => !hide);
     }
   };
   // todo: make sure clicking anchor links doesn't trigger this..
@@ -130,47 +145,62 @@ export function Repl() {
 
   return (
     <div class="flex flex-col h-full max-h-full justify-stretch text-teal-600 font-mono">
-      <div class="px-4 py-2 space-x-8 font-bold border-b border-stone-800 flex justify-between items-center select-none">
+      <Show when={!zen()}>
+        <div class="px-4 py-2 space-x-8 font-bold border-b border-stone-800 flex justify-between items-center select-none">
+          <div
+            class={`font-bold font-mono text-xl
+        bg-gradient-to-r from-teal-400 to-fuchsia-300 inline-block text-transparent bg-clip-text cursor-pointer`}
+            onClick={() => setZen((z) => !z)}
+          >
+            🔌 kabelsalat
+          </div>
+          <Show when={!zen()}>
+            <div class="flex justify-start items-center space-x-4 font-light">
+              <button
+                onClick={() => (started() ? repl.stop() : run())}
+                class="items-center flex space-x-1 hover:opacity-50"
+              >
+                {!started() ? (
+                  <>
+                    <Icon type="play" />
+                    <span class="animate-pulse hidden sm:block">play</span>
+                  </>
+                ) : (
+                  <>
+                    <Icon type="stop" />
+                    <span class="hidden sm:block">stop</span>
+                  </>
+                )}
+              </button>
+              <button
+                onClick={() => run()}
+                class="items-center flex space-x-1 hover:opacity-50"
+              >
+                <Icon type="refresh" />
+                <span class="hidden sm:block">run</span>
+              </button>
+              <a
+                class="items-center flex space-x-1 hover:opacity-50"
+                href="/learn"
+              >
+                <Icon type="learn" />
+                <span class="hidden sm:block">learn</span>
+              </a>
+            </div>
+          </Show>
+        </div>
+      </Show>
+      <Show when={zen()}>
         <div
-          class={`font-bold font-mono text-xl
-        bg-gradient-to-r from-teal-400 to-fuchsia-300 inline-block text-transparent bg-clip-text
-        `}
+          class={`font-bold font-mono text-xl ${
+            started() ? "animate-pulse" : ""
+          } 
+        bg-gradient-to-r from-teal-400 to-fuchsia-300 inline-block text-transparent bg-clip-text cursor-pointer fixed top-2 right-4 z-10`}
+          onClick={() => setZen((z) => !z)}
         >
-          🔌 kabelsalat
+          🔌
         </div>
-        <div class="flex justify-start items-center space-x-4 font-light">
-          <button
-            onClick={() => (started() ? repl.stop() : run())}
-            class="items-center flex space-x-1 hover:opacity-50"
-          >
-            {!started() ? (
-              <>
-                <Icon type="play" />
-                <span class="animate-pulse hidden sm:block">play</span>
-              </>
-            ) : (
-              <>
-                <Icon type="stop" />
-                <span class="hidden sm:block">stop</span>
-              </>
-            )}
-          </button>
-          <button
-            onClick={() => run()}
-            class="items-center flex space-x-1 hover:opacity-50"
-          >
-            <Icon type="refresh" />
-            <span class="hidden sm:block">run</span>
-          </button>
-          <a
-            class="items-center flex space-x-1 hover:opacity-50"
-            href="/learn"
-          >
-            <Icon type="learn" />
-            <span class="hidden sm:block">learn</span>
-          </a>
-        </div>
-      </div>
+      </Show>
       {welcomeHidden() === "false" && (
         <div class="px-4 py-2 border-b border-stone-800 grow-0 text-sm text-stone-400 flex items-center justify-between">
           <div>
@@ -194,70 +224,85 @@ export function Repl() {
           </div>
         </div>
       )}
-      <div class="grid sm:grid-cols-2 flex-auto shrink grow overflow-hidden">
-        {!hideCode() && <Codemirror code={code()} onChange={setCode} />}
-        <div
-          class={`hidden sm:flex flex-col h-full overflow-hidden${
-            hideCode() ? " col-span-2" : " border-l border-stone-800"
-          }`}
-        >
-          <nav class={`border-b border-stone-800 py-0 px-4 flex space-x-4`}>
-            <For each={panels}>
-              {(panel) => (
-                <div
-                  onClick={() => setActivePanel(panel)}
-                  class={
-                    `select-none hover:opacity-50 cursor-pointer text-teal-600 py-1 ` +
-                    (activePanel() === panel
-                      ? `border-b-2 border-teal-600`
-                      : "")
-                  }
-                >
-                  {panel}
-                </div>
-              )}
-            </For>
-          </nav>
+      <div
+        class={`grid flex-auto shrink grow overflow-hidden ${
+          zen() ? `sm:grid-cols-1` : "sm:grid-cols-2"
+        }`}
+      >
+        <Codemirror code={code()} onChange={setCode} />
+        <Show when={!zen()}>
           <div
-            class={`select-none bg-stone-900 overflow-auto text-gray-500 p-4 grow-0 h-full`}
+            class={`hidden sm:flex flex-col h-full overflow-hidden border-l border-stone-800`}
           >
-            <Show when={activePanel() === TAB_GRAPH}>
-              <div
-                ref={(el) => {
-                  container = el;
-                  repl.evaluate(code()).render(container, vizSettings);
-                }}
-              ></div>
-            </Show>
-            <Show when={activePanel() === TAB_DOCS}>
-              <div class="prose prose-invert">
-                <h2>reference</h2>
-                <Reference />
-              </div>
-            </Show>
-            <Show when={activePanel() === TAB_PATCHES}>
-              <h2 class="text-xl text-white pb-4">examples</h2>
-              <For each={examples}>
-                {(example) => (
-                  <div class="not-prose">
-                    <a
-                      class={`text-teal-600 cursor-pointer hover:opacity-50${
-                        code() === example.code
-                          ? " border-b border-teal-600"
-                          : ""
-                      }`}
-                      onClick={() => run(example.code)}
-                    >
-                      {example.label}
-                    </a>
+            <nav class={`border-b border-stone-800 py-0 px-4 flex space-x-4`}>
+              <For each={panels}>
+                {(panel) => (
+                  <div
+                    onClick={() => setActivePanel(panel)}
+                    class={
+                      `select-none hover:opacity-50 cursor-pointer text-teal-600 py-1 ` +
+                      (activePanel() === panel
+                        ? `border-b-2 border-teal-600`
+                        : "")
+                    }
+                  >
+                    {panel}
                   </div>
                 )}
               </For>
-              <History code={code()} run={run} />
-            </Show>
+            </nav>
+            <div
+              class={`select-none bg-stone-900 overflow-auto text-gray-500 p-4 grow-0 h-full`}
+            >
+              <Show when={activePanel() === TAB_GRAPH}>
+                <div
+                  ref={(el) => {
+                    container = el;
+                    try {
+                      const node = graph() || evaluate();
+                      node.render(container, vizSettings);
+                      clearError();
+                    } catch (err) {
+                      handleError(err);
+                    }
+                  }}
+                ></div>
+              </Show>
+              <Show when={activePanel() === TAB_DOCS}>
+                <div class="prose prose-invert">
+                  <h2>reference</h2>
+                  <Reference />
+                </div>
+              </Show>
+              <Show when={activePanel() === TAB_PATCHES}>
+                <h2 class="text-xl text-white pb-4">examples</h2>
+                <For each={examples}>
+                  {(example) => (
+                    <div class="not-prose">
+                      <a
+                        class={`text-teal-600 cursor-pointer hover:opacity-50${
+                          code() === example.code
+                            ? " border-b border-teal-600"
+                            : ""
+                        }`}
+                        onClick={() => run(example.code)}
+                      >
+                        {example.label}
+                      </a>
+                    </div>
+                  )}
+                </For>
+                <History code={code()} run={run} />
+              </Show>
+            </div>
           </div>
-        </div>
+        </Show>
       </div>
+      {!!error() && (
+        <div class="px-4 py-4 animate-pulse border-t border-stone-800 grow-0 text-sm text-red-500 flex items-center justify-between">
+          {error()}
+        </div>
+      )}
     </div>
   );
 }

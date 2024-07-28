@@ -289,13 +289,17 @@ KrajeskiFilter.prototype.setCutoff = function (cutoff) {
  * Delay line, implemented as a circular buffer
  * */
 export class Delay {
-  constructor(sampleRate) {
+  constructor(sampleRate, buf) {
     // Maximum delay time
     const MAX_DELAY_TIME = 10;
 
     this.sampleRate = sampleRate;
-    this.buffer = new Float32Array(MAX_DELAY_TIME * sampleRate);
-    this.buffer.fill(0);
+    if (buf) {
+      this.buffer = buf.slice(0);
+    } else {
+      this.buffer = new Float32Array(MAX_DELAY_TIME * sampleRate);
+      this.buffer.fill(0);
+    }
 
     // Write and read positions in the buffer
     this.writeIdx = 0;
@@ -306,6 +310,13 @@ export class Delay {
     this.buffer.fill(0);
     this.writeIdx = 0;
     this.readIdx = 0;
+  }
+
+  clone() {
+    const cloned = new Delay(this.sampleRate, this.buffer);
+    cloned.writeIdx = this.writeIdx;
+    cloned.readIdx = this.readIdx;
+    return cloned;
   }
 
   /**

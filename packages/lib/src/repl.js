@@ -1,6 +1,6 @@
-import { AudioView } from "../../core/src/audioview.js";
-import * as core from "../../core/src/index.js";
-import * as compiler from "../../core/src/compiler.js";
+import { AudioView } from "@kabelsalat/core/src/audioview.js";
+import * as core from "@kabelsalat/core/src/index.js";
+import * as compiler from "@kabelsalat/core/src/compiler.js";
 import * as lib from "./lib.js";
 import { transpiler } from "@kabelsalat/transpiler";
 
