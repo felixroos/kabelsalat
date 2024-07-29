@@ -17,7 +17,6 @@
     "@kabelsalat/lib": "workspace:*",
     "chokidar": "^3.6.0",
     "jzz": "^1.8.5",
-    "speaker": "^0.5.5",
     "yesno": "^0.4.0"
   }
 }
