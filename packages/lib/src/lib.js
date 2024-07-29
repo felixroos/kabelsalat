@@ -112,9 +112,23 @@ export let adsr = registerNode("adsr", {
     ...meta
   }) => langs[meta.lang].defUgen(meta, "time", gate, att, dec, sus, rel),
 });
+export let ar = module(
+  "ar",
+  (gate = 0, attack = 0.02, release = 0.1) => gate.adsr(attack, 0, 1, release),
+  {
+    tags: ["envelope"],
+    description: "AR envelope",
+    examples: [`impulse(1).ad(.01, .1).mul(sine(220)).out()`],
+    ins: [
+      { name: "trig", default: 0, description: "gate input" },
+      { name: "att", default: 0.02, description: "attack time" },
+      { name: "rel", default: 0.1, description: "release time" },
+    ],
+  }
+);
 export let ad = module(
   "ad",
-  (gate = 0, attack = 0.02, decay = 0.1) => gate.adsr(attack, 0, 1, decay),
+  (gate = 0, attack = 0.02, decay = 0.1) => gate.adsr(attack, decay, 0, decay),
   {
     tags: ["envelope"],
     description: "AD envelope",

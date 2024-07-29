@@ -1,7 +1,7 @@
-import { AudioView } from "./audioview.js";
 import * as core from "@kabelsalat/core/src/index.js";
 import * as compiler from "@kabelsalat/core/src/compiler.js";
 import * as lib from "@kabelsalat/lib/src/lib.js";
+import { AudioView } from "./audioview.js";
 import { transpiler } from "@kabelsalat/transpiler";
 
 export class SalatRepl {
