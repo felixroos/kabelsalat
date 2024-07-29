@@ -77,7 +77,7 @@ function updateCode(code) {
   url.searchParams.set("p", btoa(code));
   window.history.pushState({}, "", url);
   const firstLine = code.split("\n")[0].slice(0, 30);
-  document.title = "🔌" + firstLine;
+  document.title = firstLine;
   addToHistory(code);
 }
 
