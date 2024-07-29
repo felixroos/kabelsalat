@@ -20,7 +20,6 @@
     "vitest": "^1.6.0"
   },
   "dependencies": {
-    "@kabelsalat/core": "workspace:*",
-    "@kabelsalat/transpiler": "workspace:*"
+    "@kabelsalat/core": "workspace:*"
   }
 }
