@@ -20,7 +20,7 @@ export let receive = registerNode("receive", {
   ins: [],
   compile: (meta, ...args) => {
     args.unshift("nodes");
-    return def(
+    return langs[meta.lang].def(
       meta.name,
       `nodes[${meta.ugenIndex}].update(${args.join(",")})`,
       meta.node.type
@@ -30,7 +30,8 @@ export let receive = registerNode("receive", {
 export let send = registerNode("send", {
   ugen: "Send",
   ins: [],
-  compile: ({ vars: [_, input = 0], ...meta }) => defUgen(meta, input),
+  compile: ({ vars: [_, input = 0], ...meta }) =>
+    langs[meta.lang].defUgen(meta, input),
 });
 
 export let time = register("time", (code) => new Node("time", code), {

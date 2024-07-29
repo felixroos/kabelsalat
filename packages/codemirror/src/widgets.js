@@ -23,8 +23,10 @@ let widgetClasses = {
   _: SliderWidget,
   B: ButtonWidget,
 };
-registerWidgetType("_");
-registerWidgetType("B");
+registerWidgetType("_", "cc");
+registerWidgetType("B", "cc");
+registerWidgetType("I", "receive");
+registerWidgetType("O", "send");
 
 export const widgetPlugin = ViewPlugin.fromClass(
   class {
