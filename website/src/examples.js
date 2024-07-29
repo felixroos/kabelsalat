@@ -1,5 +1,46 @@
 export let examples = [
   {
+    label: "eddyflux - tapeloop",
+    code: `/* eddyflux - tapeloop
+use headphones to avoid feedback..
+    _________
+   |   ___   |
+   |  o___o  |
+   |__/___\__| 
+*/
+let tape = register(
+  "tape",
+  (
+    input,
+    id,
+    rec = 0,
+    monitor = 0,
+    dt = 1,
+    df = 1,
+    lvl = 1,
+    latency = 0.4,
+    dl = 0
+  ) =>
+    input
+      .mul(rec.lag(0.1))
+      .add((x) => x.delay(dt.lag(dl), id).mul(df))
+      .delay(latency)
+      .add(input.mul(monitor).mul(n(1).sub(rec)).mul(lvl))
+)
+
+audioin()
+  .tape(
+    "1",
+    B(0), // rec
+    B(0), // monitor
+    _(1.0, 1, 8), // loop length
+    _(1.00), // feedback
+    _(1.0) // lvl
+  )
+  .add(x=>x.delay(.15).mul(.7))
+  .out()`,
+  },
+  {
     label: "pulu - shall we trance",
     code: `// shall we trance, buttons & sliders version
 // by pulu : https://pulusound.fi
