@@ -3,6 +3,7 @@
   "version": "0.0.6",
   "type": "module",
   "module": "src/index.js",
+  "main": "src/index.js",
   "publishConfig": {
     "main": "dist/index.js",
     "module": "dist/index.mjs"
@@ -19,7 +20,6 @@
     "vitest": "^1.6.0"
   },
   "dependencies": {
-    "@kabelsalat/core": "workspace:*",
-    "@kabelsalat/transpiler": "workspace:*"
+    "@kabelsalat/core": "workspace:*"
   }
 }

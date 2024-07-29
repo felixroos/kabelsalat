@@ -1,6 +1,6 @@
-import "./compiler.js"; // Node.prototype.compile
-import { assert } from "./utils.js";
-import { MIDI, parseMidiMessage } from "./midi.js";
+import "@kabelsalat/core/src/compiler.js"; // Node.prototype.compile
+import { assert } from "@kabelsalat/core/src/utils.js";
+import { MIDI, parseMidiMessage } from "@kabelsalat/core/src/midi.js";
 
 // what follows are attempts at importing the worklet as a url
 // the problem: when ?url is used, the worklet.js file itself is not bundled.

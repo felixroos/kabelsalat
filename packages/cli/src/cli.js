@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
-import * as api from "@kabelsalat/core/dist/index.mjs";
+import * as core from "@kabelsalat/core/src/index.js";
+import * as lib from "@kabelsalat/lib/src/index.js";
 // for some reason, node will always take main and not module file...
 import { AudioGraph } from "@kabelsalat/core/src/audiograph.js";
 import { existsSync } from "node:fs";
@@ -65,17 +66,18 @@ const filePath = path.resolve(process.cwd(), file);
 const audioGraph = new AudioGraph(44100);
 
 // init midi
-const { MIDI, parseMidiMessage } = api;
+const { MIDI, parseMidiMessage } = core;
 const midi = new MIDI(navigator);
 midi.on("midimessage", (_, message) => {
   const msg = parseMidiMessage(message);
   msg && audioGraph.parseMsg(msg);
 });
 
-Object.assign(globalThis, api);
+Object.assign(globalThis, core);
+Object.assign(globalThis, lib);
 function update(code) {
   try {
-    const node = api.evaluate(code);
+    const node = core.evaluate(code);
     const unit = node.compile();
     audioGraph.parseMsg({ type: "NEW_UNIT", unit });
   } catch (err) {

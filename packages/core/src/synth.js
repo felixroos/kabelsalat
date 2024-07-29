@@ -75,12 +75,6 @@ export function ADSREnv() {
 
   this.startVal = 0;
 }
-
-// Reset the state of the envelope
-ADSREnv.prototype.reset = function () {
-  ADSREnv.call(this);
-};
-
 ADSREnv.prototype.eval = function (
   curTime,
   gate,
@@ -341,7 +335,7 @@ export class Delay {
     if (this.readIdx < 0) this.readIdx += this.buffer.length;
   }
 
-  read(delayTime) {
+  read() {
     return this.buffer[this.readIdx];
   }
 }
