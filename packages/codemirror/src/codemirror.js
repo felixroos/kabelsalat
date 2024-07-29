@@ -2,13 +2,24 @@ import { EditorView, minimalSetup } from "codemirror";
 import { kabelsalatTheme } from "./theme.js";
 import { javascript } from "@codemirror/lang-javascript";
 import { widgetPlugin } from "./widgets.js";
+import { flashField } from "./flash.js";
+import {
+  lineNumbers,
+  highlightActiveLineGutter,
+  highlightActiveLine,
+} from "@codemirror/view";
+import { bracketMatching } from "@codemirror/language";
 
 export function initEditor({ root, code, onChange, onEvaluate, onStop }) {
   let editor = new EditorView({
     extensions: [
       //basicSetup,
+      lineNumbers(),
+      [highlightActiveLine(), highlightActiveLineGutter()],
+      bracketMatching({ brackets: "()[]{}<>" }),
       minimalSetup,
       kabelsalatTheme,
+      flashField,
       widgetPlugin,
       EditorView.lineWrapping,
       javascript(),

@@ -1,1 +1,6 @@
 kabelsalat.js
+src/clib/dsp
+src/clib/wav.c
+src/clib/alsa.md
+src/kabelsalat
+src/kabelsalat.js.c

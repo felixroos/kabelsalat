@@ -1,4 +1,4 @@
-import { AudioGraph } from "./audiograph.js";
+import { AudioGraph } from "@kabelsalat/core/src/audiograph.js";
 
 // taken / slightly modified from noisecraft
 // https://github.com/maximecb/noisecraft

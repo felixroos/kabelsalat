@@ -11,6 +11,9 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "@kabelsalat/core": "workspace:*"
+    "@kabelsalat/core": "workspace:*",
+    "jgf-dot": "^1.1.1",
+    "graphviz": "link:@hpcc-js/wasm/graphviz",
+    "@hpcc-js/wasm": "^2.16.2"
   }
 }

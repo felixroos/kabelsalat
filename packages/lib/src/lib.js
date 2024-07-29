@@ -7,21 +7,12 @@ import {
   nodeRegistry,
   assert,
 } from "@kabelsalat/core";
-import { registerWidgetType } from "@kabelsalat/transpiler";
+import * as js from "./lang/js.js";
+import * as c from "./lang/c.js";
 
-registerWidgetType("_", "cc");
-registerWidgetType("B", "cc");
-registerWidgetType("I", "receive");
-registerWidgetType("O", "send");
-
-let def = (name, value, comment) =>
-  `const ${name} = ${value};${comment ? ` /* ${comment} */` : ""}`;
-let defUgen = (meta, ...args) => {
-  return def(
-    meta.name,
-    `nodes[${meta.ugenIndex}].update(${args.join(",")})`,
-    meta.node.type
-  );
+const langs = {
+  js,
+  c,
 };
 
 export let receive = registerNode("receive", {
@@ -45,7 +36,7 @@ export let send = registerNode("send", {
 export let time = register("time", (code) => new Node("time", code), {
   tags: ["meta"],
   description: "Returns elapsed time in seconds",
-  compile: ({ name }) => def(name, "time"),
+  compile: ({ name, lang }) => langs[lang].def(name, "time"),
 });
 
 export let raw = register(
@@ -137,11 +128,25 @@ export let adsr = registerNode("adsr", {
   compile: ({
     vars: [gate = 0, att = 0.02, dec = 0.1, sus = 0.2, rel = 0.1],
     ...meta
-  }) => defUgen(meta, "time", gate, att, dec, sus, rel),
+  }) => langs[meta.lang].defUgen(meta, "time", gate, att, dec, sus, rel),
 });
+export let ar = module(
+  "ar",
+  (gate = 0, attack = 0.02, release = 0.1) => gate.adsr(attack, 0, 1, release),
+  {
+    tags: ["envelope"],
+    description: "AR envelope",
+    examples: [`impulse(1).ad(.01, .1).mul(sine(220)).out()`],
+    ins: [
+      { name: "trig", default: 0, description: "gate input" },
+      { name: "att", default: 0.02, description: "attack time" },
+      { name: "rel", default: 0.1, description: "release time" },
+    ],
+  }
+);
 export let ad = module(
   "ad",
-  (gate = 0, attack = 0.02, decay = 0.1) => gate.adsr(attack, 0, 1, decay),
+  (gate = 0, attack = 0.02, decay = 0.1) => gate.adsr(attack, decay, 0, decay),
   {
     tags: ["envelope"],
     description: "AD envelope",
@@ -167,7 +172,8 @@ export let clock = registerNode("clock", {
       description: "clock tempo in bpm (beats per minute)",
     },
   ],
-  compile: ({ vars: [bpm = 120], ...meta }) => defUgen(meta, bpm),
+  compile: ({ vars: [bpm = 120], ...meta }) =>
+    langs[meta.lang].defUgen(meta, bpm),
 });
 export let clockdiv = registerNode("clockdiv", {
   ugen: "ClockDiv",
@@ -179,7 +185,7 @@ export let clockdiv = registerNode("clockdiv", {
     { name: "divisor", default: 2, description: "tempo divisor" },
   ],
   compile: ({ vars: [clock = 0, divisor = 2], ...meta }) =>
-    defUgen(meta, clock, divisor),
+    langs[meta.lang].defUgen(meta, clock, divisor),
 });
 
 export let distort = registerNode("distort", {
@@ -196,7 +202,7 @@ export let distort = registerNode("distort", {
     { name: "amt", default: 0, description: "distortion amount" },
   ],
   compile: ({ vars: [input = 0, amt = 0], ...meta }) =>
-    defUgen(meta, input, amt),
+    langs[meta.lang].defUgen(meta, input, amt),
 });
 
 export let noise = registerNode("noise", {
@@ -205,7 +211,7 @@ export let noise = registerNode("noise", {
   description: "White noise source",
   examples: ["noise().mul(.25).out()"],
   ins: [],
-  compile: defUgen,
+  compile: ({ lang, ...meta }) => langs[lang].defUgen(meta),
 });
 
 // todo: how to show "pink" in reference?
@@ -215,7 +221,7 @@ export let pink = registerNode("pink", {
   description: "Pink noise source",
   examples: ["pink().mul(.5).out()"],
   ins: [],
-  compile: defUgen,
+  compile: ({ lang, ...meta }) => langs[lang].defUgen(meta),
 });
 
 export let brown = registerNode("brown", {
@@ -224,7 +230,7 @@ export let brown = registerNode("brown", {
   description: "Brown noise source",
   examples: ["brown().out()"],
   ins: [],
-  compile: defUgen,
+  compile: ({ lang, ...meta }) => langs[lang].defUgen(meta),
 });
 
 export let dust = registerNode("dust", {
@@ -235,7 +241,8 @@ export let dust = registerNode("dust", {
   ins: [
     { name: "density", default: 0, description: "average impulses per second" },
   ],
-  compile: ({ vars: [density = 0], ...meta }) => defUgen(meta, density),
+  compile: ({ vars: [density = 0], ...meta }) =>
+    langs[meta.lang].defUgen(meta, density),
 });
 
 export let impulse = registerNode("impulse", {
@@ -248,7 +255,7 @@ export let impulse = registerNode("impulse", {
     { name: "phase", default: 0 },
   ],
   compile: ({ vars: [freq = 0, phase = 0], ...meta }) =>
-    defUgen(meta, freq, phase),
+    langs[meta.lang].defUgen(meta, freq, phase),
 });
 export let saw = registerNode("saw", {
   ugen: "SawOsc",
@@ -256,7 +263,8 @@ export let saw = registerNode("saw", {
   description: "Sawtooth wave oscillator",
   examples: ["saw(110).mul(.5).out()"],
   ins: [{ name: "freq", default: 0 }],
-  compile: ({ vars: [freq = 0], ...meta }) => defUgen(meta, freq),
+  compile: ({ vars: [freq = 0], ...meta }) =>
+    langs[meta.lang].defUgen(meta, freq),
 });
 export let sine = registerNode("sine", {
   tags: ["regular", "waveform", "source"],
@@ -269,7 +277,7 @@ export let sine = registerNode("sine", {
     { name: "phase", default: 0, description: "phase offset" },
   ],
   compile: ({ vars: [freq = 0, sync = 0, phase = 0], ...meta }) =>
-    defUgen(meta, freq, sync, phase),
+    langs[meta.lang].defUgen(meta, freq, sync, phase),
 });
 export let tri = registerNode("tri", {
   ugen: "TriOsc",
@@ -277,7 +285,8 @@ export let tri = registerNode("tri", {
   description: "Triangle wave oscillator",
   examples: ["tri(220).out()"],
   ins: [{ name: "freq", default: 0 }],
-  compile: ({ vars: [freq = 0], ...meta }) => defUgen(meta, freq),
+  compile: ({ vars: [freq = 0], ...meta }) =>
+    langs[meta.lang].defUgen(meta, freq),
 });
 
 export let pulse = registerNode("pulse", {
@@ -289,7 +298,8 @@ export let pulse = registerNode("pulse", {
     { name: "freq", default: 0 },
     { name: "pw", default: 0.5, description: "pulse width 0 - 1" },
   ],
-  compile: ({ vars: [freq = 0, pw = 0.5], ...meta }) => defUgen(meta, freq, pw),
+  compile: ({ vars: [freq = 0, pw = 0.5], ...meta }) =>
+    langs[meta.lang].defUgen(meta, freq, pw),
 });
 
 export let slide = registerNode("slide", {
@@ -306,7 +316,7 @@ export let slide = registerNode("slide", {
     { name: "rate", default: 1 },
   ],
   compile: ({ vars: [input = 0, rate = 1], ...meta }) =>
-    defUgen(meta, input, rate),
+    langs[meta.lang].defUgen(meta, input, rate),
 });
 export let lag = registerNode("lag", {
   ugen: "Lag",
@@ -321,7 +331,7 @@ export let lag = registerNode("lag", {
     { name: "rate", default: 1, description: "60 dB lag time in seconds" },
   ],
   compile: ({ vars: [input = 0, rate = 1], ...meta }) =>
-    defUgen(meta, input, rate),
+    langs[meta.lang].defUgen(meta, input, rate),
 });
 
 // feedback_write doesn't need a creation function, because it's created internally in dagify
@@ -329,8 +339,12 @@ nodeRegistry.set("feedback_write", {
   internal: true,
   tags: ["innards"],
   description: "Writes to the feedback buffer. Not intended for direct use",
-  compile: ({ vars, node, name }) =>
-    def(name, `nodes[${node.to}].write(${vars[0]})`, "feedback_write"),
+  compile: ({ vars, node, name, lang }) =>
+    langs[lang].def(
+      name,
+      langs[lang].feedbackWrite(node.to, vars[0]),
+      "feedback_write"
+    ),
 });
 export let feedback_read = registerNode("feedback_read", {
   ugen: "Feedback",
@@ -345,7 +359,7 @@ export let feedback_read = registerNode("feedback_read", {
       (node) => node.type === "feedback_write" && String(node.to) === id
     );
     writer.to = ugenIndex;
-    return defUgen(meta, ...vars);
+    return langs[meta.lang].defUgen(meta, ...vars);
   },
 });
 export let slew = registerNode("slew", {
@@ -368,7 +382,7 @@ export let slew = registerNode("slew", {
     },
   ],
   compile: ({ vars: [input = 0, up = 1, dn = 1], ...meta }) =>
-    defUgen(meta, input, up, dn),
+    langs[meta.lang].defUgen(meta, input, up, dn),
 });
 export let filter = registerNode("filter", {
   ugen: "Filter",
@@ -382,7 +396,7 @@ export let filter = registerNode("filter", {
     { name: "reso", default: 0 },
   ],
   compile: ({ vars: [input = 0, cutoff = 1, reso = 0], ...meta }) =>
-    defUgen(meta, input, cutoff, reso),
+    langs[meta.lang].defUgen(meta, input, cutoff, reso),
 });
 export let fold = registerNode("fold", {
   ugen: "Fold",
@@ -398,7 +412,7 @@ export let fold = registerNode("fold", {
     { name: "rate", default: 0 },
   ],
   compile: ({ vars: [input = 0, rate = 0], ...meta }) =>
-    defUgen(meta, input, rate),
+    langs[meta.lang].defUgen(meta, input, rate),
 });
 export let seq = registerNode("seq", {
   ugen: "Sequence",
@@ -413,7 +427,7 @@ export let seq = registerNode("seq", {
     { name: "step", default: 0, dynamic: true, description: "step inputs" },
     // 1-Infinity of steps
   ],
-  compile: ({ vars, ...meta }) => defUgen(meta, ...vars),
+  compile: ({ vars, ...meta }) => langs[meta.lang].defUgen(meta, ...vars),
 });
 export let delay = registerNode("delay", {
   ugen: "Delay",
@@ -428,7 +442,7 @@ export let delay = registerNode("delay", {
     { name: "time", default: 0 },
   ],
   compile: ({ vars: [input = 0, time = 0], ...meta }) =>
-    defUgen(meta, input, time),
+    langs[meta.lang].defUgen(meta, input, time),
 });
 export let hold = registerNode("hold", {
   ugen: "Hold",
@@ -443,7 +457,7 @@ export let hold = registerNode("hold", {
     { name: "trig", default: 0 },
   ],
   compile: ({ vars: [input = 0, trig = 0], ...meta }) =>
-    defUgen(meta, input, trig),
+    langs[meta.lang].defUgen(meta, input, trig),
 });
 /*export let midin = registerNode("MidiIn",{
     ins: [],
@@ -461,7 +475,8 @@ export let midifreq = registerNode("midifreq", {
       description: "Channel filter. Defaults to all channels",
     },
   ],
-  compile: ({ vars: [channel = -1], ...meta }) => defUgen(meta, channel),
+  compile: ({ vars: [channel = -1], ...meta }) =>
+    langs[meta.lang].defUgen(meta, channel),
 });
 export let midigate = registerNode("midigate", {
   ugen: "MidiGate",
@@ -470,7 +485,8 @@ export let midigate = registerNode("midigate", {
     "outputs gate of midi note in. Multiple instances will do voice allocation",
   examples: [`midigate().lag(1).mul(sine(220)).out()`],
   ins: [{ name: "channel", default: -1 }],
-  compile: ({ vars: [channel = -1], ...meta }) => defUgen(meta, channel),
+  compile: ({ vars: [channel = -1], ...meta }) =>
+    langs[meta.lang].defUgen(meta, channel),
 });
 export let midicc = registerNode("midicc", {
   ugen: "MidiCC",
@@ -482,7 +498,7 @@ export let midicc = registerNode("midicc", {
     { name: "channel", default: -1 },
   ],
   compile: ({ vars: [ccnumber = -1, channel = -1], ...meta }) =>
-    defUgen(meta, ccnumber, channel),
+    langs[meta.lang].defUgen(meta, ccnumber, channel),
 });
 
 export let cc = registerNode("cc", {
@@ -502,7 +518,7 @@ export let cc = registerNode("cc", {
       !types.find((type) => !["number", "undefined"].includes(type)),
       "_ only accepts static numbers"
     );
-    return defUgen(meta);
+    return langs[meta.lang].defUgen(meta);
   },
 });
 
@@ -512,7 +528,7 @@ export let audioin = registerNode("audioin", {
   description: "External Audio Input, depends on your system input",
   examples: [`audioin().add(x=>x.delay(.1).mul(.8)).out()`],
   ins: [],
-  compile: (meta) => defUgen(meta, "input"),
+  compile: (meta) => langs[meta.lang].defUgen(meta, "input"),
 });
 
 // non-audio nodes
@@ -520,82 +536,103 @@ export let log = registerNode("log", {
   tags: ["math"],
   description: "calculates the logarithm (base 10) of the input signal",
   ins: [{ name: "in" }],
-  compile: ({ vars: [input = 0], name }) => def(name, `Math.log(${input})`),
+  compile: ({ vars: [input = 0], name, lang }) =>
+    langs[lang].def(name, langs[lang].log(input)),
 });
 export let exp = registerNode("exp", {
   tags: ["math"],
   description: "raises e to the power of the input signal",
   ins: [{ name: "in" }],
-  compile: ({ vars: [input = 0], name }) => def(name, `Math.exp(${input})`),
+  compile: ({ vars: [input = 0], name, lang }) =>
+    langs[lang].def(name, langs[lang].exp(input)),
 });
 export let pow = registerNode("pow", {
   tags: ["math"],
   description: "raises the input to the given power",
   ins: [{ name: "in" }, { name: "power" }],
-  compile: ({ vars: [input = 0, power = 1], name }) =>
-    def(name, `Math.pow(${input},${power})`),
+  compile: ({ vars: [input = 0, power = 1], name, lang }) =>
+    langs[lang].def(name, langs[lang].pow(input, power)),
 });
 export let sin = registerNode("sin", {
   tags: ["math"],
   description: "calculates the sine of the input signal",
   ins: [{ name: "in" }],
-  compile: ({ vars: [input = 0], name }) => def(name, `Math.sin(${input})`),
+  compile: ({ vars: [input = 0], name, lang }) =>
+    langs[lang].def(name, langs[lang].defSin(input)),
 });
 export let cos = registerNode("cos", {
   tags: ["math"],
   description: "calculates the cosine of the input signal",
   ins: [{ name: "in" }],
-  compile: ({ vars: [input = 0], name }) => def(name, `Math.cos(${input})`),
+  compile: ({ vars: [input = 0], name, lang }) =>
+    langs[lang].def(name, langs[lang].defCos(input)),
 });
 export let mul = registerNode("mul", {
   tags: ["math"],
   description: "Multiplies the given signals.",
   examples: [`sine(220).mul( sine(4).range(.25,1) ).out()`],
   ins: [{ name: "in", dynamic: true }],
-  compile: ({ vars, name }) => def(name, vars.join(" * ") || 0),
+  compile: ({ vars, name, lang }) =>
+    langs[lang].def(name, vars.join(" * ") || 0),
 });
 export let add = registerNode("add", {
   tags: ["math"],
   description: "sums the given signals",
   examples: [`n([0,3,7,10]).add(60).midinote().sine().mix(2).out()`],
   ins: [{ name: "in", dynamic: true }],
-  compile: ({ vars, name }) => def(name, vars.join(" + ") || 0),
+  compile: ({ vars, name, lang }) =>
+    langs[lang].def(name, vars.join(" + ") || 0),
 });
 export let div = registerNode("div", {
   tags: ["math"],
   description: "adds the given signals",
   ins: [{ name: "in", dynamic: true }],
-  compile: ({ vars, name }) => def(name, vars.join(" / ") || 0),
+  compile: ({ vars, name, lang }) =>
+    langs[lang].def(name, vars.join(" / ") || 0),
 });
 export let sub = registerNode("sub", {
   tags: ["math"],
   description: "subtracts the given signals",
   ins: [{ name: "in", dynamic: true }],
-  compile: ({ vars, name }) => def(name, vars.join(" - ") || 0),
+  compile: ({ vars, name, lang }) =>
+    langs[lang].def(name, vars.join(" - ") || 0),
 });
 export let mod = registerNode("mod", {
   tags: ["math"],
   description: "calculates the modulo",
   examples: [`add(x=>x.add(.003).mod(1)).out()`],
   ins: [{ name: "in" }, { name: "modulo" }],
-  compile: ({ vars, name }) => def(name, vars.join(" % ") || 0),
+  compile: ({ vars, name, lang }) =>
+    langs[lang].def(name, langs[lang].mod(...vars) || 0),
+});
+export let greater = registerNode("greater", {
+  tags: ["math"],
+  description: "returns 1 if input is greater then threshold",
+  ins: [{ name: "in" }, { name: "threshold" }],
+  examples: [
+    `greater(sine(1),0)
+.bipolar().range(100,200)
+.sine().out()`,
+  ],
+  compile: ({ vars: [a = 0, b = 0], name, lang }) =>
+    langs[lang].def(name, `${a} > ${b}`),
 });
 export let range = registerNode("range", {
   tags: ["math"],
   description: "Scales the incoming bipolar value to the given range.",
   examples: [`sine(.5).range(.25,1).mul(sine(440)).out()`],
   ins: [{ name: "in" }, { name: "min" }, { name: "max" }],
-  compile: ({ vars, name }) => {
+  compile: ({ vars, name, lang }) => {
     const [bipolar, min, max, curve = 1] = vars;
     // bipolar [-1,1] to unipolar [0,1] => (v+1)/2
     const unipolar = `((${bipolar} + 1) * 0.5)`;
-    const shaped = curve === 1 ? unipolar : `Math.pow(${unipolar}, ${curve})`;
-    return def(name, `${shaped} * (${max} - ${min}) + ${min}`);
+    const shaped = curve === 1 ? unipolar : langs[lang].pow(unipolar, curve);
+    return langs[lang].def(name, `${shaped} * (${max} - ${min}) + ${min}`);
   },
 });
 
 export let thru = registerNode("thru", {
-  compile: ({ name, vars }) => def(name, vars[0], "thru"),
+  compile: ({ name, vars, lang }) => langs[lang].def(name, vars[0], "thru"),
 });
 
 export let rangex = module(
@@ -616,8 +653,8 @@ export let rangex = module(
 );
 
 export let midinote = registerNode("midinote", {
-  compile: ({ vars: [note], name }) =>
-    def(name, `(2 ** ((${note} - 69) / 12) * 440)`),
+  compile: ({ vars: [note], name, lang }) =>
+    langs[lang].def(name, langs[lang].midinote(note)),
   tags: ["math"],
   description: "convert midi number to frequency",
   ins: [{ name: "midi" }],
@@ -628,7 +665,7 @@ export let midinote = registerNode("midinote", {
 });
 export let dac = registerNode("dac", {
   internal: true,
-  compile: ({ vars }) => {
+  compile: ({ vars, lang }) => {
     let channels;
     if (!vars.length) {
       console.warn(`no input.. call .out() to play`);
@@ -643,7 +680,7 @@ export let dac = registerNode("dac", {
       console.warn("returned more than 2 channels.. using first 2");
       channels = channels.slice(0, 2);
     }
-    return `return [${channels.map((chan) => `(${chan}*lvl)`).join(",")}]`;
+    return langs[lang].returnLine(channels);
   },
 });
 export let exit = registerNode("exit", { internal: true });
@@ -763,7 +800,8 @@ export let mix = register(
     return node("mix").withIns(...input.ins);
   },
   {
-    compile: ({ vars, name }) => def(name, `(${vars.join(" + ")})`),
+    compile: ({ vars, name, lang }) =>
+      langs[lang].def(name, `(${vars.join(" + ")})`),
     description: `mixes down multiple channels. Useful to make sure you get a mono or stereo signal out at the end. 
 When mixing down to 2 channels, the input channels are equally distributed over the stereo image, e.g. 3 channels are panned [-1,0,1]`,
     ins: [
@@ -786,7 +824,7 @@ Node.prototype.feedback = function (fn) {
 export let feedback = (fn) => add(fn);
 
 // todo: remaining noisecraft nodes
-// Greater, ClockOut, Scope, BitCrush?
+// ClockOut, Scope, BitCrush?
 
 /* Scope: {
     ins: [{ name: "", default: 0 }],
@@ -794,3 +832,7 @@ export let feedback = (fn) => add(fn);
     sendSize: 5,
     historyLen: 150,
   }, */
+
+// no-widget fallback
+export let B = n;
+export let _ = n;

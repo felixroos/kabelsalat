@@ -418,15 +418,10 @@ export function evaluate(code) {
     portals.push(node);
     return node;
   };
-  try {
-    Function(code)();
-    const exit = dac(...nodes).exit();
-    exit.ins = exit.ins.concat(portals);
-    return exit;
-  } catch (err) {
-    console.error(err);
-    return n(0);
-  }
+  Function(code)();
+  const exit = dac(...nodes).exit();
+  exit.ins = exit.ins.concat(portals);
+  return exit;
 }
 
 // is this needed?
