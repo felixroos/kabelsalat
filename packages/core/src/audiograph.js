@@ -86,7 +86,7 @@ export class AudioGraph {
       case "STOP":
         this.stop();
         break;
-      case "ADD_UGEN":
+      case "SET_UGEN":
         this.addUgen(msg.className, msg.ugen);
         break;
 

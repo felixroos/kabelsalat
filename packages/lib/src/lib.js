@@ -19,7 +19,7 @@ const langs = {
 export const registerUgen = (type, className) =>
   registerNode(type, {
     ugen: className,
-    compile: ({ vars, ...meta }) => defUgen(meta, ...vars),
+    compile: ({ vars, ...meta }) => langs[meta.lang].defUgen(meta, ...vars),
   });
 
 export let time = register("time", (code) => new Node("time", code), {

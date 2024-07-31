@@ -112,7 +112,7 @@ export function Repl() {
     try {
       // reset fadeTime?
       setCode(_code);
-      await repl.audio.init();
+      // await repl.audio.init(); // init also called in repl.play ...
       const node = evaluate();
       node.render(container, vizSettings); // update viz
       updateCode(_code);
