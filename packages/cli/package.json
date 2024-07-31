@@ -6,13 +6,17 @@
   "author": "Felix Roos <flix91@gmail.com>",
   "license": "AGPL-3.0-or-later",
   "scripts": {
-    "test": "node src/cli.js"
+    "test": "node src/cli.js",
+    "ks2c": "pnpm ks2c:compile && pnpm ks2c:build && pnpm ks2c:run",
+    "ks2c:compile": "cd src && node ks2c.js",
+    "ks2c:build": "cd src && gcc -o kabelsalat kabelsalat.js.c -lm",
+    "ks2c:run": "cd src && ./kabelsalat | sox -traw -r44100 -b32 -e float -c 2 - -tcoreaudio"
   },
   "dependencies": {
     "@kabelsalat/core": "workspace:*",
+    "@kabelsalat/lib": "workspace:*",
     "chokidar": "^3.6.0",
     "jzz": "^1.8.5",
-    "speaker": "^0.5.5",
     "yesno": "^0.4.0"
   }
 }

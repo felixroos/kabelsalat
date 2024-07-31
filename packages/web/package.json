@@ -1,5 +1,5 @@
 {
-  "name": "@kabelsalat/core",
+  "name": "@kabelsalat/web",
   "version": "0.0.6",
   "type": "module",
   "module": "src/index.js",
@@ -14,6 +14,11 @@
     "build": "vite build",
     "prepublishOnly": "npm run build",
     "test": "vitest"
+  },
+  "dependencies": {
+    "@kabelsalat/core": "workspace:*",
+    "@kabelsalat/transpiler": "workspace:*",
+    "@kabelsalat/lib": "workspace:*"
   },
   "devDependencies": {
     "vite": "^5.2.0",

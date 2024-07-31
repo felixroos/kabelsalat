@@ -1,0 +1,295 @@
+---
+title: Web Audio Iceberg
+layout: ../layouts/doc.astro
+---
+
+# The Web Audio Iceberg
+
+| method          | static | dynamic | ar feedback | portability | difficulty |
+| --------------- | ------ | ------- | ----------- | ----------- | ---------- |
+| Tone.js         | 🟢     | 🔴      | 🔴          | 🔴          | 🟢         |
+| Web Audio Nodes | 🟢     | 🟡      | 🔴          | 🔴          | 🟡         |
+| AudioWorklet    | 🟢     | ❔      | 🟢          | 🟢          | 🔴         |
+
+## Tone.js
+
+Tone.js is the go to Web Audio framework. It has a wide variety of synths and FX
+Under the hood, it uses Web Audio API Nodes.
+
+- 🔴 **dynamic graph**: It is not designed for "fire and forget", so spawning new synths and FX at runtime will not work.
+- 🔴 **audio-rate feedback**: Because it's based on Web Audio Nodes, feedback is only at control rate.
+- 🔴 **portable**: It only runs on the web
+
+```js
+const synth = new Tone.Synth().toDestination();
+const now = Tone.now();
+synth.triggerAttackRelease("A4", "8n", now);
+synth.triggerAttackRelease("C4", "8n", now + 0.5);
+synth.triggerAttackRelease("E4", "8n", now + 1);
+```
+
+[tonejs.github.io](https://tonejs.github.io/)
+
+## Web Audio Nodes
+
+The Web Audio API comes with a decent number of Nodes that can be used to do audio processing, e.g. `OscillatorNode`, `BiquadFilterNode` etc..
+
+- 🟡 **dynamic graph**: It is designed for "fire and forget", so spawning new synths and FX at runtime is possible, tho still inefficient. This is what Strudel does.
+- 🔴 **audio-rate feedback**: The Web Audio Nodes will only let you do feedback at control rate.
+- 🔴 **portability**: It is a web-only API, although [node-web-audio-api](https://github.com/ircam-ismm/node-web-audio-api) exists. Still a huge API surface for portability.
+
+```js
+const ctx = new AudioContext();
+const osc = new OscillatorNode(ctx);
+osc.connect(ctx.destination);
+osc.start();
+const now = ctx.currentTime + 0.1;
+osc.frequency.setValueAtTime(440, now);
+osc.frequency.setValueAtTime(550, now + 0.5);
+osc.frequency.setValueAtTime(660, now + 1);
+osc.frequency.setValueAtTime(0, now + 1.5);
+```
+
+you can paste the above code in the browser console!
+
+[Web Audio API on MDN](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API)
+
+### superdough
+
+superdough is the audio engine of strudel and it uses Web Audio Nodes as well.
+There is only a single function called `superdough` to trigger sounds:
+
+```js
+const t = getAudioContext().currentTime;
+superdough({ freq: 440 }, t, 0.5);
+superdough({ freq: 550 }, t + 0.5, 0.5);
+superdough({ freq: 660 }, t + 1.5);
+```
+
+The same function can also play samples + apply effects etc..
+
+[Demo](https://codesandbox.io/p/sandbox/superdough-demo-forked-sf8djh?file=%2Fsrc%2Findex.js%3A12%2C4)
+
+## One Sample At A Time Please
+
+All the above methods are just abstractions over abstractions.. If we dive down the audio iceberg, we have to deal with cold hard numbers 🥶
+
+### ScriptProcessorNode
+
+This Node is a special Web Audio Node to give you an audio callback to calculate your own audio samples / speaker positions:
+
+```js
+document.onclick = () => {
+  let ctx = new AudioContext(),
+    sn = ctx.createScriptProcessor(),
+    t = 0, // global time
+    isr = 1 / 44100; // time of one sample
+  sn.connect(ctx.destination);
+  sn.onaudioprocess = (e) => {
+    let o = e.outputBuffer,
+      l = o.getChannelData(0), // left channel
+      r = o.getChannelData(1); // right channel
+    let dsp = (t) => ((55 * t) % 1) / 10; // write dsp here!
+    for (let s = 0; s < o.length; s++) {
+      // loop through buffer
+      l[s] = r[s] = dsp(t);
+      t += isr; // advance time
+    }
+  };
+};
+```
+
+While it is nice and short, it is now deprecated, in favor of..
+
+### AudioWorklet
+
+The AudioWorkletNode also lets you calculate audio samples by yourself, but on a separate audio thread! This means better performance..
+
+- ❔ **dynamic graph**: It remains to be tested how well dynamic graphs work within AudioWorklets.
+- 🟢 **audio-rate feedback**: Is possible
+- 🟢 **portability**: The ties to the Web are minimal when the whole Audio DSP is running in a single AudioWorklet, so porting (and testing) is easy. You can even combine them with WASM, which means sky is the limit.
+
+<details>
+<summary>show boilerplate code</summary>
+
+```js
+let ac;
+document.addEventListener("click", function initAudio() {
+  ac = new AudioContext();
+  ac.resume();
+  document.removeEventListener("click", initAudio);
+});
+
+async function getSimpleDynamicWorklet(ac, code, hz = ac.sampleRate) {
+  const name = `simple-custom-${Date.now()}`;
+  let srcSampleRate = hz || ac.sampleRate;
+  const workletCode = `${code}
+        class MyProcessor extends AudioWorkletProcessor {
+  constructor() {
+    super();
+    this.t = 0;
+    this.stopped = false;
+    this.port.onmessage = (e) => {
+      if(e.data==='stop') {
+        this.stopped = true;
+      }
+    };
+  }
+  process(inputs, outputs, parameters) {
+    const output = outputs[0];
+    for (let i = 0; i < output[0].length; i++) {
+      const out = dsp(this.t / ${ac.sampleRate});
+      output.forEach((channel) => {
+        channel[i] = out;
+      });
+      this.t++;
+    }
+    return !this.stopped;
+  }
+}
+registerProcessor('${name}', MyProcessor);
+  `;
+  const base64String = btoa(workletCode);
+  const dataURL = `data:text/javascript;base64,${base64String}`;
+  if (!ac.audioWorklet) {
+    console.error(
+      "You need to be on a secure origin (https or localhost) site!"
+    );
+  }
+  await ac.audioWorklet.addModule(dataURL);
+  const node = new AudioWorkletNode(ac, name);
+  const stop = () => node.port.postMessage("stop");
+  return { node, stop };
+}
+
+// control
+let worklet,
+  hz = 44100;
+const stop = async () => {
+  worklet?.stop();
+  worklet?.node?.disconnect();
+};
+const update = async (code) => {
+  ac = ac || new AudioContext();
+  await ac.resume();
+  stop();
+  worklet = await getSimpleDynamicWorklet(ac, code, hz);
+  worklet.node.connect(ac.destination);
+};
+```
+
+</details>
+
+you can paste the above boilerplate code in the browser console! Then you can run any DSP with `update`:
+
+```js
+update(`
+let time;
+let sin = (freq) => Math.sin(freq * time * 2 * Math.PI)
+let seq = (speed, items) => items[Math.floor(time*speed)%items.length]
+function dsp(t) {
+  time = t;
+  return sin(seq(1, [440, 550, 660]))*0.4
+}
+`);
+```
+
+To stop, run `stop()`
+
+### doughbeat
+
+[doughbeat](https://github.com/felixroos/doughbeat) is a single html file bytebeat/dsp editor.
+
+[dsp lvl 1](https://loophole-letters.netlify.app/dsp-lvl1/)
+
+## Audio Graphs
+
+graphs are everywhere..
+
+- pure data
+- max
+- supercollider
+- glicol
+- web audio api
+- [noisecraft](https://noisecraft.app/)
+
+maybe it is a good abstraction...
+
+### kabelsalat
+
+This is where kabelsalat comes in..
+
+import { MiniRepl } from "../components/MiniRepl";
+
+<MiniRepl
+  code="impulse(2).seq(440, 550, 660).sine().out()"
+  client:visible="solid"
+/>
+
+[kabelsalat intro](/kabelsalat/learn/)
+
+## bytebeat
+
+```c
+// bytebeat.c
+#include <stdio.h>
+int main() {
+  int t = 0;
+  while(1) {
+    putchar(t&t>>8);
+    t++;
+  }
+}
+```
+
+or short version:
+
+```c
+#include <stdio.h>
+int main(t) {for(;;t++)putchar(
+(t&t&t>>8) // <--- replace this line with any bytebeat
+);}
+```
+
+- install `sox` (e.g. `brew install sox` on MacOS)
+- compile via `gcc -o bytebeat bytebeat.c`
+- run `./bytebeat | sox -traw -r8000 -b8 -e unsigned-integer - -tcoreaudio` (replace 8000 with sample rate)
+- replace `i&i>>8` with any bytebeat code!
+  - `(t*5&t>>7)|(t*3&t>>10)` 8000
+  - `(int)(t/1e7*t*t+t)%127|t>>4|t>>5|t%127+(t>>16)|t` 8000
+  - `((t*("36364689"[t>>13&7]&15))/12&128)+(((((t>>12)^(t>>12)-2)%11*t)/4|t>>13)&127)` 44100
+
+[Bytebeat Video](https://www.youtube.com/watch?v=tCRPUv8V22o)
+
+### bytebeat in the browser
+
+```js
+document.onclick = () => {
+  let ctx = new AudioContext(),
+    sn = ctx.createScriptProcessor(),
+    t = 0,
+    isr = 1 / 44100;
+  sn.connect(ctx.destination);
+  let bytebeat = (code, hz) => (t) =>
+    (new Function("t", `return ${code}`)(t * hz) & 255) / 127.5 - 1;
+  let floatbeat = (code, hz) => (t) =>
+    new Function("t", `return ${code}`)(t * hz);
+  let dsp = bytebeat(
+    '((t*("36364689"[t>>13&7]&15))/12&128)+(((((t>>12)^(t>>12)-2)%11*t)/4|t>>13)&127)',
+    44100
+  );
+  sn.onaudioprocess = (e) => {
+    let o = e.outputBuffer;
+    let l = o.getChannelData(0);
+    let r = o.getChannelData(1);
+    for (let s = 0; s < o.length; s++) {
+      l[s] = r[s] = dsp(t) / 4;
+      t += isr;
+    }
+  };
+};
+```
+
+## compiling kabelsalat patches to c
+
+diving deeper..

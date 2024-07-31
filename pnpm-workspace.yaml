@@ -3,3 +3,4 @@ packages:
   - "website"
   - "packages/*"
   - "!packages/cli"
+  - "test"

@@ -21,24 +21,9 @@ importers:
         specifier: ^1.8.15
         version: 1.8.18
     devDependencies:
-      autoprefixer:
-        specifier: ^10.4.19
-        version: 10.4.19(postcss@8.4.38)
       lerna:
         specifier: 8.1.4
         version: 8.1.4(encoding@0.1.13)
-      postcss:
-        specifier: ^8.4.38
-        version: 8.4.38
-      tailwindcss:
-        specifier: ^3.4.4
-        version: 3.4.6
-      vite:
-        specifier: ^5.2.0
-        version: 5.3.1
-      vite-plugin-solid:
-        specifier: ^2.10.2
-        version: 2.10.2(solid-js@1.8.18)(vite@5.3.1)
 
   packages/codemirror:
     dependencies:
@@ -75,18 +60,24 @@ importers:
 
   packages/graphviz:
     dependencies:
+      '@hpcc-js/wasm':
+        specifier: ^2.16.2
+        version: 2.17.0
       '@kabelsalat/core':
         specifier: workspace:*
         version: link:../core
+      graphviz:
+        specifier: link:@hpcc-js/wasm/graphviz
+        version: link:@hpcc-js/wasm/graphviz
+      jgf-dot:
+        specifier: ^1.1.1
+        version: 1.1.1
 
   packages/lib:
     dependencies:
       '@kabelsalat/core':
         specifier: workspace:*
         version: link:../core
-      '@kabelsalat/transpiler':
-        specifier: workspace:*
-        version: link:../transpiler
     devDependencies:
       vite:
         specifier: ^5.2.0
@@ -114,6 +105,44 @@ importers:
         specifier: ^5.2.0
         version: 5.3.1
 
+  packages/web:
+    dependencies:
+      '@kabelsalat/core':
+        specifier: workspace:*
+        version: link:../core
+      '@kabelsalat/lib':
+        specifier: workspace:*
+        version: link:../lib
+      '@kabelsalat/transpiler':
+        specifier: workspace:*
+        version: link:../transpiler
+    devDependencies:
+      vite:
+        specifier: ^5.2.0
+        version: 5.3.1
+      vitest:
+        specifier: ^1.6.0
+        version: 1.6.0
+
+  test:
+    dependencies:
+      '@kabelsalat/core':
+        specifier: workspace:*
+        version: link:../packages/core
+      '@kabelsalat/lib':
+        specifier: workspace:*
+        version: link:../packages/lib
+      '@kabelsalat/transpiler':
+        specifier: workspace:*
+        version: link:../packages/transpiler
+    devDependencies:
+      vite:
+        specifier: ^5.2.0
+        version: 5.3.1
+      vitest:
+        specifier: ^1.6.0
+        version: 1.6.0
+
   website:
     dependencies:
       '@astrojs/mdx':
@@ -137,6 +166,9 @@ importers:
       '@kabelsalat/lib':
         specifier: workspace:*
         version: link:../packages/lib
+      '@kabelsalat/web':
+        specifier: workspace:*
+        version: link:../packages/web
       '@nanostores/persistent':
         specifier: ^0.10.1
         version: 0.10.1(nanostores@0.10.3)
@@ -152,16 +184,28 @@ importers:
       solid-js:
         specifier: ^1.8.18
         version: 1.8.18
-      tailwindcss:
-        specifier: ^3.4.4
-        version: 3.4.6
     devDependencies:
       '@tailwindcss/forms':
         specifier: ^0.5.7
         version: 0.5.7(tailwindcss@3.4.6)
       '@tailwindcss/typography':
         specifier: ^0.5.13
-        version: 0.5.13(tailwindcss@3.4.6)
+        version: 0.5.13(tailwindcss@3.4.4)
+      autoprefixer:
+        specifier: ^10.4.19
+        version: 10.4.19(postcss@8.4.38)
+      postcss:
+        specifier: ^8.4.38
+        version: 8.4.38
+      tailwindcss:
+        specifier: ^3.4.4
+        version: 3.4.4
+      vite:
+        specifier: ^5.2.0
+        version: 5.3.1
+      vite-plugin-solid:
+        specifier: ^2.10.2
+        version: 2.10.2(solid-js@1.8.18)(vite@5.3.1)
 
 packages:
 

@@ -411,14 +411,9 @@ export function evaluate(code) {
   Node.prototype.out = function () {
     nodes.push(this);
   };
-  try {
-    Function(code)();
-    const node = dac(...nodes).exit();
-    return node;
-  } catch (err) {
-    console.error(err);
-    return n(0);
-  }
+  Function(code)();
+  const node = dac(...nodes).exit();
+  return node;
 }
 
 // is this needed?

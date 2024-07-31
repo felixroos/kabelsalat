@@ -1,7 +1,9 @@
-import { n, node, Node, register, sine, add, evaluate } from "../src/index";
-import * as api from "../src/lib";
+import * as core from "@kabelsalat/core";
+import * as lib from "@kabelsalat/lib";
 import { describe, expect, it, test } from "vitest";
-Object.assign(globalThis, api);
+
+Object.assign(globalThis, core);
+Object.assign(globalThis, lib);
 
 describe("Node", () => {
   it("creates a node", () => {

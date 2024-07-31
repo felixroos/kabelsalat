@@ -3,6 +3,7 @@
   "version": "0.0.6",
   "type": "module",
   "module": "src/transpiler.js",
+  "main": "src/transpiler.js",
   "publishConfig": {
     "main": "dist/index.js",
     "module": "dist/index.mjs"

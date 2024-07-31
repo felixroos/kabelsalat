@@ -3,6 +3,7 @@ import { Node, nodeRegistry } from "./graph.js";
 export function compile(node, options = {}) {
   const {
     log = false,
+    lang = "js",
     fallbackType = "thru",
     constType = "n",
     varPrefix = "n",
@@ -34,7 +35,16 @@ export function compile(node, options = {}) {
       );
       schema = nodeRegistry.get(fallbackType);
     }
-    const meta = { vars, node, nodes, id, ugenIndex, name: v(id) };
+    const meta = {
+      vars,
+      node,
+      nodes,
+      id,
+      ugenIndex,
+      ugen: schema.ugen,
+      name: v(id),
+      lang,
+    };
     if (schema.compile) {
       lines.push(schema.compile(meta));
     }
