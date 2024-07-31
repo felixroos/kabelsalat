@@ -62,7 +62,7 @@ importers:
     dependencies:
       '@hpcc-js/wasm':
         specifier: ^2.16.2
-        version: 2.17.0
+        version: 2.18.0
       '@kabelsalat/core':
         specifier: workspace:*
         version: link:../core
@@ -190,7 +190,7 @@ importers:
         version: 0.5.7(tailwindcss@3.4.6)
       '@tailwindcss/typography':
         specifier: ^0.5.13
-        version: 0.5.13(tailwindcss@3.4.4)
+        version: 0.5.13(tailwindcss@3.4.6)
       autoprefixer:
         specifier: ^10.4.19
         version: 10.4.19(postcss@8.4.38)
@@ -199,7 +199,7 @@ importers:
         version: 8.4.38
       tailwindcss:
         specifier: ^3.4.4
-        version: 3.4.4
+        version: 3.4.6
       vite:
         specifier: ^5.2.0
         version: 5.3.1
