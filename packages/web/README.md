@@ -1,3 +1,8 @@
+# @kabelsalat/web
+
+This package allows you to use kabelsalat anywhere on the web. Example:
+
+```html
 <!DOCTYPE html>
 <html>
   <head>
@@ -24,3 +29,4 @@
     </script>
   </body>
 </html>
+```
