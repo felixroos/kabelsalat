@@ -20,6 +20,7 @@
     "@kabelsalat/lib": "workspace:*",
     "@kabelsalat/web": "workspace:*",
     "@kabelsalat/codemirror": "workspace:*",
+    "@kabelsalat/transpiler": "workspace:*",
     "@nanostores/persistent": "^0.10.1",
     "@nanostores/solid": "^0.4.2",
     "astro": "^4.11.3",

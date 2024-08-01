@@ -9,6 +9,7 @@ import { useStore } from "@nanostores/solid";
 import { History, addToHistory, $history } from "./History";
 import { Codemirror, codemirrorView } from "./Codemirror";
 import { updateWidgets, flash } from "@kabelsalat/codemirror";
+import { transpiler } from "@kabelsalat/transpiler";
 
 export const $hideWelcome = persistentAtom("hideWelcome", "false");
 const hideWelcome = () => $hideWelcome.set("true");
@@ -85,6 +86,7 @@ export function Repl() {
   let [started, setStarted] = createSignal(false);
   let [recording, setRecording] = createSignal(false);
   const repl = new SalatRepl({
+    transpiler,
     onToggle: (_started) => setStarted(_started),
     onToggleRecording: (_recording) => setRecording(_recording),
     beforeEval: (transpiled) => {

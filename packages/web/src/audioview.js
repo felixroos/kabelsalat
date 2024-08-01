@@ -50,7 +50,8 @@ import recorderUrl from "./recorder.js?worker&url";
 import { audioBuffersToWav } from "./wav.js";
 
 export class AudioView {
-  constructor() {
+  constructor(base = "") {
+    this.base = base;
     this.ugens = new Map();
   }
   async updateGraph(node) {
@@ -139,19 +140,19 @@ export class AudioView {
 
     if (!this.audioCtx.audioWorklet) {
       throw new Error(
-        "Audio cannot be loaded: non-secure origin? (AudioContext.audioWorklet is undefined)",
+        "Audio cannot be loaded: non-secure origin? (AudioContext.audioWorklet is undefined)"
       );
     }
 
-    await this.audioCtx.audioWorklet.addModule(workletUrl);
-    await this.audioCtx.audioWorklet.addModule(recorderUrl);
+    await this.audioCtx.audioWorklet.addModule(this.base + workletUrl);
+    await this.audioCtx.audioWorklet.addModule(this.base + recorderUrl);
 
     this.audioWorklet = new AudioWorkletNode(
       this.audioCtx,
       "sample-generator",
       {
         outputChannelCount: [2],
-      },
+      }
     );
     // Callback to receive messages from the audioworklet
     this.audioWorklet.port.onmessage = (msg) => {
@@ -177,7 +178,7 @@ export class AudioView {
         const bytes = audioBuffersToWav(
           this.recordedBuffers,
           this.audioCtx.sampleRate,
-          2,
+          2
         );
         downloadFile(bytes, "kabelsalat.wav", "audio/wav");
         this.recordedBuffers = [];

@@ -2,12 +2,18 @@ import * as core from "@kabelsalat/core/src/index.js";
 import * as compiler from "@kabelsalat/core/src/compiler.js";
 import * as lib from "@kabelsalat/lib/src/lib.js";
 import { AudioView } from "./audioview.js";
-import { transpiler } from "@kabelsalat/transpiler";
 
 export class SalatRepl {
-  constructor({ onToggle, onToggleRecording, beforeEval } = {}) {
-    this.audio = new AudioView();
+  constructor({
+    onToggle,
+    onToggleRecording,
+    beforeEval,
+    base,
+    transpiler,
+  } = {}) {
+    this.audio = new AudioView(base);
     this.onToggle = onToggle;
+    this.transpiler = transpiler;
     this.onToggleRecording = onToggleRecording;
     this.beforeEval = beforeEval;
     if (typeof window !== "undefined") {
@@ -40,7 +46,12 @@ export class SalatRepl {
     Object.assign(globalThis, {
       addUgen: this.registerUgen.bind(this),
     });
-    const transpiled = transpiler(code);
+    let transpiled;
+    if (this.transpiler) {
+      transpiled = this.transpiler(code);
+    } else {
+      transpiled = { output: code };
+    }
     this.beforeEval?.(transpiled);
     return core.evaluate(transpiled.output);
   }
@@ -48,6 +59,10 @@ export class SalatRepl {
     await this.audio.init();
     this.audio.updateGraph(node);
     this.onToggle?.(true);
+  }
+  run(code) {
+    const node = repl.evaluate(code);
+    this.play(node);
   }
   stop() {
     this.stopRecording();

@@ -17,11 +17,9 @@
   },
   "dependencies": {
     "@kabelsalat/core": "workspace:*",
-    "@kabelsalat/transpiler": "workspace:*",
     "@kabelsalat/lib": "workspace:*"
   },
   "devDependencies": {
-    "vite": "^5.2.0",
-    "vitest": "^1.6.0"
+    "vite": "^5.2.0"
   }
 }
