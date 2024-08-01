@@ -54,9 +54,6 @@ importers:
       vite:
         specifier: ^5.2.0
         version: 5.3.1
-      vitest:
-        specifier: ^1.6.0
-        version: 1.6.0
 
   packages/graphviz:
     dependencies:

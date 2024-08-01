@@ -5,9 +5,8 @@ import {
   register,
   module,
   nodeRegistry,
-  assert,
 } from "@kabelsalat/core";
-
+import { assert } from "./utils.js";
 import * as js from "./lang/js.js";
 import * as c from "./lang/c.js";
 

@@ -1,4 +1,4 @@
-import { AudioGraph } from "@kabelsalat/core/src/audiograph.js";
+import { AudioGraph } from "@kabelsalat/lib/src/audiograph.js";
 
 // taken / slightly modified from noisecraft
 // https://github.com/maximecb/noisecraft
@@ -14,7 +14,7 @@ class GraphWorklet extends AudioWorkletProcessor {
     // Audio generation graph
     this.audioGraph = new AudioGraph(
       44100,
-      this.port.postMessage.bind(this.port)
+      this.port.postMessage.bind(this.port),
     );
   }
 

@@ -69,7 +69,7 @@ export class MIDI extends Eventable {
           "MIDI device connected:",
           evt.port.name,
           "PORT:",
-          evt.port.id
+          evt.port.id,
         );
 
         evt.port.onmidimessage = (e) =>

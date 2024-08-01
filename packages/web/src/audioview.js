@@ -1,6 +1,6 @@
+import { assert } from "@kabelsalat/lib/src/utils.js";
 import "@kabelsalat/core/src/compiler.js"; // Node.prototype.compile
-import { assert } from "@kabelsalat/core/src/utils.js";
-import { MIDI, parseMidiMessage } from "@kabelsalat/core/src/midi.js";
+import { MIDI, parseMidiMessage } from "@kabelsalat/lib/src/midi.js";
 
 // what follows are attempts at importing the worklet as a url
 // the problem: when ?url is used, the worklet.js file itself is not bundled.
@@ -139,7 +139,7 @@ export class AudioView {
 
     if (!this.audioCtx.audioWorklet) {
       throw new Error(
-        "Audio cannot be loaded: non-secure origin? (AudioContext.audioWorklet is undefined)"
+        "Audio cannot be loaded: non-secure origin? (AudioContext.audioWorklet is undefined)",
       );
     }
 
@@ -151,7 +151,7 @@ export class AudioView {
       "sample-generator",
       {
         outputChannelCount: [2],
-      }
+      },
     );
     // Callback to receive messages from the audioworklet
     this.audioWorklet.port.onmessage = (msg) => {
@@ -177,7 +177,7 @@ export class AudioView {
         const bytes = audioBuffersToWav(
           this.recordedBuffers,
           this.audioCtx.sampleRate,
-          2
+          2,
         );
         downloadFile(bytes, "kabelsalat.wav", "audio/wav");
         this.recordedBuffers = [];

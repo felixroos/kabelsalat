@@ -81,7 +81,7 @@ ADSREnv.prototype.eval = function (
   attack,
   decay,
   susVal,
-  release
+  release,
 ) {
   switch (this.state) {
     case "off":
@@ -241,7 +241,7 @@ KrajeskiFilter.prototype.apply = function (s, cutoff, resonance) {
 
   for (var s = 0; s < n; ++s) {
     state[0] = Math.tanh(
-      drive * (samples[s] - 4 * gRes * (state[4] - gComp * samples[s]))
+      drive * (samples[s] - 4 * gRes * (state[4] - gComp * samples[s])),
     );
 
     for (var i = 0; i < 4; i++) {
@@ -326,7 +326,7 @@ export class Delay {
     // Calculate how far in the past to read
     let numSamples = Math.min(
       Math.floor(this.sampleRate * delayTime),
-      this.buffer.length - 1
+      this.buffer.length - 1,
     );
 
     this.readIdx = this.writeIdx - numSamples;

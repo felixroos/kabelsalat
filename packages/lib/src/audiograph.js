@@ -49,7 +49,7 @@ export class AudioGraph {
 
     this.units.push(unit);
     console.log(
-      `${schema.ugens.length} ugens spawned, ${this.units.length} units alive`
+      `${schema.ugens.length} ugens spawned, ${this.units.length} units alive`,
     );
   }
 
@@ -146,7 +146,7 @@ class Unit {
           index,
           ugen,
           this.sampleRate,
-          this.send
+          this.send,
         );
       } else {
         console.warn(`unknown ugen "${ugen.type}"`);
@@ -160,12 +160,12 @@ class Unit {
     const midifreqs = this.nodes.filter(
       (node) =>
         node.type === "midifreq" &&
-        (node.channel === -1 || node.channel === channel)
+        (node.channel === -1 || node.channel === channel),
     );
     const midigates = this.nodes.filter(
       (node) =>
         node.type === "midigate" &&
-        (node.channel === -1 || node.channel === channel)
+        (node.channel === -1 || node.channel === channel),
     );
 
     if (velocity > 0) {
@@ -196,7 +196,7 @@ class Unit {
   setControl(msg) {
     const { value, id } = msg;
     const match = this.nodes.find(
-      (node) => node.type === "cc" && node.id === id
+      (node) => node.type === "cc" && node.id === id,
     );
     if (match) {
       match.setValue(value);
