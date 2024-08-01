@@ -38,7 +38,7 @@ pnpm --filter "./packages/**" publish --access public
 
 This project is a monorepo with the following packages:
 
-- [core](./packages/core/dist/) core graph language + compiler
+- [core](./packages/core/) core graph language + compiler
 - [lib](./packages/lib/) the standard library
 - [transpiler](./packages/transpiler/) optional transpiler
 - [web](./packages/web/) web related functionality
