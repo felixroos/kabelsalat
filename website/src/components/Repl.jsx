@@ -83,8 +83,10 @@ function updateCode(code) {
 
 export function Repl() {
   let [started, setStarted] = createSignal(false);
+  let [recording, setRecording] = createSignal(false);
   const repl = new SalatRepl({
     onToggle: (_started) => setStarted(_started),
+    onToggleRecording: (_recording) => setRecording(_recording),
     beforeEval: (transpiled) => {
       updateWidgets(codemirrorView(), transpiled.widgets);
       flash(codemirrorView());
@@ -178,6 +180,24 @@ export function Repl() {
               >
                 <Icon type="refresh" />
                 <span class="hidden sm:block">run</span>
+              </button>
+              <button
+                onClick={() =>
+                  recording() ? repl.stopRecording() : repl.record()
+                }
+                class="items-center flex space-x-1 hover:opacity-50"
+              >
+                {!recording() ? (
+                  <>
+                    <Icon type="record" />
+                    <span class="hidden sm:block">rec</span>
+                  </>
+                ) : (
+                  <>
+                    <Icon type="recordstop" />
+                    <span class="hidden sm:block">rec.stop</span>
+                  </>
+                )}
               </button>
               <a
                 class="items-center flex space-x-1 hover:opacity-50"

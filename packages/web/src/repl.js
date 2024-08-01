@@ -5,9 +5,10 @@ import { AudioView } from "./audioview.js";
 import { transpiler } from "@kabelsalat/transpiler";
 
 export class SalatRepl {
-  constructor({ onToggle, beforeEval } = {}) {
+  constructor({ onToggle, onToggleRecording, beforeEval } = {}) {
     this.audio = new AudioView();
     this.onToggle = onToggle;
+    this.onToggleRecording = onToggleRecording;
     this.beforeEval = beforeEval;
     if (typeof window !== "undefined") {
       Object.assign(globalThis, core);
@@ -49,7 +50,16 @@ export class SalatRepl {
     this.onToggle?.(true);
   }
   stop() {
+    this.stopRecording();
     this.audio.stop();
     this.onToggle?.(false);
+  }
+  record() {
+    this.audio.record();
+    this.onToggleRecording?.(true);
+  }
+  stopRecording() {
+    this.audio.stopRecording();
+    this.onToggleRecording?.(false);
   }
 }

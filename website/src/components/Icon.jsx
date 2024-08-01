@@ -35,6 +35,20 @@ export function Icon(props) {
             clip-rule="evenodd"
           />
         </Match>
+        <Match when={props.type === "record"}>
+          <path
+            fill-rule="evenodd"
+            d="m 2,10 c 0,-4.389 3.611,-8 8,-8 4.389,0 8,3.611 8,8 0,4.389 -3.611,8 -8,8 -4.389,0 -8,-3.611 -8,-8 z m 8,-3.001 c 1.657,0 3.001,1.344 3.001,3 0,1.655 -1.344,3 -3.001,3 -1.657,0 -3.001,-1.345 -3.001,-3 0,-1.656 1.344,-3 3.001,-3 z"
+            clip-rule="evenodd"
+          />
+        </Match>
+        <Match when={props.type === "recordstop"}>
+          <path
+            fill-rule="evenodd"
+            d="m 2,10 c 0,-4.389 3.611,-8 8,-8 4.389,0 8,3.611 8,8 0,4.389 -3.611,8 -8,8 -4.389,0 -8,-3.611 -8,-8 z m 8,-3 c 1.656,0 3,1.344 3,3 0,1.656 -1.344,3 -3,3 C 8.344,13 7,11.656 7,10 7,8.344 8.344,7 10,7 Z m 0,1 c 1.104,0 2,0.896 2,2 0,1.104 -0.896,2 -2,2 C 8.896,12 8,11.104 8,10 8,8.896 8.896,8 10,8 Z"
+            clip-rule="evenodd"
+          />
+        </Match>
         <Match when={props.type === "skip"}>
           <path
             fill-rule="evenodd"
