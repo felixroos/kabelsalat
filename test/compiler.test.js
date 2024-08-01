@@ -1,7 +1,9 @@
-import "../src/compiler";
-import * as api from "../src/lib";
+import * as core from "@kabelsalat/core";
+import * as lib from "@kabelsalat/lib";
 import { describe, expect, it } from "vitest";
-Object.assign(globalThis, api);
+
+Object.assign(globalThis, core);
+Object.assign(globalThis, lib);
 
 describe("compiler", () => {
   it("sine", () => {
@@ -10,7 +12,7 @@ describe("compiler", () => {
       `const n2 = nodes[0].update(200,0,0); /* sine */
 return [(n2*lvl),(n2*lvl)]`
     );
-    expect(unit.ugens).toStrictEqual(["SineOsc"]);
+    expect(unit.ugens.map((ugen) => ugen.type)).toStrictEqual(["SineOsc"]);
   });
   it("feedback", () => {
     const unit = sine(200)
@@ -26,6 +28,9 @@ const n7 = n2 * 0.8;
 const n6 = nodes[0].write(n7); /* feedback_write */
 return [(n2*lvl),(n2*lvl)]`
     );
-    expect(unit.ugens).toStrictEqual(["Feedback", "SineOsc"]);
+    expect(unit.ugens.map((ugen) => ugen.type)).toStrictEqual([
+      "Feedback",
+      "SineOsc",
+    ]);
   });
 });

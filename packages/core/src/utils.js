@@ -18,12 +18,3 @@ export function lerp(x, y0, y1) {
 
   return y0 + x * (y1 - y0);
 }
-
-// Trigger a file download in the browser
-export function downloadFile(bytes, filename, mimeType) {
-  const blob = new Blob([bytes], {type: mimeType});
-  const link = document.createElement('a');
-  link.href = window.URL.createObjectURL(blob);
-  link.download = filename;
-  link.click();
-}

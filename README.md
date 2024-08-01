@@ -2,7 +2,7 @@
 
 very early experiment to live code audio graphs
 
-[felixroos.github.io/kabelsalat](https://felixroos.github.io/kabelsalat/)
+[kabel.salat.dev](https://kabel.salat.dev)
 
 compilation strategy / graph format based on <https://noisecraft.app/>
 

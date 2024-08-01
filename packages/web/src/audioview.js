@@ -1,6 +1,6 @@
-import "./compiler.js"; // Node.prototype.compile
-import { assert, downloadFile } from "./utils.js";
-import { MIDI, parseMidiMessage } from "./midi.js";
+import "@kabelsalat/core/src/compiler.js"; // Node.prototype.compile
+import { assert } from "@kabelsalat/core/src/utils.js";
+import { MIDI, parseMidiMessage } from "@kabelsalat/core/src/midi.js";
 
 // what follows are attempts at importing the worklet as a url
 // the problem: when ?url is used, the worklet.js file itself is not bundled.
@@ -50,7 +50,9 @@ import recorderUrl from "./recorder.js?worker&url";
 import { audioBuffersToWav } from "./wav.js";
 
 export class AudioView {
-  constructor() {}
+  constructor() {
+    this.ugens = new Map();
+  }
   async updateGraph(node) {
     const { src, ugens } = node.compile({
       log: false,
@@ -64,18 +66,35 @@ export class AudioView {
     if (!this.audioIn && ugens.some((ugen) => ugen.type === "AudioIn")) {
       await this.initAudioIn();
     }
-
+    this.sendUgens();
     this.send({
       type: "NEW_UNIT",
       unit: { src, ugens },
     });
   }
 
+  // ugen is expected to be a class
+  registerUgen(ugen) {
+    this.ugens.set(ugen.name, ugen);
+  }
+  sendUgens() {
+    for (let [name, ugen] of this.ugens) {
+      this.send({
+        type: "SET_UGEN",
+        className: name,
+        ugen: ugen + "",
+      });
+    }
+  }
+
   async initAudioIn() {
     console.log("init audio input...");
     const stream = await navigator.mediaDevices.getUserMedia({
-      video: false,
-      audio: true,
+      audio: {
+        echoCancellation: false,
+        noiseSuppression: false,
+        autoGainControl: false,
+      },
     });
     const inputNode = this.audioCtx.createMediaStreamSource(stream);
     inputNode.connect(this.audioWorklet);
@@ -95,15 +114,18 @@ export class AudioView {
    */
   send(msg) {
     assert(msg instanceof Object);
-
     // make sure to init before callilng send..
-    if (!this.audioWorklet) return;
+    if (!this.audioWorklet) {
+      console.warn("message sent before audioworklet was ready...", msg);
+      return;
+    }
 
     this.audioWorklet.port.postMessage(msg);
   }
 
   async init() {
     if (this.audioCtx) {
+      // console.warn("no context");
       return;
     }
     assert(!this.audioCtx);
@@ -141,23 +163,28 @@ export class AudioView {
       }
     };
 
-    this.recorder = new window.AudioWorkletNode(this.audioCtx, 'recorder');
+    this.recorder = new window.AudioWorkletNode(this.audioCtx, "recorder");
     this.audioWorklet.connect(this.recorder);
+    this.sendUgens();
     this.recorder.connect(this.audioCtx.destination);
 
     this.recorder.port.onmessage = (e) => {
-      if (e.data.eventType === 'data') {
+      if (e.data.eventType === "data") {
         this.recordedBuffers.push(e.data.audioBuffer);
       }
-      if (e.data.eventType === 'stop') {
+      if (e.data.eventType === "stop") {
         console.log("recording stopped");
-        const bytes = audioBuffersToWav(this.recordedBuffers, this.audioCtx.sampleRate, 2);
+        const bytes = audioBuffersToWav(
+          this.recordedBuffers,
+          this.audioCtx.sampleRate,
+          2
+        );
         downloadFile(bytes, "kabelsalat.wav", "audio/wav");
         this.recordedBuffers = [];
       }
     };
 
-    if(this.recordOnPlay) {
+    if (this.recordOnPlay) {
       this.record();
     }
   }
@@ -187,7 +214,7 @@ export class AudioView {
     }
 
     this.recordedBuffers = [];
-    this.recorder.parameters.get('isRecording').setValueAtTime(1, 0);
+    this.recorder.parameters.get("isRecording").setValueAtTime(1, 0);
     console.log("recording started");
   }
 
@@ -198,10 +225,19 @@ export class AudioView {
       return;
     }
 
-    this.recorder.parameters.get('isRecording').setValueAtTime(0, 0);
+    this.recorder.parameters.get("isRecording").setValueAtTime(0, 0);
   }
 
   set fadeTime(fadeTime) {
     this.send({ type: "FADE_TIME", fadeTime });
   }
+}
+
+// Trigger a file download in the browser
+function downloadFile(bytes, filename, mimeType) {
+  const blob = new Blob([bytes], { type: mimeType });
+  const link = document.createElement("a");
+  link.href = window.URL.createObjectURL(blob);
+  link.download = filename;
+  link.click();
 }
