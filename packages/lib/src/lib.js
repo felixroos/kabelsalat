@@ -7,6 +7,7 @@ import {
   nodeRegistry,
   assert,
 } from "@kabelsalat/core";
+
 import * as js from "./lang/js.js";
 import * as c from "./lang/c.js";
 
@@ -14,6 +15,12 @@ const langs = {
   js,
   c,
 };
+
+export const registerUgen = (type, className) =>
+  registerNode(type, {
+    ugen: className,
+    compile: ({ vars, ...meta }) => langs[meta.lang].defUgen(meta, ...vars),
+  });
 
 export let time = register("time", (code) => new Node("time", code), {
   tags: ["meta"],
@@ -588,7 +595,7 @@ export let mod = registerNode("mod", {
     langs[lang].def(name, langs[lang].mod(...vars) || 0),
 });
 export let greater = registerNode("greater", {
-  tags: ["math"],
+  tags: ["logic"],
   description: "returns 1 if input is greater then threshold",
   ins: [{ name: "in" }, { name: "threshold" }],
   examples: [
@@ -598,6 +605,27 @@ export let greater = registerNode("greater", {
   ],
   compile: ({ vars: [a = 0, b = 0], name, lang }) =>
     langs[lang].def(name, `${a} > ${b}`),
+});
+export let xor = registerNode("xor", {
+  tags: ["logic"],
+  description: "returns 1 if exactly one of the inputs is 1",
+  ins: [{ name: "a" }, { name: "b" }],
+  compile: ({ vars: [a = 0, b = 0], name }) =>
+    def(name, `${a} != ${b} ? 1 : 0`),
+});
+export let and = registerNode("and", {
+  tags: ["logic"],
+  description: "returns 1 if both inputs are 1",
+  ins: [{ name: "a" }, { name: "b" }],
+  compile: ({ vars: [a = 0, b = 0], name }) =>
+    def(name, `${a} && ${b} ? 1 : 0`),
+});
+export let or = registerNode("or", {
+  tags: ["logic"],
+  description: "returns 1 if one or both inputs are 1",
+  ins: [{ name: "a" }, { name: "b" }],
+  compile: ({ vars: [a = 0, b = 0], name }) =>
+    def(name, `${a} || ${b} ? 1 : 0`),
 });
 export let range = registerNode("range", {
   tags: ["math"],

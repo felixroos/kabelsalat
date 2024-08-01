@@ -23,6 +23,7 @@ let widgetClasses = {
   _: SliderWidget,
   B: ButtonWidget,
 };
+
 registerWidgetType("_");
 registerWidgetType("B");
 

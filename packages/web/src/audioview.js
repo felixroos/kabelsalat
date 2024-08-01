@@ -47,7 +47,9 @@ if (match) {
 // console.log("workletUrl", workletUrl);
 
 export class AudioView {
-  constructor() {}
+  constructor() {
+    this.ugens = new Map();
+  }
   async updateGraph(node) {
     const { src, ugens } = node.compile({
       log: false,
@@ -61,11 +63,25 @@ export class AudioView {
     if (!this.audioIn && ugens.some((ugen) => ugen.type === "AudioIn")) {
       await this.initAudioIn();
     }
-
+    this.sendUgens();
     this.send({
       type: "NEW_UNIT",
       unit: { src, ugens },
     });
+  }
+
+  // ugen is expected to be a class
+  registerUgen(ugen) {
+    this.ugens.set(ugen.name, ugen);
+  }
+  sendUgens() {
+    for (let [name, ugen] of this.ugens) {
+      this.send({
+        type: "SET_UGEN",
+        className: name,
+        ugen: ugen + "",
+      });
+    }
   }
 
   async initAudioIn() {
@@ -95,15 +111,18 @@ export class AudioView {
    */
   send(msg) {
     assert(msg instanceof Object);
-
     // make sure to init before callilng send..
-    if (!this.audioWorklet) return;
+    if (!this.audioWorklet) {
+      console.warn("message sent before audioworklet was ready...", msg);
+      return;
+    }
 
     this.audioWorklet.port.postMessage(msg);
   }
 
   async init() {
     if (this.audioCtx) {
+      // console.warn("no context");
       return;
     }
     assert(!this.audioCtx);
@@ -140,6 +159,7 @@ export class AudioView {
       }
     };
     this.audioWorklet.connect(this.audioCtx.destination);
+    this.sendUgens();
   }
 
   destroy() {

@@ -10,7 +10,7 @@ importers:
     dependencies:
       '@hpcc-js/wasm':
         specifier: ^2.16.2
-        version: 2.17.0
+        version: 2.18.0
       graphviz:
         specifier: link:@hpcc-js/wasm/graphviz
         version: link:@hpcc-js/wasm/graphviz
@@ -19,7 +19,7 @@ importers:
         version: 1.1.1
       solid-js:
         specifier: ^1.8.15
-        version: 1.8.17
+        version: 1.8.18
     devDependencies:
       lerna:
         specifier: 8.1.4
@@ -62,7 +62,7 @@ importers:
     dependencies:
       '@hpcc-js/wasm':
         specifier: ^2.16.2
-        version: 2.17.0
+        version: 2.18.0
       '@kabelsalat/core':
         specifier: workspace:*
         version: link:../core
@@ -153,7 +153,7 @@ importers:
         version: 4.4.0(solid-js@1.8.18)(vite@5.3.1)
       '@astrojs/tailwind':
         specifier: ^5.1.0
-        version: 5.1.0(astro@4.11.3(typescript@5.5.3))(tailwindcss@3.4.4)
+        version: 5.1.0(astro@4.11.3(typescript@5.5.3))(tailwindcss@3.4.6)
       '@kabelsalat/codemirror':
         specifier: workspace:*
         version: link:../packages/codemirror
@@ -187,10 +187,10 @@ importers:
     devDependencies:
       '@tailwindcss/forms':
         specifier: ^0.5.7
-        version: 0.5.7(tailwindcss@3.4.4)
+        version: 0.5.7(tailwindcss@3.4.6)
       '@tailwindcss/typography':
         specifier: ^0.5.13
-        version: 0.5.13(tailwindcss@3.4.4)
+        version: 0.5.13(tailwindcss@3.4.6)
       autoprefixer:
         specifier: ^10.4.19
         version: 10.4.19(postcss@8.4.38)
@@ -199,7 +199,7 @@ importers:
         version: 8.4.38
       tailwindcss:
         specifier: ^3.4.4
-        version: 3.4.4
+        version: 3.4.6
       vite:
         specifier: ^5.2.0
         version: 5.3.1
@@ -537,8 +537,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@hpcc-js/wasm@2.17.0':
-    resolution: {integrity: sha512-ojAf7kf4AQZjY/zxtPetpIy3znJxG+QVMApSwHAomLrgt6KW63prmA8ZPXBQWkE4uEspdZcsTcnwPfRUd9RrJg==}
+  '@hpcc-js/wasm@2.18.0':
+    resolution: {integrity: sha512-M9XVIvAXGH4Xcyb5UoiohWcn6fil89pcos/gClNdBZG2v+W48xSf2bjcA8BW131X/AFHUerVY28n1P1Jw81/9A==}
     hasBin: true
 
   '@hutson/parse-repository-url@3.0.2':
@@ -3370,8 +3370,8 @@ packages:
     resolution: {integrity: sha512-IQ7TZdoaqbT+LCpShg46jnZVlhWD2w6iQYAcYXfHARZ7X1t/UGhhceQDs5X0cGqKvYlHNOuv7Oa1xmb0oQuA3w==}
     engines: {node: '>=4'}
 
-  postcss-selector-parser@6.1.0:
-    resolution: {integrity: sha512-UMz42UD0UY0EApS0ZL9o1XnLhSTtvvvLe5Dc2H2O56fvRZi+KulDyf5ctDhhtYJBGKStV2FL1fy6253cmLgqVQ==}
+  postcss-selector-parser@6.1.1:
+    resolution: {integrity: sha512-b4dlw/9V8A71rLIDsSwVmak9z2DuBUB7CA1/wSdelNEzqsjoSPeADTWNO09lpH49Diy3/JIZ2bSPB1dI3LJCHg==}
     engines: {node: '>=4'}
 
   postcss-value-parser@4.2.0:
@@ -3710,9 +3710,6 @@ packages:
     resolution: {integrity: sha512-l5x7VUUWbjVFbafGLxPWkYsHIhEvmF85tbIeFZWc8ZPtoMyybuEhL7Jye/ooC4/d48FgOjSJXgsF/AJPYCW8Zw==}
     engines: {node: '>= 10.0.0', npm: '>= 3.0.0'}
 
-  solid-js@1.8.17:
-    resolution: {integrity: sha512-E0FkUgv9sG/gEBWkHr/2XkBluHb1fkrHywUgA6o6XolPDCJ4g1HaLmQufcBBhiF36ee40q+HpG/vCZu7fLpI3Q==}
-
   solid-js@1.8.18:
     resolution: {integrity: sha512-cpkxDPvO/AuKBugVv6xKFd1C9VC0XZMu4VtF56IlHoux8HgyW44uqNSWbozMnVcpIzHIhS3vVXPAVZYM26jpWw==}
 
@@ -3869,8 +3866,8 @@ packages:
     resolution: {integrity: sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w==}
     engines: {node: '>= 0.4'}
 
-  tailwindcss@3.4.4:
-    resolution: {integrity: sha512-ZoyXOdJjISB7/BcLTR6SEsLgKtDStYyYZVLsUtWChO4Ps20CBad7lfJKVDiejocV4ME1hLmyY0WJE3hSDcmQ2A==}
+  tailwindcss@3.4.6:
+    resolution: {integrity: sha512-1uRHzPB+Vzu57ocybfZ4jh5Q3SdlH7XW23J5sQoM9LhE9eIOlzxer/3XPSsycvih3rboRsvt0QCmzSrqyOYUIA==}
     engines: {node: '>=14.0.0'}
     hasBin: true
 
@@ -4388,13 +4385,13 @@ snapshots:
       - supports-color
       - vite
 
-  '@astrojs/tailwind@5.1.0(astro@4.11.3(typescript@5.5.3))(tailwindcss@3.4.4)':
+  '@astrojs/tailwind@5.1.0(astro@4.11.3(typescript@5.5.3))(tailwindcss@3.4.6)':
     dependencies:
       astro: 4.11.3(typescript@5.5.3)
       autoprefixer: 10.4.19(postcss@8.4.38)
       postcss: 8.4.38
       postcss-load-config: 4.0.2(postcss@8.4.38)
-      tailwindcss: 3.4.4
+      tailwindcss: 3.4.6
     transitivePeerDependencies:
       - ts-node
 
@@ -4696,7 +4693,7 @@ snapshots:
   '@esbuild/win32-x64@0.21.5':
     optional: true
 
-  '@hpcc-js/wasm@2.17.0':
+  '@hpcc-js/wasm@2.18.0':
     dependencies:
       yargs: 17.7.2
 
@@ -5246,18 +5243,18 @@ snapshots:
 
   '@sinclair/typebox@0.27.8': {}
 
-  '@tailwindcss/forms@0.5.7(tailwindcss@3.4.4)':
+  '@tailwindcss/forms@0.5.7(tailwindcss@3.4.6)':
     dependencies:
       mini-svg-data-uri: 1.4.4
-      tailwindcss: 3.4.4
+      tailwindcss: 3.4.6
 
-  '@tailwindcss/typography@0.5.13(tailwindcss@3.4.4)':
+  '@tailwindcss/typography@0.5.13(tailwindcss@3.4.6)':
     dependencies:
       lodash.castarray: 4.4.0
       lodash.isplainobject: 4.0.6
       lodash.merge: 4.6.2
       postcss-selector-parser: 6.0.10
-      tailwindcss: 3.4.4
+      tailwindcss: 3.4.6
 
   '@tootallnate/once@2.0.0': {}
 
@@ -8244,14 +8241,14 @@ snapshots:
   postcss-nested@6.0.1(postcss@8.4.38):
     dependencies:
       postcss: 8.4.38
-      postcss-selector-parser: 6.1.0
+      postcss-selector-parser: 6.1.1
 
   postcss-selector-parser@6.0.10:
     dependencies:
       cssesc: 3.0.0
       util-deprecate: 1.0.2
 
-  postcss-selector-parser@6.1.0:
+  postcss-selector-parser@6.1.1:
     dependencies:
       cssesc: 3.0.0
       util-deprecate: 1.0.2
@@ -8692,12 +8689,6 @@ snapshots:
       ip-address: 9.0.5
       smart-buffer: 4.2.0
 
-  solid-js@1.8.17:
-    dependencies:
-      csstype: 3.1.3
-      seroval: 1.0.7
-      seroval-plugins: 1.0.7(seroval@1.0.7)
-
   solid-js@1.8.18:
     dependencies:
       csstype: 3.1.3
@@ -8858,7 +8849,7 @@ snapshots:
 
   supports-preserve-symlinks-flag@1.0.0: {}
 
-  tailwindcss@3.4.4:
+  tailwindcss@3.4.6:
     dependencies:
       '@alloc/quick-lru': 5.2.0
       arg: 5.0.2
@@ -8879,7 +8870,7 @@ snapshots:
       postcss-js: 4.0.1(postcss@8.4.38)
       postcss-load-config: 4.0.2(postcss@8.4.38)
       postcss-nested: 6.0.1(postcss@8.4.38)
-      postcss-selector-parser: 6.1.0
+      postcss-selector-parser: 6.1.1
       resolve: 1.22.8
       sucrase: 3.35.0
     transitivePeerDependencies:
