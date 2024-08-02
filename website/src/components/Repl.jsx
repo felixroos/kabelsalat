@@ -127,25 +127,8 @@ export function Repl() {
       console.error(err);
     }
   }
-  let handleKeydown = (e) => {
-    // console.log("key", e.code);
-    if (e.key === "Enter" && (e.ctrlKey || e.altKey)) {
-      run();
-    } else if (e.code === "Period" && (e.ctrlKey || e.altKey)) {
-      repl.stop();
-      e.preventDefault();
-    }
-  };
   // todo: make sure clicking anchor links doesn't trigger this..
-  let handlePopState = () => setCode(getURLCode());
-  onMount(() => {
-    document.addEventListener("keydown", handleKeydown);
-    // window.addEventListener("popstate", handlePopState);
-  });
-  onCleanup(() => {
-    document.removeEventListener("keydown", handleKeydown);
-    // window.removeEventListener("popstate", handlePopState);
-  });
+  // let handlePopState = () => setCode(getURLCode());
 
   return (
     <div class="flex flex-col h-full max-h-full justify-stretch text-teal-600 font-mono">
@@ -251,7 +234,12 @@ export function Repl() {
           zen() ? `sm:grid-cols-1` : "sm:grid-cols-2"
         }`}
       >
-        <Codemirror code={code()} onChange={setCode} />
+        <Codemirror
+          code={code()}
+          onChange={setCode}
+          onEvaluate={() => run()}
+          onStop={() => repl.stop()}
+        />
         <Show when={!zen()}>
           <div
             class={`hidden sm:flex flex-col h-full overflow-hidden border-l border-stone-800`}

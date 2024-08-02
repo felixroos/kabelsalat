@@ -7,8 +7,10 @@ import {
   lineNumbers,
   highlightActiveLineGutter,
   highlightActiveLine,
+  keymap,
 } from "@codemirror/view";
 import { bracketMatching } from "@codemirror/language";
+import { Prec } from "@codemirror/state";
 
 export function initEditor({ root, code, onChange, onEvaluate, onStop }) {
   let editor = new EditorView({
@@ -28,6 +30,29 @@ export function initEditor({ root, code, onChange, onEvaluate, onStop }) {
           onChange?.(v.state.doc.toString());
         }
       }),
+      Prec.highest(
+        keymap.of([
+          {
+            key: "Ctrl-Enter",
+            run: () => onEvaluate?.(),
+          },
+          {
+            key: "Alt-Enter",
+            run: () => onEvaluate?.(),
+          },
+          {
+            key: "Ctrl-.",
+            run: () => onStop?.(),
+          },
+          {
+            key: "Alt-.",
+            run: () => {
+              onStop?.();
+              return true;
+            },
+          },
+        ])
+      ),
     ],
     parent: root,
   });
@@ -43,13 +68,5 @@ export function initEditor({ root, code, onChange, onEvaluate, onStop }) {
 
   const getCode = () => editor.state.doc.toString();
 
-  root.addEventListener("keydown", (e) => {
-    if (e.ctrlKey && e.code === "Enter") {
-      const code = editor.state.doc.toString();
-      onEvaluate?.(code);
-    } else if (e.ctrlKey && e.key === ".") {
-      onStop?.();
-    }
-  });
   return { setCode, getCode, editor };
 }
