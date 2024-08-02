@@ -56,15 +56,12 @@ const panels = [TAB_GRAPH, TAB_PATCHES, TAB_DOCS];
 
 function getURLCode() {
   let url = new URL(window.location);
-  let patch = url.searchParams.get("p");
-
-  // assume it's a legacy link with "#" when a bit longer.. shorter hash links collide with docs
-  if (!patch && window.location.hash.length > 25) {
-    patch = window.location.hash.slice(1);
-  }
+  let patch = window.location.hash
+    ? window.location.hash.slice(1)
+    : url.searchParams.get("p"); // legacy..
 
   if (patch) {
-    return atob(patch);
+    return hash2code(patch);
   }
   return "";
 }
@@ -75,8 +72,8 @@ function getInitialCode() {
 
 function updateCode(code) {
   let url = new URL(window.location);
-  url.searchParams.set("p", btoa(code));
-  window.history.pushState({}, "", url);
+  const hash = code2hash(code);
+  window.location.hash = hash;
   const firstLine = code.split("\n")[0].slice(0, 30);
   document.title = firstLine;
   addToHistory(code);
@@ -262,6 +259,7 @@ export function Repl() {
               </For>
             </nav>
             <div
+              id="scroll-container"
               class={`select-none bg-stone-900 overflow-auto text-gray-500 p-4 grow-0 h-full`}
             >
               <Show when={activePanel() === TAB_GRAPH}>
@@ -315,4 +313,28 @@ export function Repl() {
       )}
     </div>
   );
+}
+
+export function unicodeToBase64(text) {
+  const utf8Bytes = new TextEncoder().encode(text);
+  const base64String = btoa(String.fromCharCode(...utf8Bytes));
+  return base64String;
+}
+
+export function base64ToUnicode(base64String) {
+  const utf8Bytes = new Uint8Array(
+    atob(base64String)
+      .split("")
+      .map((char) => char.charCodeAt(0))
+  );
+  const decodedText = new TextDecoder().decode(utf8Bytes);
+  return decodedText;
+}
+
+export function code2hash(code) {
+  return encodeURIComponent(unicodeToBase64(code));
+}
+
+export function hash2code(hash) {
+  return base64ToUnicode(decodeURIComponent(hash));
 }

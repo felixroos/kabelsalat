@@ -74,7 +74,20 @@ export function Reference() {
         <For each={filtered()}>
           {([name, schema]) => (
             <>
-              <a href={`#${name}`}>{name}</a>{" "}
+              <a
+                // href={`#${name}`} // breaks code in hash..
+                // code in hash is the only way due to https://github.com/felixroos/kabelsalat/issues/19
+                // it feels a bit wrong but let's just do it to make it work:
+                class="cursor-pointer"
+                onClick={() => {
+                  const el = document.getElementById(`doc-${name}`);
+                  const container = document.getElementById("scroll-container");
+                  const pos = el.offsetTop - container.offsetTop - 10;
+                  container.scrollTo(0, pos);
+                }}
+              >
+                {name}
+              </a>{" "}
             </>
           )}
         </For>
@@ -83,7 +96,7 @@ export function Reference() {
         {([name, schema]) => (
           <div>
             <div class="flex not-prose justify-start space-x-4 pt-12 items-center">
-              <h2 class="text-2xl font-bold" id={name}>
+              <h2 class="text-2xl font-bold" id={`doc-${name}`}>
                 {name}
               </h2>
               <div class="flex space-x-2 items-center">
