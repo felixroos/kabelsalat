@@ -1,13 +1,9 @@
 import { defineConfig } from "vite";
-// import { dependencies } from "./package.json";
 import { resolve } from "path";
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [],
-  optimizeDeps: {
-    exclude: ["acorn"],
-  },
   build: {
     lib: {
       name: "kabelsalat",
@@ -15,9 +11,7 @@ export default defineConfig({
       formats: ["es", "iife"],
       fileName: (ext) => ({ es: "index.mjs", iife: "index.js" }[ext]),
     },
-    rollupOptions: {
-      // external: [...Object.keys(dependencies)],
-    },
+    rollupOptions: {},
     target: "esnext",
   },
 });
