@@ -107,7 +107,7 @@ function getNode(type, ...args) {
       }
       arg = parseInput(arg, cloned); // wire up cloned node for feedback..
       if (arg.type === polyType) {
-        // this can happen when arg is a function that contains multichannel expansion...
+        // this can happen when arg was a function that contained multichannel expansion...
         arg = arg.ins[i];
       }
       return arg;
