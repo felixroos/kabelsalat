@@ -19,7 +19,7 @@ function parseInput(input, node) {
         "tried to parse function input without without passing node.."
       );
     }
-    return node.apply(input);
+    return input(node);
   }
   if (typeof input === "object") {
     // is node
@@ -63,12 +63,13 @@ function getNode(type, ...args) {
       }
       arg = new Node(polyType).withIns(...arg);
     }
-    /* if (typeof arg === "function") {
-      const peek = arg(new Node("foo"));
+    if (typeof arg === "function") {
+      // if we have a feedback function, we need to check if it expands
+      const peek = arg(new Node("peek")); // the input node type doesn't matter
       if (peek.type === polyType) {
         maxExpansions = Math.max(peek.ins.length, maxExpansions);
       }
-    } */
+    }
     if (arg.type === polyType) {
       maxExpansions = Math.max(arg.ins.length, maxExpansions);
     }
@@ -104,7 +105,12 @@ function getNode(type, ...args) {
         const input = parseInput(arg.ins[i % arg.ins.length], cloned);
         return input.inherit(arg);
       }
-      return parseInput(arg, cloned); // wire up cloned node for feedback..
+      arg = parseInput(arg, cloned); // wire up cloned node for feedback..
+      if (arg.type === polyType) {
+        // this can happen when arg is a function that contains multichannel expansion...
+        arg = arg.ins[i];
+      }
+      return arg;
     });
     return cloned.withIns(...inputs);
   });
