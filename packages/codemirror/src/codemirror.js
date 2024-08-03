@@ -1,6 +1,7 @@
 import { EditorView, minimalSetup } from "codemirror";
 import { kabelsalatTheme } from "./theme.js";
 import { javascript } from "@codemirror/lang-javascript";
+import { insertNewline } from "@codemirror/commands";
 import { widgetPlugin } from "./widgets.js";
 import { flashField } from "./flash.js";
 import {
@@ -48,6 +49,13 @@ export function initEditor({ root, code, onChange, onEvaluate, onStop }) {
             key: "Alt-.",
             run: () => {
               onStop?.();
+              return true;
+            },
+          },
+          {
+            key: "Enter",
+            run: (view) => {
+              insertNewline(view);
               return true;
             },
           },
