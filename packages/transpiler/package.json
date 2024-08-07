@@ -4,16 +4,9 @@
   "type": "module",
   "module": "src/transpiler.js",
   "main": "src/transpiler.js",
-  "publishConfig": {
-    "main": "dist/index.js",
-    "module": "dist/index.mjs"
-  },
   "author": "Felix Roos <flix91@gmail.com>",
   "license": "AGPL-3.0-or-later",
-  "scripts": {
-    "build": "vite build",
-    "prepublishOnly": "npm run build"
-  },
+  "scripts": {},
   "devDependencies": {
     "vite": "^5.2.0"
   },
