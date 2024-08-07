@@ -397,88 +397,6 @@ export class SidechainCompressor {
   }
 }
 
-/* export class SidechainCompressor {
-  constructor(sampleRate) {
-    this.sampleRate = sampleRate;
-
-    // Initialize default parameters
-    this.ratio = 12.0;
-    this.threshold = -30.0;
-    this.attack_time = 0.005;
-    this.release_time = 0.4;
-    this.makeupGain = 1.0;
-
-    // Initializing Params
-    this.wav_pow = 0;
-    this.prev_level_lp_pow = 1.0e-6;
-    this.prev_gain_dB = 0.0;
-
-    // Precompute constants
-    this.updateConstants();
-  }
-
-  updateConstants() {
-    this.comp_ratio_const = 1.0 - 1.0 / this.ratio;
-    this.attack_const = Math.exp(-1.0 / (this.attack_time * this.sampleRate));
-    this.release_const = Math.exp(-1.0 / (this.release_time * this.sampleRate));
-    this.level_lp_const = Math.exp(-1.0 / (this.attack_time * this.sampleRate));
-    this.one_minus_attack_const = 1 - this.attack_const;
-    this.one_minus_release_const = 1 - this.release_const;
-  }
-
-  update(
-    input = 0,
-    threshold = -28,
-    ratio = 4,
-    attack = 0.005,
-    release = 0.005,
-    makeupGain = 0
-  ) {
-    // Update parameters
-    this.threshold = threshold;
-    this.ratio = ratio;
-    this.attack_time = attack;
-    this.release_time = release;
-    this.makeupGain = makeupGain;
-
-    // Update constants based on new parameters
-    this.updateConstants();
-
-    // Calculate intermediate values
-    this.wav_pow =
-      this.level_lp_const * this.prev_level_lp_pow +
-      (1.0 - this.level_lp_const) * input * input;
-    this.prev_level_lp_pow = Math.max(this.wav_pow, 1.0e-6);
-    this.level_dB = Math.log10(this.wav_pow) * 10;
-
-    this.above_threshold_dB = this.level_dB - this.threshold;
-    this.instant_target_gain_dB = Math.min(
-      this.above_threshold_dB / this.ratio - this.above_threshold_dB,
-      0
-    );
-    this.gain_dB = this.instant_target_gain_dB;
-
-    // Apply attack and release constants
-    if (this.gain_dB < this.prev_gain_dB) {
-      this.gain_dB =
-        this.attack_const * this.prev_gain_dB +
-        this.one_minus_attack_const * this.gain_dB;
-    } else {
-      this.gain_dB =
-        this.release_const * this.prev_gain_dB +
-        this.one_minus_release_const * this.gain_dB;
-    }
-
-    this.prev_gain_dB = this.gain_dB;
-
-    // Calculate linear gain
-    this.gain_linear = Math.pow(10.0, (this.gain_dB + this.makeupGain) / 20.0);
-
-    // Return the gain value representing the gain reduction
-    return this.gain_linear;
-  }
-} */
-
 /**
  * Triangle wave oscillator
  */
@@ -621,7 +539,19 @@ export class Filter extends AudioNode {
   }
 
   update(input, cutoff, reso) {
-    return this.filter.apply(input, cutoff, reso);
+    this.filter.apply(input, cutoff, reso);
+    return this.filter.s1;
+  }
+}
+export class BPF extends AudioNode {
+  constructor(id, state, sampleRate, send) {
+    super(id, state, sampleRate, send);
+    this.filter = new synth.TwoPoleFilter();
+  }
+
+  update(input, cutoff, reso) {
+    this.filter.apply(input, cutoff, reso);
+    return this.filter.s0;
   }
 }
 

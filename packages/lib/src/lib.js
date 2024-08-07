@@ -717,8 +717,7 @@ export let perc = module("perc", (gate, decay) => gate.adsr(0, 0, 1, decay), {
 
 export let hpf = module(
   "hpf",
-  (input, cutoff, resonance = 0) =>
-    input.lpf(1, resonance).sub(input.lpf(cutoff, resonance)),
+  (input, cutoff, resonance = 0) => input.sub(input.lpf(cutoff, resonance)),
   {
     ins: [{ name: "in" }, { name: "cutoff" }, { name: "reso" }],
     description: "high pass filter",
@@ -732,6 +731,15 @@ export let lpf = module("lpf", filter, {
   tags: ["fx", "filter"],
   examples: [`saw(55).lpf( sine(1).range(.4,.8) ).out()`],
 }); // alias
+
+export let bpf = registerNode("bpf", {
+  ugen: "BPF",
+  ins: [{ name: "in" }, { name: "cutoff" }, { name: "reso" }],
+  description: "high pass filter",
+  tags: ["fx", "filter"],
+  compile: ({ vars: [input = 0, cutoff = 1, reso = 0], ...meta }) =>
+    langs[meta.lang].defUgen(meta, input, cutoff, reso),
+});
 
 export let lfnoise = module("lfnoise", (freq) => noise().hold(impulse(freq)), {
   ins: [{ name: "freq" }],
