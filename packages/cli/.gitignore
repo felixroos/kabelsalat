@@ -4,3 +4,5 @@ src/clib/wav.c
 src/clib/alsa.md
 src/kabelsalat
 src/kabelsalat.js.c
+src/clib/sine_wave
+src/clib/sine_wave.c
