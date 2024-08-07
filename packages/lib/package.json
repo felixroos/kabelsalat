@@ -12,12 +12,10 @@
   "license": "AGPL-3.0-or-later",
   "scripts": {
     "build": "vite build",
-    "prepublishOnly": "npm run build",
-    "test": "vitest"
+    "prepublishOnly": "npm run build"
   },
   "devDependencies": {
-    "vite": "^5.2.0",
-    "vitest": "^1.6.0"
+    "vite": "^5.2.0"
   },
   "dependencies": {
     "@kabelsalat/core": "workspace:*"

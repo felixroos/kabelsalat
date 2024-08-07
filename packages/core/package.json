@@ -12,8 +12,7 @@
   "license": "AGPL-3.0-or-later",
   "scripts": {
     "build": "vite build",
-    "prepublishOnly": "npm run build",
-    "test": "vitest"
+    "prepublishOnly": "npm run build"
   },
   "devDependencies": {
     "vite": "^5.2.0"
