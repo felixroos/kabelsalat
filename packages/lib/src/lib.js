@@ -494,19 +494,11 @@ export let cc = registerNode("cc", {
   tags: ["external"],
   description: "CC control",
   ins: [
+    { name: "id", default: 0 },
     { name: "value", default: 0 },
-    { name: "min", default: 0 },
-    { name: "max", default: 1 },
-    { name: "step", default: 0 },
   ],
-  compile: ({ vars, ...meta }) => {
-    // const [_, value, min, max, step] = vars;
-    const types = vars.map((v) => typeof v);
-    assert(
-      !types.find((type) => !["number", "undefined"].includes(type)),
-      "_ only accepts static numbers"
-    );
-    return langs[meta.lang].defUgen(meta);
+  compile: ({ vars: [id], ...meta }) => {
+    return langs[meta.lang].defUgen(meta, id);
   },
 });
 
@@ -853,3 +845,18 @@ export let feedback = (fn) => add(fn);
 // no-widget fallback
 export let B = n;
 export let _ = n;
+
+let _mouseX = module("mouseX", () => cc("mouseX"), {
+  ins: [],
+  description: "X position of mouse, bipolar range",
+  tags: ["external"],
+  examples: [`mouseX.range(100,800).sine().out()`],
+});
+export let mouseX = _mouseX();
+let _mouseY = module("mouseY", () => cc("mouseY"), {
+  ins: [],
+  description: "Y position of mouse, bipolar range",
+  tags: ["external"],
+  examples: [`mouseY.range(800,100).sine().out()`],
+});
+export let mouseY = _mouseY();

@@ -25,11 +25,7 @@ export class SalatRepl {
       // TODO: could this get problematic for multiple SalatRepl instances in parallel?
       window.addEventListener("message", (e) => {
         if (e.data.type === "KABELSALAT_SET_CONTROL") {
-          this.audio.send({
-            type: "SET_CONTROL",
-            id: e.data.id,
-            value: e.data.value,
-          });
+          this.audio.setControl(e.data.id, e.data.value);
         }
       });
     }

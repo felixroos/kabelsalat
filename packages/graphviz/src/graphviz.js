@@ -99,7 +99,9 @@ Node.prototype.render = async function (container, options = {}) {
       const values = numericNodes
         .map((inputNode) => {
           inputNode.ignore = true;
-          return getNumericLabel(inputNode.value);
+          return typeof inputNode.value === "number"
+            ? getNumericLabel(inputNode.value)
+            : inputNode.value;
         })
         .join(" ");
       node.label = `${node.type} ${values}`;

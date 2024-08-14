@@ -1,6 +1,7 @@
 import { assert } from "@kabelsalat/lib/src/utils.js";
 import "@kabelsalat/core/src/compiler.js"; // Node.prototype.compile
 import { MIDI, parseMidiMessage } from "@kabelsalat/lib/src/midi.js";
+import { Mouse } from "@kabelsalat/lib/src/mouse.js";
 
 // what follows are attempts at importing the worklet as a url
 // the problem: when ?url is used, the worklet.js file itself is not bundled.
@@ -58,6 +59,7 @@ export class AudioView {
     const { src, ugens } = node.compile({
       log: false,
     });
+    this.initMouse();
     if (
       !this.midiInited &&
       ugens.some((ugen) => ugen.type.startsWith("Midi"))
@@ -88,6 +90,14 @@ export class AudioView {
     }
   }
 
+  setControl(id, value) {
+    this.send({
+      type: "SET_CONTROL",
+      id,
+      value,
+    });
+  }
+
   async initAudioIn() {
     console.log("init audio input...");
     const stream = await navigator.mediaDevices.getUserMedia({
@@ -109,6 +119,13 @@ export class AudioView {
       msg && this.send(msg);
     });
   }
+  initMouse() {
+    this.mouse = new Mouse();
+    this.mouse.on("move", (x, y) => {
+      this.setControl("mouseX", x);
+      this.setControl("mouseY", y);
+    });
+  }
 
   /**
    * Send a message to the audio thread (audio worket)
@@ -117,7 +134,7 @@ export class AudioView {
     assert(msg instanceof Object);
     // make sure to init before callilng send..
     if (!this.audioWorklet) {
-      console.warn("message sent before audioworklet was ready...", msg);
+      // console.warn("message sent before audioworklet was ready...", msg);
       return;
     }
 
@@ -206,6 +223,7 @@ export class AudioView {
    */
   stop() {
     this.audioCtx && this.send({ type: "STOP" });
+    this.mouse?.detach();
   }
 
   record() {

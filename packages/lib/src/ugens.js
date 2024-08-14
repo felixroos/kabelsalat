@@ -711,17 +711,19 @@ export class CC extends AudioNode {
   constructor(id, state, sampleRate, send) {
     super(id, state, sampleRate, send);
     this.type = "cc";
-    const [_id, value, min, max, step] = state.inputs;
-    this.id = _id;
-    this.value = value;
-    this.min = min;
-    this.max = max;
-    this.step = step;
+    // the following line doesn't work for strings
+    // ..which is why the id is passed in update (for now?)
+    // theoretically, this means control changes will be ignored before for the first audio frame
+    // ..which should be negligible
+    // also, using state.inputs is generally a bit ugly..
+    // this.id = state.inputs[0];
+    this.value = state.inputs[1] ?? 0;
   }
   setValue(value) {
     this.value = value;
   }
-  update() {
+  update(id) {
+    this.id = id;
     return this.value;
   }
 }
