@@ -381,18 +381,12 @@ function dagify(node) {
   return node;
 }
 
-function visit(node, visited = []) {
-  visited.push(node);
-  node.ins.forEach((child) => {
-    if (!visited.includes(child)) {
-      visit(child, visited);
-    }
-  });
-  return visited;
-}
-
 function flatten(node) {
-  const flat = visit(node);
+  const flat = [];
+  dfs(node, (node) => {
+    flat.push(node);
+    return node;
+  });
   return flat.map((node) => {
     let clone = {
       ...node,
