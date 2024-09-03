@@ -82,14 +82,13 @@ let impseq = module("impseq", (trig, ...step) =>
 );
 let feed = register("feed", (x, f) =>
   x.apply((dry) => {
-    let wets = [];
+    let wet;
     return dry
       .add((x) => {
-        let wet = f(x);
-        wets.push(wet);
+        wet = f(x);
         return wet;
       })
-      .apply((x) => poly(...wets));
+      .apply(x => wet)
   })
 );
 
