@@ -23,3 +23,5 @@ export let exp = (input) => `Math.exp(${input})`;
 export let log = (input) => `Math.log(${input})`;
 export let mod = (a, b) => `${a}%${b}`;
 export let abs = (input) => `Math.abs(${input})`;
+export let min = (a, b) => `Math.min(${a}, ${b})`;
+export let max = (a, b) => `Math.max(${a}, ${b})`;

@@ -595,6 +595,22 @@ export let abs = registerNode("abs", {
   compile: ({ vars: [input = 0], name, lang }) =>
     langs[lang].def(name, langs[lang].abs(input)),
 });
+export let min = registerNode("min", {
+  tags: ["math"],
+  description: "returns the minimum of the given signals",
+  examples: [`impulse(4).apply(x => min(x.seq(0,3,2), x.seq(0,7,0,5,0)).add(48).midinote().sine()).out()`],
+  ins: [{ name: "in", dynamic: true }],
+  compile: ({ vars, name, lang }) =>
+    langs[lang].def(name, vars.reduce(langs[lang].min) || 0),
+});
+export let max = registerNode("max", {
+  tags: ["math"],
+  description: "returns the maximum of the given signals",
+  examples: [`impulse(4).apply(x => max(x.seq(0,3,2), x.seq(0,7,0,5,0)).add(48).midinote().sine()).out()`],
+  ins: [{ name: "in", dynamic: true }],
+  compile: ({ vars, name, lang }) =>
+    langs[lang].def(name, vars.reduce(langs[lang].max) || 0),
+});
 export let greater = registerNode("greater", {
   tags: ["logic"],
   description: "returns 1 if input is greater then threshold",
