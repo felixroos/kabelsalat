@@ -23,6 +23,13 @@ double lerp(double x, double y0, double y1)
   return y0 + x * (y1 - y0);
 }
 
+// a pair of values
+// used to implement e.g. argmin and argmax
+typedef struct pair {
+   double a;
+   double b;
+} pair;
+
 // SineOsc
 
 typedef struct SineOsc

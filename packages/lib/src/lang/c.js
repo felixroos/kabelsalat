@@ -31,3 +31,8 @@ export let mod = (a, b) => `${a}>=${b}?${a}-${b}:${a}`;
 export let abs = (input) => `fabs(${input})`;
 export let min = (a, b) => `fmin(${a}, ${b})`;
 export let max = (a, b) => `fmax(${a}, ${b})`;
+export let pair_make = (value, i) => `((pair) {${value}, ${i}})`;
+export let pair_a = (p) => `${p}.a`;
+export let pair_b = (p) => `${p}.b`;
+export let pair_a_min = (p, q) => `(${pair_a(p)} < ${pair_a(q)} ? ${p} : ${q})`;
+export let pair_a_max = (p, q) => `(${pair_a(p)} > ${pair_a(q)} ? ${p} : ${q})`;

@@ -25,3 +25,8 @@ export let mod = (a, b) => `${a}%${b}`;
 export let abs = (input) => `Math.abs(${input})`;
 export let min = (a, b) => `Math.min(${a}, ${b})`;
 export let max = (a, b) => `Math.max(${a}, ${b})`;
+export let pair_make = (a, b) => `[${a}, ${b}]`;
+export let pair_a = (p) => `${p}[0]`;
+export let pair_b = (p) => `${p}[1]`;
+export let pair_a_min = (p, q) => `(${pair_a(p)} < ${pair_a(q)} ? ${p} : ${q})`;
+export let pair_a_max = (p, q) => `(${pair_a(p)} > ${pair_a(q)} ? ${p} : ${q})`;

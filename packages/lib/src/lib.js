@@ -611,6 +611,22 @@ export let max = registerNode("max", {
   compile: ({ vars, name, lang }) =>
     langs[lang].def(name, vars.reduce(langs[lang].max) || 0),
 });
+export let argmin = registerNode("argmin", {
+  tags: ["math"],
+  description: "returns the index of the minimum of the given signals",
+  examples: [`argmin(saw(1), saw(3), saw(5)).mul(12).add(48).midinote().sine().out()`],
+  ins: [{ name: "in", dynamic: true }],
+  compile: ({ vars, name, lang }) =>
+    langs[lang].def(name, langs[lang].pair_b(vars.map(langs[lang].pair_make).reduce(langs[lang].pair_a_min)) || 0),
+});
+export let argmax = registerNode("argmax", {
+  tags: ["math"],
+  description: "returns the index of the maximum of the given signals",
+  examples: [`argmax(saw(1), saw(3), saw(5)).mul(12).add(48).midinote().sine().out()`],
+  ins: [{ name: "in", dynamic: true }],
+  compile: ({ vars, name, lang }) =>
+    langs[lang].def(name, langs[lang].pair_b(vars.map(langs[lang].pair_make).reduce(langs[lang].pair_a_max)) || 0),
+});
 export let greater = registerNode("greater", {
   tags: ["logic"],
   description: "returns 1 if input is greater then threshold",
