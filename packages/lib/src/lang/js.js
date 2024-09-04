@@ -22,3 +22,4 @@ export let pow = (a, b) => `${a} ** ${b}`;
 export let exp = (input) => `Math.exp(${input})`;
 export let log = (input) => `Math.log(${input})`;
 export let mod = (a, b) => `${a}%${b}`;
+export let abs = (input) => `Math.abs(${input})`;

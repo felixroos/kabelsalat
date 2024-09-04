@@ -28,3 +28,4 @@ export let pow = (a, b) => `pow(${a}, ${b})`;
 export let exp = (a) => `exp(${a})`;
 export let log = (input) => `log(${input})`;
 export let mod = (a, b) => `${a}>=${b}?${a}-${b}:${a}`;
+export let abs = (input) => `fabs(${input})`;

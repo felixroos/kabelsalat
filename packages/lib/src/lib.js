@@ -585,6 +585,16 @@ export let mod = registerNode("mod", {
   compile: ({ vars, name, lang }) =>
     langs[lang].def(name, langs[lang].mod(...vars) || 0),
 });
+export let abs = registerNode("abs", {
+  tags: ["math"],
+  description: "returns the absolute value of the signal",
+  ins: [{ name: "in" }],
+  examples: [
+    `sine(440).abs().out()`,
+  ],
+  compile: ({ vars: [input = 0], name, lang }) =>
+    langs[lang].def(name, langs[lang].abs(input)),
+});
 export let greater = registerNode("greater", {
   tags: ["logic"],
   description: "returns 1 if input is greater then threshold",
