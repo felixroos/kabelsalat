@@ -827,6 +827,19 @@ export let pan = module(
   }
 );
 
+export let pick = registerNode("pick", {
+  tags: ["multi-channel"],
+  ugen: "Pick",
+  description: "Pick",
+  examples: ["sine(220).out()"],
+  ins: [
+    { name: "index" },
+    { name: "inputs", dynamic: true },
+  ],
+  compile: ({ vars, ...meta }) =>
+    langs[meta.lang].defUgen(meta, ...vars),
+});
+
 export let mix = register(
   "mix",
   (input, channels = 1) => {

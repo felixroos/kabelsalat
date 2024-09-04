@@ -769,3 +769,9 @@ export class Sequence extends AudioNode {
     return ins[this.step];
   }
 }
+
+export class Pick extends AudioNode {
+  update(index, ...inputs) {
+    return inputs[Math.floor(index) % inputs.length];
+  }
+}

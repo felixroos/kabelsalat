@@ -838,6 +838,26 @@ void *Clock_create()
   return (void *)node;
 }
 
+// Pick
+
+typedef struct Pick {} Pick;
+
+void Pick_init(Pick *self)
+{
+}
+
+double Pick_update(Sequence *self, float index, int len, float *inputs)
+{
+    return inputs[((int) floor(index)) % len];
+}
+
+void *Pick_create()
+{
+  Pick *node = (Pick *)malloc(sizeof(Pick));
+  Pick_init(node);
+  return (void *)node;
+}
+
 #endif // UGENS_H
 
 /*

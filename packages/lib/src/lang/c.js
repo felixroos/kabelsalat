@@ -5,7 +5,7 @@ export let def = (name, value, comment) =>
 
 export let defUgen = (meta, ...args) => {
   args.unshift(`nodes[${meta.ugenIndex}]`);
-  if (meta.ugen === "Sequence") {
+  if (meta.ugen === "Sequence" || meta.ugen === "Pick") {
     const len = args.length - 2;
     const seq = `(float[${len}]){${args.slice(2).join(",")}}`;
     return def(
