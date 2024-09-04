@@ -840,6 +840,22 @@ export let pick = registerNode("pick", {
     langs[meta.lang].defUgen(meta, ...vars),
 });
 
+export let split = register(
+  "split",
+  (input, fn) => {
+    if (input.type !== "poly") {
+      return fn([input]);
+    }
+    return fn(input.ins);
+  },
+  {
+    ins: [{ name: "input" }, { name: "fn" }],
+    tags: ["multi-channel"],
+    description: "apply fn to an array of signals, one for each channel in input",
+    examples: [`sine([220,330,550]).split(chs => add(...chs)).out()`],
+  }
+);
+
 export let mix = register(
   "mix",
   (input, channels = 1) => {
