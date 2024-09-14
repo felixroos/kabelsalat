@@ -19,8 +19,6 @@ Node.prototype.render = async function (container, options = {}) {
 
   if (dagify) {
     this.dagify();
-  } else if (node.type === "exit") {
-    node = node.ins[0]; // don't render exit helper node
   }
 
   let getNumericLabel = (value) =>

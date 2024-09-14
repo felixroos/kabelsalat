@@ -227,6 +227,15 @@ export class Feedback extends AudioNode {
     return this.value;
   }
 }
+export class Output {
+  constructor() {
+    this.value = 0;
+  }
+  update(value) {
+    this.value = value;
+    return this.value;
+  }
+}
 
 /**
  * White noise source

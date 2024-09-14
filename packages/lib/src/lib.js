@@ -664,26 +664,14 @@ export let midinote = registerNode("midinote", {
 .midinote().sine().out()`,
   ],
 });
-export let dac = registerNode("dac", {
+export let output = registerNode("output", {
   internal: true,
-  compile: ({ vars, lang, name }) => {
-    let channels;
-    if (!vars.length) {
-      console.warn(`no input.. call .out() to play`);
-      channels = [0, 0];
-    } else {
-      channels = vars;
-    }
-    if (channels.length === 1) {
-      // make mono if only one channel
-      channels = [channels[0], channels[0]];
-    } else if (channels.length > 2) {
-      console.warn("returned more than 2 channels.. using first 2");
-      channels = channels.slice(0, 2);
-    }
-    return langs[lang].returnLine(channels);
+  ugen: "Output",
+  compile: ({ vars: [id], ...meta }) => {
+    return langs[meta.lang].defUgen(meta, id);
   },
 });
+
 export let exit = registerNode("exit", { internal: true });
 export let poly = registerNode("poly");
 export let PI = n(Math.PI);

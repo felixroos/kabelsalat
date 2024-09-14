@@ -10,8 +10,6 @@ export let defUgen = (meta, ...args) => {
     meta.node.type
   );
 };
-export let returnLine = (channels) =>
-  `return [${channels.map((chan) => `(${chan}*lvl)`).join(",")}]`;
 
 export let feedbackWrite = (to, value) => {
   return `nodes[${to}].write(${value})`;

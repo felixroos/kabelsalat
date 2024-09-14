@@ -375,6 +375,35 @@ void *Feedback_create()
   return (void *)node;
 }
 
+// Output
+
+typedef struct Output
+{
+  double value;
+} Output;
+
+void Output_init(Output *self)
+{
+  self->value = 0;
+}
+
+double Output_update(Feedback *self, double value)
+{
+  self->value = value;
+  return self->value;
+}
+double Output_read(Feedback *self)
+{
+  return self->value;
+}
+
+void *Output_create()
+{
+  Output *node = (Output *)malloc(sizeof(Output));
+  Output_init(node);
+  return (void *)node;
+}
+
 // Fold
 
 typedef struct Fold
@@ -864,6 +893,7 @@ void *Clock_create()
 - [x] Slew
 - [x] Slide
 - [x] TriOsc
+- [ ] Output
 
 */
 

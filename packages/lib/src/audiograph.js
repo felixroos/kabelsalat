@@ -118,9 +118,9 @@ export class AudioGraph {
     for (let i = 0; i < this.units.length; i++) {
       const unit = this.units[i];
       const lvl = unit.getLevel(this.playPos);
-      const channels = unit.genSample(this.playPos, unit.nodes, inputs, lvl);
-      sum[0] += channels[0];
-      sum[1] += channels[1];
+      unit.genSample(this.playPos, unit.nodes, inputs);
+      sum[0] += unit.getOutput(0) * lvl;
+      sum[1] += unit.getOutput(1) * lvl;
     }
     return sum;
   }
@@ -152,7 +152,20 @@ class Unit {
         console.warn(`unknown ugen "${ugen.type}"`);
       }
     }
-    this.genSample = new Function("time", "nodes", "input", "lvl", schema.src);
+    this.outputs = schema.ugens
+      .filter((ugen) => ugen.type === "Output")
+      .map((output) => schema.ugens.indexOf(output));
+    if (this.outputs.length > 2) {
+      console.warn(
+        `Only max 2 channels supported, received ${this.outputs.length}`
+      );
+    }
+
+    this.genSample = new Function("time", "nodes", "input", schema.src);
+  }
+
+  getOutput(index) {
+    return this.nodes[this.outputs[index % this.outputs.length]].value;
   }
 
   noteOn(msg) {

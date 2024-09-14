@@ -16,8 +16,6 @@ export let defUgen = (meta, ...args) => {
   }
   return def(meta.name, `${meta.ugen}_update(${args.join(",")})`, meta.ugen);
 };
-export let returnLine = (channels) =>
-  `float left = ${channels[0]}; float right = ${channels[1]};`;
 
 export let feedbackWrite = (to, value) => {
   return `Feedback_write(nodes[${to}], ${value})`;

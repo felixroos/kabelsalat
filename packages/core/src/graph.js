@@ -10,7 +10,7 @@ export const node = (type, value) => new Node(type, value);
 export let nodeRegistry = new Map();
 
 const polyType = "poly";
-const outputType = "dac";
+const outputType = "exit";
 
 function parseInput(input, node) {
   if (typeof input === "function") {
@@ -82,7 +82,7 @@ function getNode(type, ...args) {
     return next.withIns(...args.map((arg) => parseInput(arg, next))); //
   }
 
-  // dont expand dac node, but instead input all channels
+  // dont expand exit node, but instead input all channels
   if (type === outputType) {
     const inputs = args
       .map((arg) => {
@@ -416,7 +416,8 @@ export function evaluate(code) {
     nodes.push(this);
   };
   Function(code)();
-  const node = dac(...nodes).exit();
+  const channels = nodes.length === 1 ? nodes[0] : poly(...nodes);
+  const node = output(channels).exit();
   return node;
 }
 
