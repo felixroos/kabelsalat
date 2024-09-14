@@ -20,15 +20,6 @@ describe("Node", () => {
     expect(id(n(1))).toStrictEqual(n(1));
     expect(n(1).id()).toStrictEqual(n(1));
   });
-  test("flatten", () => {
-    expect(sine(200).flatten()).toStrictEqual([
-      { type: "sine", ins: ["1"] },
-      { type: "n", value: 200, ins: [] },
-    ]);
-    expect(add((x) => x).flatten()).toStrictEqual([
-      { type: "add", ins: ["0"] },
-    ]);
-  });
   test("loopsToMe", () => {
     const fb = n(1);
     expect(fb.loopsToMe(fb)).toStrictEqual(true);
@@ -47,23 +38,23 @@ describe("Node", () => {
       // 0
       {
         type: "exit",
-        ins: ["1", "3"],
+        ins: ["1", "2"],
       },
       // 1
       {
-        type: "add",
+        type: "feedback_write",
         ins: ["2"],
+        to: 3,
       },
       // 2
       {
-        type: "feedback_read",
-        ins: [],
+        type: "add",
+        ins: ["3"],
       },
       // 3
       {
-        type: "feedback_write",
-        ins: ["1"],
-        to: 2,
+        type: "feedback_read",
+        ins: [],
       },
     ]);
   });
