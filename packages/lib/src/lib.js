@@ -344,7 +344,7 @@ export let feedback_read = registerNode("feedback_read", {
     // remap indices
     // we need to rewrite the "to" value to the audio node index (instead of flat node index)
     const writer = nodes.find(
-      (node) => node.type === "feedback_write" && String(node.to) === id
+      (node) => node.type === "feedback_write" && node.to === nodes[id]
     );
     writer.to = ugenIndex;
     return langs[meta.lang].defUgen(meta, ...vars);
@@ -666,7 +666,7 @@ export let midinote = registerNode("midinote", {
 });
 export let dac = registerNode("dac", {
   internal: true,
-  compile: ({ vars, lang }) => {
+  compile: ({ vars, lang, name }) => {
     let channels;
     if (!vars.length) {
       console.warn(`no input.. call .out() to play`);

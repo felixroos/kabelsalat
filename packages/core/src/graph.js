@@ -371,7 +371,11 @@ function dagify(node) {
         const feedbackWriter = new Node("feedback_write");
         feedbackWriter.ins = [feedbackSource];
         feedbackWriter.to = feedbackReader;
-        node.ins.push(feedbackWriter); // don't unshift!
+        // node is the exit node, and its only input is currently of type dac
+        // the dac node returns from our generated function, so we need to make sure it is last
+        // we unshift the feedback node to make sure the dac node stays last,
+        // so when we dfs through the nodes and generate code, the return statement comes last as well
+        node.ins.unshift(feedbackWriter);
       });
       return;
     }
