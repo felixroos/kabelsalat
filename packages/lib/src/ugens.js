@@ -227,6 +227,7 @@ export class Feedback extends AudioNode {
     return this.value;
   }
 }
+
 export class Output {
   constructor() {
     this.value = 0;
@@ -234,6 +235,15 @@ export class Output {
   update(value) {
     this.value = value;
     return this.value;
+  }
+}
+
+export class Source {
+  constructor() {
+    this.source = { value: 0 }; // fallback
+  }
+  update() {
+    return this.source.value;
   }
 }
 

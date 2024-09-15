@@ -152,14 +152,24 @@ class Unit {
         console.warn(`unknown ugen "${ugen.type}"`);
       }
     }
+
+    // this logic could also be moved to the compiler..
     this.outputs = schema.ugens
       .filter((ugen) => ugen.type === "Output")
       .map((output) => schema.ugens.indexOf(output));
-    if (this.outputs.length > 2) {
-      console.warn(
-        `Only max 2 channels supported, received ${this.outputs.length}`
+
+    // this logic could also be moved to the compiler..
+    // assign corresponding output nodes to input nodes
+    schema.ugens.forEach((ugen, i) => {
+      if (ugen.type !== "Source") {
+        return;
+      }
+      const outputIndex = schema.ugens.findIndex(
+        (node) => node.type === "Output" && node.inputs[1] === ugen.inputs[0]
       );
-    }
+      this.nodes[i].source = this.nodes[outputIndex];
+    });
+    // could potentially warn about outputs that have no corresponding inputs and ignore them?
 
     this.genSample = new Function("time", "nodes", "input", schema.src);
   }

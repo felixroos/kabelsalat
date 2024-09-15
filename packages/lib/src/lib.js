@@ -664,12 +664,19 @@ export let midinote = registerNode("midinote", {
 .midinote().sine().out()`,
   ],
 });
+
+// aren't these nodes very same / similar to feedback_write and feedback_read?
+// maybe they should be the same
 export let output = registerNode("output", {
   internal: true,
   ugen: "Output",
-  compile: ({ vars: [id], ...meta }) => {
-    return langs[meta.lang].defUgen(meta, id);
-  },
+  compile: ({ vars: [input, id = 0], ...meta }) =>
+    langs[meta.lang].defUgen(meta, input, id),
+});
+export let src = registerNode("src", {
+  internal: true,
+  ugen: "Source",
+  compile: ({ vars: [id = 0], ...meta }) => langs[meta.lang].defUgen(meta, id),
 });
 
 export let exit = registerNode("exit", { internal: true });

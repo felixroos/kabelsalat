@@ -412,12 +412,11 @@ function flatten(node) {
 export function evaluate(code) {
   // make sure to call Object.assign(globalThis, api);
   let nodes = [];
-  Node.prototype.out = function () {
-    nodes.push(this);
+  Node.prototype.out = function (channels = [0, 1]) {
+    nodes.push(this.output(channels));
   };
   Function(code)();
-  const channels = nodes.length === 1 ? nodes[0] : poly(...nodes);
-  const node = output(channels).exit();
+  const node = exit(...nodes);
   return node;
 }
 
