@@ -153,10 +153,17 @@ class Unit {
       }
     }
 
-    // this logic could also be moved to the compiler..
-    this.outputs = schema.ugens
-      .filter((ugen) => ugen.type === "Output")
-      .map((output) => schema.ugens.indexOf(output));
+    // this logic might movable to the compiler..
+    let fallback = { value: 0 }; // fallback output
+    this.outputs = { 0: fallback, 1: fallback };
+    for (let i in schema.ugens) {
+      const ugen = schema.ugens[i];
+      if (ugen.type !== "Output") {
+        continue;
+      }
+      const channel = ugen.inputs[1];
+      this.outputs[channel] = this.nodes[i];
+    }
 
     // this logic could also be moved to the compiler..
     // assign corresponding output nodes to input nodes
@@ -175,7 +182,7 @@ class Unit {
   }
 
   getOutput(index) {
-    return this.nodes[this.outputs[index % this.outputs.length]].value;
+    return this.outputs[index].value;
   }
 
   noteOn(msg) {
