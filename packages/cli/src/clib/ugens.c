@@ -23,6 +23,13 @@ double lerp(double x, double y0, double y1)
   return y0 + x * (y1 - y0);
 }
 
+// a pair of values
+// used to implement e.g. argmin and argmax
+typedef struct pair {
+   double a;
+   double b;
+} pair;
+
 // SineOsc
 
 typedef struct SineOsc
@@ -828,6 +835,26 @@ void *Clock_create()
 {
   Clock *node = (Clock *)malloc(sizeof(Clock));
   Clock_init(node);
+  return (void *)node;
+}
+
+// Pick
+
+typedef struct Pick {} Pick;
+
+void Pick_init(Pick *self)
+{
+}
+
+double Pick_update(Sequence *self, float index, int len, float *inputs)
+{
+    return inputs[((int) floor(index)) % len];
+}
+
+void *Pick_create()
+{
+  Pick *node = (Pick *)malloc(sizeof(Pick));
+  Pick_init(node);
   return (void *)node;
 }
 
