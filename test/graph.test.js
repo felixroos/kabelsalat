@@ -20,25 +20,27 @@ describe("Node", () => {
     expect(id(n(1))).toStrictEqual(n(1));
     expect(n(1).id()).toStrictEqual(n(1));
   });
-  test("loopsToMe", () => {
-    const fb = n(1);
-    expect(fb.loopsToMe(fb)).toStrictEqual(true);
-    let inner;
-    let fb2 = add((x) => {
-      inner = x.mul(1);
-      return inner;
+  test("output", () => {
+    const node = sine(200).output(1);
+    expect(node.toObject()).toStrictEqual({
+      type: "output",
+      ins: [
+        { type: "sine", ins: [{ type: "n", value: 200, ins: [] }] },
+        {
+          type: "n",
+          value: 1,
+          ins: [],
+        },
+      ],
     });
-    expect(fb2.loopsToMe(inner)).toStrictEqual(true);
-    let fb3 = add((x) => x);
-    expect(fb3.loopsToMe(fb3)).toStrictEqual(true);
   });
   test("evaluate", () => {
     const node = evaluate("sine(200).out()");
     expect(node.toObject()).toStrictEqual({
-      type: "exit", // <- this is the node all connect to (to make feedback_write nodes discoverable)
+      type: "exit",
       ins: [
         {
-          type: "dac", // <- this is the node that only sound generators connect to
+          type: "output",
           ins: [
             {
               type: "sine",
@@ -49,6 +51,31 @@ describe("Node", () => {
                   ins: [],
                 },
               ],
+            },
+            {
+              ins: [],
+              type: "n",
+              value: 0,
+            },
+          ],
+        },
+        {
+          type: "output",
+          ins: [
+            {
+              ins: [
+                {
+                  ins: [],
+                  type: "n",
+                  value: 200,
+                },
+              ],
+              type: "sine",
+            },
+            {
+              ins: [],
+              type: "n",
+              value: 1,
             },
           ],
         },

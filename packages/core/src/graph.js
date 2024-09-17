@@ -201,12 +201,8 @@ export function n(value) {
 
 nodeRegistry.set("out", {
   tags: ["meta"],
-  description: "Sends the node to the audio output (dac)",
+  description: "Sends the node to the audio output",
 });
-// this method will be overriden when using evaluate
-Node.prototype.out = function () {
-  return dac(this);
-};
 
 nodeRegistry.set("withIns", {
   internal: true,
