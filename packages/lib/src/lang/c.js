@@ -17,10 +17,6 @@ export let defUgen = (meta, ...args) => {
   return def(meta.name, `${meta.ugen}_update(${args.join(",")})`, meta.ugen);
 };
 
-export let feedbackWrite = (to, value) => {
-  return `Feedback_write(nodes[${to}], ${value})`;
-};
-
 export let midinote = (note) => `pow(2.0, ((${note} - 69.0) / 12.0)) * 440.0`;
 export let pow = (a, b) => `pow(${a}, ${b})`;
 export let exp = (a) => `exp(${a})`;
