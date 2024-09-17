@@ -1,7 +1,7 @@
 export let defSin = (input) => `Math.sin(${input})`;
 export let defCos = (input) => `Math.cos(${input})`;
 export let def = (name, value, comment) =>
-  `const ${name} = ${value};${comment ? ` /* ${comment} */` : ""}`;
+  `${name} = ${value};${comment ? ` /* ${comment} */` : ""}`;
 
 export let defUgen = (meta, ...args) => {
   return def(

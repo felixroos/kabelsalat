@@ -348,33 +348,6 @@ void *Delay_create()
   return (void *)node;
 }
 
-typedef struct Feedback
-{
-  double value;
-} Feedback;
-
-void Feedback_init(Feedback *self)
-{
-  self->value = 0;
-}
-
-double Feedback_write(Feedback *self, double value)
-{
-  self->value = value;
-  return 0;
-}
-double Feedback_update(Feedback *self)
-{
-  return self->value;
-}
-
-void *Feedback_create()
-{
-  Feedback *node = (Feedback *)malloc(sizeof(Feedback));
-  Feedback_init(node);
-  return (void *)node;
-}
-
 // Output
 
 typedef struct Output
@@ -387,12 +360,13 @@ void Output_init(Output *self)
   self->value = 0;
 }
 
-double Output_update(Feedback *self, double value)
+// TODO: find out what to do with id
+double Output_update(Output *self, double value, int id)
 {
   self->value = value;
   return self->value;
 }
-double Output_read(Feedback *self)
+double Output_read(Output *self)
 {
   return self->value;
 }

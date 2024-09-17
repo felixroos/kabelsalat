@@ -7,5 +7,5 @@ This package contains the core components of kabelsalat:
 
 Notable features:
 
-- feedback resolution: graph cycles are broken up into feedback_read and feedback_write nodes
+- single sample feedback: graph cycles will feed back to the next sample
 - multichannel-expansion: Passing an Array (or poly node) to an input will split the graph (similar to SuperCollider)

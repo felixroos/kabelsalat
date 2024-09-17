@@ -322,34 +322,6 @@ export let lag = registerNode("lag", {
     langs[meta.lang].defUgen(meta, input, rate),
 });
 
-// feedback_write doesn't need a creation function, because it's created internally in dagify
-nodeRegistry.set("feedback_write", {
-  internal: true,
-  tags: ["innards"],
-  description: "Writes to the feedback buffer. Not intended for direct use",
-  compile: ({ vars, node, name, lang }) =>
-    langs[lang].def(
-      name,
-      langs[lang].feedbackWrite(node.to, vars[0]),
-      "feedback_write"
-    ),
-});
-export let feedback_read = registerNode("feedback_read", {
-  ugen: "Feedback",
-  internal: true,
-  description: "internal helper node to read the last feedback_write output",
-  ins: [],
-  compile: ({ vars, ...meta }) => {
-    const { nodes, id, ugenIndex } = meta;
-    // remap indices
-    // we need to rewrite the "to" value to the audio node index (instead of flat node index)
-    const writer = nodes.find(
-      (node) => node.type === "feedback_write" && node.to === nodes[id]
-    );
-    writer.to = ugenIndex;
-    return langs[meta.lang].defUgen(meta, ...vars);
-  },
-});
 export let slew = registerNode("slew", {
   ugen: "Slew",
   tags: ["fx"],

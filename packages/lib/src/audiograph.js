@@ -118,7 +118,7 @@ export class AudioGraph {
     for (let i = 0; i < this.units.length; i++) {
       const unit = this.units[i];
       const lvl = unit.getLevel(this.playPos);
-      unit.genSample(this.playPos, unit.nodes, inputs);
+      unit.genSample(this.playPos, unit.nodes, inputs, unit.registers);
       sum[0] += unit.getOutput(0) * lvl;
       sum[1] += unit.getOutput(1) * lvl;
     }
@@ -177,8 +177,9 @@ class Unit {
       this.nodes[i].source = this.nodes[outputIndex];
     });
     // could potentially warn about outputs that have no corresponding inputs and ignore them?
-
-    this.genSample = new Function("time", "nodes", "input", schema.src);
+    // initialize empty registers
+    this.registers = new Array(schema.registers).fill(0);
+    this.genSample = new Function("time", "nodes", "input", "r", schema.src);
   }
 
   getOutput(index) {

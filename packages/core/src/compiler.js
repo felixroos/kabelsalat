@@ -6,14 +6,14 @@ export function compile(node, options = {}) {
     lang = "js",
     fallbackType = "thru",
     constType = "n",
-    varPrefix = "n",
+    getRegister = (id) => `r[${id}]`,
   } = options;
   log && console.log("compile", node);
   const nodes = topoSort(node);
   let lines = [];
   let v = (id) => {
     if (nodes[id].type !== constType) {
-      return `${varPrefix}${id}`;
+      return getRegister(id);
     }
     if (typeof nodes[id].value === "string") {
       return `"${nodes[id].value}"`;
@@ -57,11 +57,11 @@ export function compile(node, options = {}) {
     console.log("compiled code:");
     console.log(src);
   }
-  return { src, ugens };
+  return { src, ugens, registers: nodes.length };
 }
 
 Node.prototype.compile = function (options) {
-  return compile(this.dagify(), options);
+  return compile(this, options);
 };
 
 // simple topo sort using dfs
