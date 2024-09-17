@@ -43,6 +43,7 @@ export function compile(node, options = {}) {
       ugen: schema.ugen,
       name: v(id),
       lang,
+      getRegister,
     };
     if (schema.compile) {
       lines.push(schema.compile(meta));

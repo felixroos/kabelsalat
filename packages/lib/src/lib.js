@@ -637,36 +637,25 @@ export let midinote = registerNode("midinote", {
   ],
 });
 
-export let src = registerNode("src");
-export let output = register(
-  "output",
-  (input, id) => {
-    const node = getNode("output", input, id);
-    node.map((ch, i) => {
-      const channel = input.channel(i);
-      // assuming output id is set as raw number..
-      const channel_id = ch.ins[1].channel(i).value;
-      channel.dfs((node) => {
-        // if we find a node that is fed a src with our output id, we route the output instead
-        const srcIndex = node.ins.findIndex(
-          (input) => input.type === "src" && input.ins[0].value === channel_id
-        );
-        if (srcIndex !== -1) {
-          node.ins[srcIndex] = channel;
-        }
-        return node;
-      });
-      return node;
-    });
-    return node;
+export let src = registerNode("src", {
+  internal: true,
+  compile: ({ vars: [id = 0], name, lang, ...meta }) => {
+    const outputIndex = meta.nodes.findIndex(
+      (node) => node.type === "output" && node.ins[1].value === id
+    );
+    if (outputIndex === -1) {
+      return "";
+    }
+    return langs[lang].def(name, meta.getRegister(outputIndex), `src ${id}`);
   },
-  {
-    internal: true,
-    ugen: "Output",
-    compile: ({ vars: [input, id = 0], ...meta }) =>
-      langs[meta.lang].defUgen(meta, input, id),
-  }
-);
+});
+
+export let output = registerNode("output", {
+  internal: true,
+  ugen: "Output",
+  compile: ({ vars: [input, id = 0], ...meta }) =>
+    langs[meta.lang].defUgen(meta, input, id),
+});
 
 export let exit = registerNode("exit", { internal: true });
 export let poly = registerNode("poly");
