@@ -32,32 +32,6 @@ describe("Node", () => {
     let fb3 = add((x) => x);
     expect(fb3.loopsToMe(fb3)).toStrictEqual(true);
   });
-  test("dagify", () => {
-    const fb = add((x) => x).exit();
-    expect(fb.dagify().flatten()).toStrictEqual([
-      // 0
-      {
-        type: "exit",
-        ins: ["1", "2"],
-      },
-      // 1
-      {
-        type: "feedback_write",
-        ins: ["2"],
-        to: 3,
-      },
-      // 2
-      {
-        type: "add",
-        ins: ["3"],
-      },
-      // 3
-      {
-        type: "feedback_read",
-        ins: [],
-      },
-    ]);
-  });
   test("evaluate", () => {
     const node = evaluate("sine(200).out()");
     expect(node.toObject()).toStrictEqual({

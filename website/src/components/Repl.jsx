@@ -47,7 +47,7 @@ note
 .mul(.5) // master level
 .out() // send to output`;
 
-let vizSettings = { resolveModules: false, dagify: false };
+let vizSettings = { resolveModules: false };
 
 let TAB_GRAPH = "graph";
 let TAB_DOCS = "docs";

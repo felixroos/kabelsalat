@@ -5,7 +5,6 @@ import { Icon } from "./Icon";
 
 let vizSettings = {
   resolveModules: false,
-  dagify: false,
   rankdir: "LR",
   size: 12,
 };
