@@ -589,16 +589,16 @@ export let abs = registerNode("abs", {
   tags: ["math"],
   description: "returns the absolute value of the signal",
   ins: [{ name: "in" }],
-  examples: [
-    `sine(440).abs().out()`,
-  ],
+  examples: [`sine(440).abs().out()`],
   compile: ({ vars: [input = 0], name, lang }) =>
     langs[lang].def(name, langs[lang].abs(input)),
 });
 export let min = registerNode("min", {
   tags: ["math"],
   description: "returns the minimum of the given signals",
-  examples: [`impulse(4).apply(x => min(x.seq(0,3,2), x.seq(0,7,0,5,0)).add(48).midinote().sine()).out()`],
+  examples: [
+    `impulse(4).apply(x => min(x.seq(0,3,2), x.seq(0,7,0,5,0)).add(48).midinote().sine()).out()`,
+  ],
   ins: [{ name: "in", dynamic: true }],
   compile: ({ vars, name, lang }) =>
     langs[lang].def(name, vars.reduce(langs[lang].min) || 0),
@@ -606,7 +606,9 @@ export let min = registerNode("min", {
 export let max = registerNode("max", {
   tags: ["math"],
   description: "returns the maximum of the given signals",
-  examples: [`impulse(4).apply(x => max(x.seq(0,3,2), x.seq(0,7,0,5,0)).add(48).midinote().sine()).out()`],
+  examples: [
+    `impulse(4).apply(x => max(x.seq(0,3,2), x.seq(0,7,0,5,0)).add(48).midinote().sine()).out()`,
+  ],
   ins: [{ name: "in", dynamic: true }],
   compile: ({ vars, name, lang }) =>
     langs[lang].def(name, vars.reduce(langs[lang].max) || 0),
@@ -614,18 +616,32 @@ export let max = registerNode("max", {
 export let argmin = registerNode("argmin", {
   tags: ["math"],
   description: "returns the index of the minimum of the given signals",
-  examples: [`argmin(saw(1), saw(3), saw(5)).mul(12).add(48).midinote().sine().out()`],
+  examples: [
+    `argmin(saw(1), saw(3), saw(5)).mul(12).add(48).midinote().sine().out()`,
+  ],
   ins: [{ name: "in", dynamic: true }],
   compile: ({ vars, name, lang }) =>
-    langs[lang].def(name, langs[lang].pair_b(vars.map(langs[lang].pair_make).reduce(langs[lang].pair_a_min)) || 0),
+    langs[lang].def(
+      name,
+      langs[lang].pair_b(
+        vars.map(langs[lang].pair_make).reduce(langs[lang].pair_a_min)
+      ) || 0
+    ),
 });
 export let argmax = registerNode("argmax", {
   tags: ["math"],
   description: "returns the index of the maximum of the given signals",
-  examples: [`argmax(saw(1), saw(3), saw(5)).mul(12).add(48).midinote().sine().out()`],
+  examples: [
+    `argmax(saw(1), saw(3), saw(5)).mul(12).add(48).midinote().sine().out()`,
+  ],
   ins: [{ name: "in", dynamic: true }],
   compile: ({ vars, name, lang }) =>
-    langs[lang].def(name, langs[lang].pair_b(vars.map(langs[lang].pair_make).reduce(langs[lang].pair_a_max)) || 0),
+    langs[lang].def(
+      name,
+      langs[lang].pair_b(
+        vars.map(langs[lang].pair_make).reduce(langs[lang].pair_a_max)
+      ) || 0
+    ),
 });
 export let greater = registerNode("greater", {
   tags: ["logic"],
@@ -831,13 +847,8 @@ export let pick = registerNode("pick", {
   tags: ["multi-channel"],
   ugen: "Pick",
   description: "Pick",
-  examples: ["sine(220).out()"],
-  ins: [
-    { name: "index" },
-    { name: "inputs", dynamic: true },
-  ],
-  compile: ({ vars, ...meta }) =>
-    langs[meta.lang].defUgen(meta, ...vars),
+  ins: [{ name: "index" }, { name: "inputs", dynamic: true }],
+  compile: ({ vars, ...meta }) => langs[meta.lang].defUgen(meta, ...vars),
 });
 
 export let split = register(
@@ -851,7 +862,8 @@ export let split = register(
   {
     ins: [{ name: "input" }, { name: "fn" }],
     tags: ["multi-channel"],
-    description: "apply fn to an array of signals, one for each channel in input",
+    description:
+      "apply fn to an array of signals, one for each channel in input",
     examples: [`sine([220,330,550]).split(chs => add(...chs)).out()`],
   }
 );
