@@ -366,10 +366,6 @@ double Output_update(Output *self, double value, int id)
   self->value = value;
   return self->value;
 }
-double Output_read(Output *self)
-{
-  return self->value;
-}
 
 void *Output_create()
 {

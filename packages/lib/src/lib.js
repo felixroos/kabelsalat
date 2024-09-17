@@ -640,21 +640,16 @@ export let midinote = registerNode("midinote", {
 export let src = registerNode("src", {
   internal: true,
   compile: ({ vars: [id = 0], name, lang, ...meta }) => {
-    const outputIndex = meta.nodes.findIndex(
-      (node) => node.type === "output" && node.ins[1].value === id
-    );
-    if (outputIndex === -1) {
-      return "";
-    }
-    return langs[lang].def(name, meta.getRegister(outputIndex), `src ${id}`);
+    return langs[lang].def(name, meta.getOutput(id), `src ${id}`);
   },
 });
 
 export let output = registerNode("output", {
   internal: true,
   ugen: "Output",
-  compile: ({ vars: [input, id = 0], ...meta }) =>
-    langs[meta.lang].defUgen(meta, input, id),
+  compile: ({ vars: [input, id = 0], name, lang, ...meta }) => {
+    return langs[lang].def(meta.getOutput(id), input, `output ${id}`);
+  },
 });
 
 export let exit = registerNode("exit", { internal: true });

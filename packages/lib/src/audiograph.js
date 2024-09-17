@@ -49,7 +49,7 @@ export class AudioGraph {
 
     this.units.push(unit);
     console.log(
-      `${schema.ugens.length} ugens spawned, ${this.units.length} units alive`,
+      `${schema.ugens.length} ugens spawned, ${this.units.length} units alive`
     );
   }
 
@@ -118,9 +118,15 @@ export class AudioGraph {
     for (let i = 0; i < this.units.length; i++) {
       const unit = this.units[i];
       const lvl = unit.getLevel(this.playPos);
-      unit.genSample(this.playPos, unit.nodes, inputs, unit.registers);
-      sum[0] += unit.getOutput(0) * lvl;
-      sum[1] += unit.getOutput(1) * lvl;
+      unit.genSample(
+        this.playPos,
+        unit.nodes,
+        inputs,
+        unit.registers,
+        unit.outputs
+      );
+      sum[0] += unit.outputs[0] * lvl;
+      sum[1] += unit.outputs[1] * lvl;
     }
     return sum;
   }
@@ -146,33 +152,25 @@ class Unit {
           index,
           ugen,
           this.sampleRate,
-          this.send,
+          this.send
         );
       } else {
         console.warn(`unknown ugen "${ugen.type}"`);
       }
     }
 
-    // this logic might movable to the compiler..
-    let fallback = { value: 0 }; // fallback output
-    this.outputs = { 0: fallback, 1: fallback };
-    for (let i in schema.ugens) {
-      const ugen = schema.ugens[i];
-      if (ugen.type !== "Output") {
-        continue;
-      }
-      const channel = ugen.inputs[1];
-      this.outputs[channel] = this.nodes[i];
-    }
-
     // could potentially warn about outputs that have no corresponding inputs and ignore them?
     // initialize empty registers
     this.registers = new Array(schema.registers).fill(0);
-    this.genSample = new Function("time", "nodes", "input", "r", schema.src);
-  }
-
-  getOutput(index) {
-    return this.outputs[index].value;
+    this.outputs = new Array(16).fill(0);
+    this.genSample = new Function(
+      "time",
+      "nodes",
+      "input",
+      "r", // registers
+      "o", // outputs
+      schema.src
+    );
   }
 
   noteOn(msg) {
@@ -180,12 +178,12 @@ class Unit {
     const midifreqs = this.nodes.filter(
       (node) =>
         node.type === "midifreq" &&
-        (node.channel === -1 || node.channel === channel),
+        (node.channel === -1 || node.channel === channel)
     );
     const midigates = this.nodes.filter(
       (node) =>
         node.type === "midigate" &&
-        (node.channel === -1 || node.channel === channel),
+        (node.channel === -1 || node.channel === channel)
     );
 
     if (velocity > 0) {
@@ -216,7 +214,7 @@ class Unit {
   setControl(msg) {
     const { value, id } = msg;
     const match = this.nodes.find(
-      (node) => node.type === "cc" && node.id === id,
+      (node) => node.type === "cc" && node.id === id
     );
     if (match) {
       match.setValue(value);
