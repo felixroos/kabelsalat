@@ -1,7 +1,7 @@
 export let defSin = (input) => `sin(${input})`;
 export let defCos = (input) => `cos(${input})`;
 export let def = (name, value, comment) =>
-  `float ${name} = ${value};${comment ? ` /* ${comment} */` : ""}`;
+  `${name} = ${value};${comment ? ` /* ${comment} */` : ""}`;
 
 export let defUgen = (meta, ...args) => {
   args.unshift(`nodes[${meta.ugenIndex}]`);

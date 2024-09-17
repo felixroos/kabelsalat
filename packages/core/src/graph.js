@@ -53,7 +53,7 @@ Node.prototype.stringify = function () {
   return JSON.stringify(this, null, 2).replaceAll('"', "'");
 };
 
-function getNode(type, ...args) {
+export function getNode(type, ...args) {
   let maxExpansions = 1;
   args = args.map((arg) => {
     // desugar array to poly node
@@ -201,12 +201,8 @@ export function n(value) {
 
 nodeRegistry.set("out", {
   tags: ["meta"],
-  description: "Sends the node to the audio output (dac)",
+  description: "Sends the node to the audio output",
 });
-// this method will be overriden when using evaluate
-Node.prototype.out = function () {
-  return dac(this);
-};
 
 nodeRegistry.set("withIns", {
   internal: true,
@@ -227,16 +223,6 @@ nodeRegistry.set("flatten", {
 });
 Node.prototype.flatten = function () {
   return flatten(this);
-};
-
-nodeRegistry.set("dagify", {
-  internal: true,
-  tags: ["innards"],
-  description:
-    "Removes all cycles and replaces them with feedback_read / feedback_write Node's",
-});
-Node.prototype.dagify = function () {
-  return dagify(this);
 };
 
 nodeRegistry.set("apply", {
@@ -283,6 +269,13 @@ Node.prototype.map = function (fn) {
   return poly(...this.ins.map(fn));
 };
 
+Node.prototype.channel = function (ch) {
+  if (this.type !== "poly") {
+    return this;
+  }
+  return this.ins[ch % this.ins.length];
+};
+
 nodeRegistry.set("select", {
   tags: ["meta"],
   graph: true,
@@ -327,65 +320,7 @@ export function exportModule(name) {
   return JSON.stringify(exported, null, 2);
 }
 
-// returns true if the given node forms a cycle with "me" (or is me)
-function loopsToMe(node, me) {
-  if (node === me) {
-    return true;
-  }
-  for (let neighbor of node.ins) {
-    if (neighbor.ins.includes(me)) {
-      return true;
-    }
-    if (loopsToMe(neighbor, me)) {
-      return true;
-    }
-  }
-}
-Node.prototype.loopsToMe = function (node) {
-  return loopsToMe(node, this);
-};
-
 // GRAPH HELPERS
-
-// transforms the graph into a dag, where cycles are broken into feedback_read and feedback_write nodes
-function dagify(node) {
-  if (node.type !== "exit") {
-    // the crucial point is that "node" is not part of a cycle itself
-    throw new Error("dagify should be called on an exit node");
-  }
-  let visitedNodes = [];
-  function dfs(currentNode) {
-    if (visitedNodes.includes(currentNode)) {
-      // currentNode has one or more cycles, find them...
-      const feedbackSources = currentNode.ins.filter((input) =>
-        loopsToMe(input, currentNode)
-      );
-      if (!feedbackSources.length) {
-        // it might happen that we end up here again after dagification..
-        return;
-      }
-      feedbackSources.forEach((feedbackSource) => {
-        const feedbackInlet = currentNode.ins.indexOf(feedbackSource);
-        const feedbackReader = new Node("feedback_read");
-        currentNode.ins[feedbackInlet] = feedbackReader;
-        const feedbackWriter = new Node("feedback_write");
-        feedbackWriter.ins = [feedbackSource];
-        feedbackWriter.to = feedbackReader;
-        node.ins.push(feedbackWriter);
-      });
-      return;
-    }
-    visitedNodes.push(currentNode);
-    if (!currentNode.ins.length) {
-      return;
-    }
-    for (const neighbor of currentNode.ins) {
-      dfs(neighbor);
-    }
-  }
-  dfs(node);
-  return node;
-}
 
 function flatten(node) {
   const flat = [];

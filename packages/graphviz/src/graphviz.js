@@ -9,17 +9,12 @@ Node.prototype.render = async function (container, options = {}) {
     return;
   }
   const {
-    dagify = false, // if true, cycles will be transformed to feedback nodes
     resolveModules = false, // if false, module innards are ignored
     inlineNumerics = true,
     rankdir = "TB",
     size = 0,
   } = options;
   let node = this;
-
-  if (dagify) {
-    this.dagify();
-  }
 
   let getNumericLabel = (value) =>
     Math.trunc(value) === value ? value : value.toFixed(2);

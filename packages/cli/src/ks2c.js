@@ -79,6 +79,7 @@ ${unit.ugens
 
   double time = 0.0;
   float buffer[BUFFER_SIZE];
+  float r[${unit.registers}] = {0};
   while (1)
   {
     for (size_t j = 0; j < BUFFER_SIZE; j+=2)

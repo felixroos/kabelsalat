@@ -4,7 +4,7 @@ import {
   Node,
   register,
   module,
-  nodeRegistry,
+  getNode,
 } from "@kabelsalat/core";
 import { assert } from "./utils.js";
 import * as js from "./lang/js.js";
@@ -322,34 +322,6 @@ export let lag = registerNode("lag", {
     langs[meta.lang].defUgen(meta, input, rate),
 });
 
-// feedback_write doesn't need a creation function, because it's created internally in dagify
-nodeRegistry.set("feedback_write", {
-  internal: true,
-  tags: ["innards"],
-  description: "Writes to the feedback buffer. Not intended for direct use",
-  compile: ({ vars, node, name, lang }) =>
-    langs[lang].def(
-      name,
-      langs[lang].feedbackWrite(node.to, vars[0]),
-      "feedback_write"
-    ),
-});
-export let feedback_read = registerNode("feedback_read", {
-  ugen: "Feedback",
-  internal: true,
-  description: "internal helper node to read the last feedback_write output",
-  ins: [],
-  compile: ({ vars, ...meta }) => {
-    const { nodes, id, ugenIndex } = meta;
-    // remap indices
-    // we need to rewrite the "to" value to the audio node index (instead of flat node index)
-    const writer = nodes.find(
-      (node) => node.type === "feedback_write" && node.to === nodes[id]
-    );
-    writer.to = ugenIndex;
-    return langs[meta.lang].defUgen(meta, ...vars);
-  },
-});
 export let slew = registerNode("slew", {
   ugen: "Slew",
   tags: ["fx"],
@@ -665,18 +637,24 @@ export let midinote = registerNode("midinote", {
   ],
 });
 
-// aren't these nodes very same / similar to feedback_write and feedback_read?
-// maybe they should be the same
+export let src = registerNode("src", {
+  internal: true,
+  compile: ({ vars: [id = 0], name, lang, ...meta }) => {
+    const outputIndex = meta.nodes.findIndex(
+      (node) => node.type === "output" && node.ins[1].value === id
+    );
+    if (outputIndex === -1) {
+      return "";
+    }
+    return langs[lang].def(name, meta.getRegister(outputIndex), `src ${id}`);
+  },
+});
+
 export let output = registerNode("output", {
   internal: true,
   ugen: "Output",
   compile: ({ vars: [input, id = 0], ...meta }) =>
     langs[meta.lang].defUgen(meta, input, id),
-});
-export let src = registerNode("src", {
-  internal: true,
-  ugen: "Source",
-  compile: ({ vars: [id = 0], ...meta }) => langs[meta.lang].defUgen(meta, id),
 });
 
 export let exit = registerNode("exit", { internal: true });
