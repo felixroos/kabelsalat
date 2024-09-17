@@ -165,17 +165,6 @@ class Unit {
       this.outputs[channel] = this.nodes[i];
     }
 
-    // this logic could also be moved to the compiler..
-    // assign corresponding output nodes to input nodes
-    schema.ugens.forEach((ugen, i) => {
-      if (ugen.type !== "Source") {
-        return;
-      }
-      const outputIndex = schema.ugens.findIndex(
-        (node) => node.type === "Output" && node.inputs[1] === ugen.inputs[0]
-      );
-      this.nodes[i].source = this.nodes[outputIndex];
-    });
     // could potentially warn about outputs that have no corresponding inputs and ignore them?
     // initialize empty registers
     this.registers = new Array(schema.registers).fill(0);

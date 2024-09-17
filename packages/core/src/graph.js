@@ -53,7 +53,7 @@ Node.prototype.stringify = function () {
   return JSON.stringify(this, null, 2).replaceAll('"', "'");
 };
 
-function getNode(type, ...args) {
+export function getNode(type, ...args) {
   let maxExpansions = 1;
   args = args.map((arg) => {
     // desugar array to poly node
@@ -267,6 +267,13 @@ Node.prototype.map = function (fn) {
     return fn(this);
   }
   return poly(...this.ins.map(fn));
+};
+
+Node.prototype.channel = function (ch) {
+  if (this.type !== "poly") {
+    return this;
+  }
+  return this.ins[ch % this.ins.length];
 };
 
 nodeRegistry.set("select", {

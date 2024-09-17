@@ -4,7 +4,7 @@ import {
   Node,
   register,
   module,
-  nodeRegistry,
+  getNode,
 } from "@kabelsalat/core";
 import { assert } from "./utils.js";
 import * as js from "./lang/js.js";
@@ -637,19 +637,36 @@ export let midinote = registerNode("midinote", {
   ],
 });
 
-// aren't these nodes very same / similar to feedback_write and feedback_read?
-// maybe they should be the same
-export let output = registerNode("output", {
-  internal: true,
-  ugen: "Output",
-  compile: ({ vars: [input, id = 0], ...meta }) =>
-    langs[meta.lang].defUgen(meta, input, id),
-});
-export let src = registerNode("src", {
-  internal: true,
-  ugen: "Source",
-  compile: ({ vars: [id = 0], ...meta }) => langs[meta.lang].defUgen(meta, id),
-});
+export let src = registerNode("src");
+export let output = register(
+  "output",
+  (input, id) => {
+    const node = getNode("output", input, id);
+    node.map((ch, i) => {
+      const channel = input.channel(i);
+      // assuming output id is set as raw number..
+      const channel_id = ch.ins[1].channel(i).value;
+      channel.dfs((node) => {
+        // if we find a node that is fed a src with our output id, we route the output instead
+        const srcIndex = node.ins.findIndex(
+          (input) => input.type === "src" && input.ins[0].value === channel_id
+        );
+        if (srcIndex !== -1) {
+          node.ins[srcIndex] = channel;
+        }
+        return node;
+      });
+      return node;
+    });
+    return node;
+  },
+  {
+    internal: true,
+    ugen: "Output",
+    compile: ({ vars: [input, id = 0], ...meta }) =>
+      langs[meta.lang].defUgen(meta, input, id),
+  }
+);
 
 export let exit = registerNode("exit", { internal: true });
 export let poly = registerNode("poly");

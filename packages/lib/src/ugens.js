@@ -223,15 +223,6 @@ export class Output {
   }
 }
 
-export class Source {
-  constructor() {
-    this.source = { value: 0 }; // fallback
-  }
-  update() {
-    return this.source.value;
-  }
-}
-
 /**
  * White noise source
  */
