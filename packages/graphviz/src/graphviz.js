@@ -15,6 +15,7 @@ Node.prototype.render = async function (container, options = {}) {
     size = 0,
   } = options;
   let node = this;
+  // this.ignore = true; // don't render exit node
 
   let getNumericLabel = (value) =>
     Math.trunc(value) === value ? value : value.toFixed(2);

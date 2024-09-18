@@ -8,6 +8,7 @@ export function compile(node, options = {}) {
     constType = "n",
     getRegister = (id) => `r[${id}]`,
     getOutput = (id) => `o[${id}]`,
+    getSource = (id) => `s[${id}]`,
   } = options;
   log && console.log("compile", node);
   const nodes = topoSort(node);
@@ -46,6 +47,7 @@ export function compile(node, options = {}) {
       lang,
       getRegister,
       getOutput,
+      getSource,
     };
     if (schema.compile) {
       lines.push(schema.compile(meta));

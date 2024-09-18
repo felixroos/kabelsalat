@@ -698,7 +698,7 @@ export let midinote = registerNode("midinote", {
 export let src = registerNode("src", {
   internal: true,
   compile: ({ vars: [id = 0], name, lang, ...meta }) => {
-    return langs[lang].def(name, meta.getOutput(id), `src ${id}`);
+    return langs[lang].def(name, meta.getSource(id), `read source ${id}`);
   },
 });
 
@@ -706,7 +706,17 @@ export let output = registerNode("output", {
   internal: true,
   ugen: "Output",
   compile: ({ vars: [input, id = 0], name, lang, ...meta }) => {
-    return langs[lang].def(meta.getOutput(id), input, `output ${id}`);
+    const o = meta.getOutput(id);
+    const s = meta.getSource(id);
+    // o = output register, used for playback
+    // s = source register, used for feedback
+    // an output adds to the existing o register + sets the s register
+    // the o register is cleared before each loop, so we write the same value to the s register
+    // the s register is used by src to read the last output
+    return [
+      langs[lang].def(o, [o, input].join(" + "), `+ output ${id}`),
+      langs[lang].def(s, o, `write source ${id}`),
+    ].join("\n");
   },
 });
 

@@ -123,7 +123,8 @@ export class AudioGraph {
         unit.nodes,
         inputs,
         unit.registers,
-        unit.outputs
+        unit.outputs,
+        unit.sources
       );
       sum[0] += unit.outputs[0] * lvl;
       sum[1] += unit.outputs[1] * lvl;
@@ -162,13 +163,19 @@ class Unit {
     // could potentially warn about outputs that have no corresponding inputs and ignore them?
     // initialize empty registers
     this.registers = new Array(schema.registers).fill(0);
-    this.outputs = new Array(16).fill(0);
+    let channels = 16;
+    this.outputs = new Array(channels).fill(0);
+    this.sources = new Array(channels).fill(0);
+    // reset outputs before each sample
+    schema.src = "o.fill(0); // reset outputs\n" + schema.src;
+
     this.genSample = new Function(
       "time",
       "nodes",
       "input",
       "r", // registers
       "o", // outputs
+      "s", // sources
       schema.src
     );
   }
