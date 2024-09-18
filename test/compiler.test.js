@@ -10,7 +10,8 @@ describe("compiler", () => {
     const unit = sine(200).output(0).exit().compile();
     expect(unit.src).toStrictEqual(
       `r[1] = nodes[0].update(200,0,0); /* sine */
-o[0] = r[1]; /* output 0 */`
+o[0] = o[0] + r[1]; /* + output 0 */
+s[0] = o[0]; /* write source 0 */`
     );
     expect(unit.ugens.map((ugen) => ugen.type)).toStrictEqual([
       "SineOsc",
@@ -27,7 +28,8 @@ o[0] = r[1]; /* output 0 */`
       `r[1] = nodes[0].update(200,0,0); /* sine */
 r[3] = r[4] * 0.8;
 r[4] = r[1] + r[3];
-o[1] = r[4]; /* output 1 */`
+o[1] = o[1] + r[4]; /* + output 1 */
+s[1] = o[1]; /* write source 1 */`
     );
     expect(unit.ugens.map((ugen) => ugen.type)).toStrictEqual([
       "SineOsc",
