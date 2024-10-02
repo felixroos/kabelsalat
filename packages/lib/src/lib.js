@@ -659,22 +659,22 @@ export let xor = registerNode("xor", {
   tags: ["logic"],
   description: "returns 1 if exactly one of the inputs is 1",
   ins: [{ name: "a" }, { name: "b" }],
-  compile: ({ vars: [a = 0, b = 0], name }) =>
-    def(name, `${a} != ${b} ? 1 : 0`),
+  compile: ({ vars: [a = 0, b = 0], name, lang }) =>
+    langs[lang].def(name, `${a} != ${b} ? 1 : 0`),
 });
 export let and = registerNode("and", {
   tags: ["logic"],
   description: "returns 1 if both inputs are 1",
   ins: [{ name: "a" }, { name: "b" }],
-  compile: ({ vars: [a = 0, b = 0], name }) =>
-    def(name, `${a} && ${b} ? 1 : 0`),
+  compile: ({ vars: [a = 0, b = 0], name, lang }) =>
+    langs[lang].def(name, `${a} && ${b} ? 1 : 0`),
 });
 export let or = registerNode("or", {
   tags: ["logic"],
   description: "returns 1 if one or both inputs are 1",
   ins: [{ name: "a" }, { name: "b" }],
-  compile: ({ vars: [a = 0, b = 0], name }) =>
-    def(name, `${a} || ${b} ? 1 : 0`),
+  compile: ({ vars: [a = 0, b = 0], name, lang }) =>
+    langs[lang].def(name, `${a} || ${b} ? 1 : 0`),
 });
 export let range = registerNode("range", {
   tags: ["math"],
