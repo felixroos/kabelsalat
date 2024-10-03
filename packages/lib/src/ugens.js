@@ -1,5 +1,5 @@
 import * as synth from "./synth.js";
-import { assert } from "./utils.js";
+import { assert, invLerp, lerp } from "./utils.js";
 
 const ISR = 1 / 44100;
 
@@ -753,7 +753,6 @@ export class Sequence extends AudioNode {
     this.step = 0;
     this.first = true;
   }
-  // TODO: use CLOCK_PPS to get correct tempo...
   update(clock, ...ins) {
     if (!this.clockSgn && clock > 0) {
       this.step = (this.step + 1) % ins.length;
@@ -768,6 +767,13 @@ export class Sequence extends AudioNode {
 export class Pick extends AudioNode {
   update(index, ...inputs) {
     return inputs[Math.floor(index) % inputs.length];
+  }
+}
+
+export class Remap {
+  update(x, xmin, xmax, omin, omax) {
+    let norm = invLerp(x, xmin, xmax);
+    return lerp(norm, omin, omax);
   }
 }
 
