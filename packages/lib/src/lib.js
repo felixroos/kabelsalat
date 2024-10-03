@@ -851,6 +851,15 @@ export let pick = registerNode("pick", {
   compile: ({ vars, ...meta }) => langs[meta.lang].defUgen(meta, ...vars),
 });
 
+export let clip = registerNode("clip", {
+  tags: ["fx"],
+  ugen: "Clip",
+  description: "Clip",
+  ins: [{ name: "input" }, { name: "lo" }, { name: "hi" }],
+  compile: ({ vars: [input = 0, lo = -1, hi = 1], ...meta }) =>
+    langs[meta.lang].defUgen(meta, input, lo, hi),
+});
+
 export let split = register(
   "split",
   (input, fn) => {

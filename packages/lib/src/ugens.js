@@ -775,3 +775,9 @@ export class Pick extends AudioNode {
     return inputs[Math.floor(index) % inputs.length];
   }
 }
+
+export class Clip {
+  update(input, lo, hi) {
+    return Math.min(Math.max(input, lo), hi);
+  }
+}
