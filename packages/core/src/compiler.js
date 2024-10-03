@@ -6,16 +6,16 @@ export function compile(node, options = {}) {
     lang = "js",
     fallbackType = "thru",
     constType = "n",
-    varPrefix = "n",
+    getRegister = (id) => `r[${id}]`,
+    getOutput = (id) => `o[${id}]`,
+    getSource = (id) => `s[${id}]`,
   } = options;
   log && console.log("compile", node);
-  const nodes = node.flatten(true);
-  // log && console.log("flat", nodes);
-  const sorted = topoSort(nodes);
+  const nodes = topoSort(node);
   let lines = [];
   let v = (id) => {
     if (nodes[id].type !== constType) {
-      return `${varPrefix}${id}`;
+      return getRegister(id);
     }
     if (typeof nodes[id].value === "string") {
       return `"${nodes[id].value}"`;
@@ -23,9 +23,10 @@ export function compile(node, options = {}) {
     return nodes[id].value;
   };
   const ugens = [];
-  for (let id of sorted) {
+
+  for (let id in nodes) {
     const node = nodes[id];
-    const vars = nodes[id].ins.map((inlet) => v(inlet));
+    const vars = nodes[id].ins.map((inlet) => v(nodes.indexOf(inlet)));
     const ugenIndex = ugens.length;
 
     let schema = nodeRegistry.get(node.type);
@@ -44,6 +45,9 @@ export function compile(node, options = {}) {
       ugen: schema.ugen,
       name: v(id),
       lang,
+      getRegister,
+      getOutput,
+      getSource,
     };
     if (schema.compile) {
       lines.push(schema.compile(meta));
@@ -58,89 +62,29 @@ export function compile(node, options = {}) {
     console.log("compiled code:");
     console.log(src);
   }
-  return { src, ugens };
+  return { src, ugens, registers: nodes.length };
 }
 
 Node.prototype.compile = function (options) {
-  return compile(this.dagify(), options);
+  return compile(this, options);
 };
 
-// taken from noisecraft
-// https://github.com/maximecb/noisecraft
-// LICENSE: GPL-2.0
-
-export function topoSort(nodes) {
-  // Count the number of input edges going into a node
-  function countInEdges(nodeId) {
-    let node = nodes[nodeId];
-    let numIns = 0;
-
-    for (let i = 0; i < node.ins.length; ++i) {
-      let edge = node.ins[i];
-      if (!edge) continue;
-      if (remEdges.has(edge)) continue;
-      numIns++;
+// simple topo sort using dfs
+// khans algorithm seems overkill, because our graphs are relatively small
+// dfs only becomes a problem when max depth is near the recursion limit (longest chain = 10000)
+function topoSort(graph) {
+  const sorted = [];
+  const visited = new Set();
+  function dfs(node) {
+    if (typeof node !== "object" || visited.has(node)) {
+      return;
     }
-
-    return numIns;
-  }
-
-  let S = []; // Set of nodes with no incoming edges
-  let L = []; // List sorted in reverse topological order
-  let remEdges = new Set(); // Map of input-side edges removed from the graph
-  let outEdges = new Map(); // Map of each node to a list of outgoing edges
-
-  // Populate the initial list of nodes without input edges
-  for (let nodeId in nodes) {
-    if (countInEdges(nodeId) == 0) {
-      S.push(nodeId);
+    visited.add(node);
+    for (let i in node.ins) {
+      dfs(node.ins[i]);
     }
+    sorted.push(node);
   }
-  // Initialize the set of list of output edges for each node
-  for (let nodeId in nodes) {
-    outEdges.set(nodeId, []);
-  }
-
-  // Populate the list of output edges for each node
-  for (let nodeId in nodes) {
-    let node = nodes[nodeId];
-
-    // For each input of this node
-    for (let i = 0; i < node.ins.length; ++i) {
-      let edge = node.ins[i];
-      if (edge === undefined) continue;
-
-      let srcId = node.ins[i];
-      let srcOuts = outEdges.get(srcId);
-      srcOuts.push([nodeId, edge]);
-    }
-  }
-
-  // While we have nodes with no inputs
-  while (S.length > 0) {
-    // Remove a node from S, add it at the end of L
-    var nodeId = S.pop();
-    L.push(nodeId);
-
-    // Get the list of output edges for this node
-    let nodeOuts = outEdges.get(nodeId);
-
-    // For each outgoing edge
-    for (let [dstId, edge] of nodeOuts) {
-      // Mark the edge as removed
-      remEdges.add(edge);
-
-      // If the node has no more incoming edges
-      if (countInEdges(dstId) == 0) S.push(dstId);
-    }
-  }
-  L = Array.from(new Set(L)); // <--- had to add this to make .apply(x=>x.mul(x)) work
-  // hopefully doesn't break anything
-
-  // If the topological ordering doesn't include all the nodes
-  if (L.length != Object.keys(nodes).length) {
-    throw SyntaxError("graph contains cycles");
-  }
-
-  return L;
+  dfs(graph);
+  return sorted;
 }

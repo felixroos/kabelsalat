@@ -56,7 +56,7 @@ export class AudioView {
     this.ugens = new Map();
   }
   async updateGraph(node) {
-    const { src, ugens } = node.compile({
+    const { src, ugens, registers } = node.compile({
       log: false,
     });
     this.initMouse();
@@ -72,7 +72,7 @@ export class AudioView {
     this.sendUgens();
     this.send({
       type: "NEW_UNIT",
-      unit: { src, ugens },
+      unit: { src, ugens, registers },
     });
   }
 

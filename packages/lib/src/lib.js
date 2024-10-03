@@ -4,7 +4,7 @@ import {
   Node,
   register,
   module,
-  nodeRegistry,
+  getNode,
 } from "@kabelsalat/core";
 import { assert } from "./utils.js";
 import * as js from "./lang/js.js";
@@ -322,34 +322,6 @@ export let lag = registerNode("lag", {
     langs[meta.lang].defUgen(meta, input, rate),
 });
 
-// feedback_write doesn't need a creation function, because it's created internally in dagify
-nodeRegistry.set("feedback_write", {
-  internal: true,
-  tags: ["innards"],
-  description: "Writes to the feedback buffer. Not intended for direct use",
-  compile: ({ vars, node, name, lang }) =>
-    langs[lang].def(
-      name,
-      langs[lang].feedbackWrite(node.to, vars[0]),
-      "feedback_write"
-    ),
-});
-export let feedback_read = registerNode("feedback_read", {
-  ugen: "Feedback",
-  internal: true,
-  description: "internal helper node to read the last feedback_write output",
-  ins: [],
-  compile: ({ vars, ...meta }) => {
-    const { nodes, id, ugenIndex } = meta;
-    // remap indices
-    // we need to rewrite the "to" value to the audio node index (instead of flat node index)
-    const writer = nodes.find(
-      (node) => node.type === "feedback_write" && String(node.to) === id
-    );
-    writer.to = ugenIndex;
-    return langs[meta.lang].defUgen(meta, ...vars);
-  },
-});
 export let slew = registerNode("slew", {
   ugen: "Slew",
   tags: ["fx"],
@@ -722,26 +694,32 @@ export let midinote = registerNode("midinote", {
 .midinote().sine().out()`,
   ],
 });
-export let dac = registerNode("dac", {
+
+export let src = registerNode("src", {
   internal: true,
-  compile: ({ vars, lang }) => {
-    let channels;
-    if (!vars.length) {
-      console.warn(`no input.. call .out() to play`);
-      channels = [0, 0];
-    } else {
-      channels = vars;
-    }
-    if (channels.length === 1) {
-      // make mono if only one channel
-      channels = [channels[0], channels[0]];
-    } else if (channels.length > 2) {
-      console.warn("returned more than 2 channels.. using first 2");
-      channels = channels.slice(0, 2);
-    }
-    return langs[lang].returnLine(channels);
+  compile: ({ vars: [id = 0], name, lang, ...meta }) => {
+    return langs[lang].def(name, meta.getSource(id), `read source ${id}`);
   },
 });
+
+export let output = registerNode("output", {
+  internal: true,
+  ugen: "Output",
+  compile: ({ vars: [input, id = 0], name, lang, ...meta }) => {
+    const o = meta.getOutput(id);
+    const s = meta.getSource(id);
+    // o = output register, used for playback
+    // s = source register, used for feedback
+    // an output adds to the existing o register + sets the s register
+    // the o register is cleared before each loop, so we write the same value to the s register
+    // the s register is used by src to read the last output
+    return [
+      langs[lang].def(o, [o, input].join(" + "), `+ output ${id}`),
+      langs[lang].def(s, o, `write source ${id}`),
+    ].join("\n");
+  },
+});
+
 export let exit = registerNode("exit", { internal: true });
 export let poly = registerNode("poly");
 export let PI = n(Math.PI);

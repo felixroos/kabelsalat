@@ -213,17 +213,12 @@ export class Hold extends AudioNode {
   }
 }
 
-export class Feedback extends AudioNode {
-  constructor(id, state, sampleRate, send) {
-    super(id, state, sampleRate, send);
+export class Output {
+  constructor() {
     this.value = 0;
   }
-  write(value) {
+  update(value) {
     this.value = value;
-    return 0;
-  }
-
-  update() {
     return this.value;
   }
 }
