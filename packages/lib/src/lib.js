@@ -690,6 +690,24 @@ export let range = registerNode("range", {
   },
 });
 
+export let remap = registerNode("remap", {
+  ugen: "Remap",
+  tags: ["math"],
+  description: "Remaps input from one value range to another",
+  ins: [
+    { name: "in" },
+    { name: "inmin" },
+    { name: "inmax" },
+    { name: "outmin" },
+    { name: "outmax" },
+  ],
+  // examples: [`sine(440).abs().out()`],
+  compile: ({
+    vars: [input = 0, inmin = -1, inmax = 1, outmin = -1, outmax = 1],
+    ...meta
+  }) => langs[meta.lang].defUgen(meta, input, inmin, inmax, outmin, outmax),
+});
+
 export let thru = registerNode("thru", {
   compile: ({ name, vars, lang }) => langs[lang].def(name, vars[0], "thru"),
 });
