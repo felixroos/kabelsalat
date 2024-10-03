@@ -245,15 +245,28 @@ export let impulse = registerNode("impulse", {
   compile: ({ vars: [freq = 0, phase = 0], ...meta }) =>
     langs[meta.lang].defUgen(meta, freq, phase),
 });
+
 export let saw = registerNode("saw", {
   ugen: "SawOsc",
   tags: ["regular", "waveform", "source"],
-  description: "Sawtooth wave oscillator",
+  description: "Sawtooth wave oscillator with anti aliasing",
   examples: ["saw(110).mul(.5).out()"],
   ins: [{ name: "freq", default: 0 }],
   compile: ({ vars: [freq = 0], ...meta }) =>
     langs[meta.lang].defUgen(meta, freq),
 });
+
+export let zaw = registerNode("zaw", {
+  ugen: "ZawOsc",
+  tags: ["regular", "waveform", "source"],
+  description:
+    "Sawtooth wave oscillator with sharp edges. Use saw for anti aliased variant.",
+  examples: ["zaw(110).mul(.5).out()"],
+  ins: [{ name: "freq", default: 0 }],
+  compile: ({ vars: [freq = 0], ...meta }) =>
+    langs[meta.lang].defUgen(meta, freq),
+});
+
 export let sine = registerNode("sine", {
   tags: ["regular", "waveform", "source"],
   ugen: "SineOsc",

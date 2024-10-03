@@ -1,5 +1,5 @@
 import * as synth from "./synth.js";
-import { assert, invLerp, lerp } from "./utils.js";
+import { assert, invLerp, lerp, polyBlep } from "./utils.js";
 
 const ISR = 1 / 44100;
 
@@ -332,7 +332,7 @@ export class PulseOsc extends AudioNode {
 /**
  * Sawtooth wave oscillator
  */
-export class SawOsc extends AudioNode {
+export class ZawOsc extends AudioNode {
   constructor(id, state, sampleRate, send) {
     super(id, state, sampleRate, send);
 
@@ -343,6 +343,25 @@ export class SawOsc extends AudioNode {
   update(freq) {
     this.phase += this.sampleTime * freq;
     return (this.phase % 1) * 2 - 1;
+  }
+}
+
+/**
+ * Sawtooth wave with anti aliasing using polyBLEP
+ */
+export class SawOsc {
+  constructor() {
+    this.phase = Math.random();
+  }
+  update(freq) {
+    const dt = freq / sampleRate;
+    let p = polyBlep(this.phase, dt);
+    let s = 2 * this.phase - 1 - p;
+    this.phase += dt;
+    if (this.phase > 1) {
+      this.phase -= 1;
+    }
+    return s;
   }
 }
 
