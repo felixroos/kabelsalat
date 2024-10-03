@@ -34,3 +34,22 @@ export function remap(x, a0, a1, b0, b1) {
   let norm = invLerp(x, a0, a1);
   return lerp(norm, b0, b1);
 }
+
+export function polyBlep(phase, dt) {
+  // 0 <= phase < 1
+  if (phase < dt) {
+    phase /= dt;
+    // 2 * (phase - phase^2/2 - 0.5)
+    return phase + phase - phase * phase - 1;
+  }
+  // -1 < phase < 0
+  else if (phase > 1 - dt) {
+    phase = (phase - 1) / dt;
+    // 2 * (phase^2/2 + phase + 0.5)
+    return phase * phase + phase + phase + 1;
+  }
+  // 0 otherwise
+  else {
+    return 0;
+  }
+}
