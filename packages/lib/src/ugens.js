@@ -213,17 +213,12 @@ export class Hold extends AudioNode {
   }
 }
 
-export class Feedback extends AudioNode {
-  constructor(id, state, sampleRate, send) {
-    super(id, state, sampleRate, send);
+export class Output {
+  constructor() {
     this.value = 0;
   }
-  write(value) {
+  update(value) {
     this.value = value;
-    return 0;
-  }
-
-  update() {
     return this.value;
   }
 }
@@ -779,5 +774,11 @@ export class Remap {
   update(x, xmin, xmax, omin, omax) {
     let norm = invLerp(x, xmin, xmax);
     return lerp(norm, omin, omax);
+  }
+}
+
+export class Clip {
+  update(input, lo, hi) {
+    return Math.min(Math.max(input, lo), hi);
   }
 }

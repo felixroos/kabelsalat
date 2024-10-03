@@ -355,30 +355,29 @@ void *Delay_create()
   return (void *)node;
 }
 
-typedef struct Feedback
+// Output
+
+typedef struct Output
 {
   double value;
-} Feedback;
+} Output;
 
-void Feedback_init(Feedback *self)
+void Output_init(Output *self)
 {
   self->value = 0;
 }
 
-double Feedback_write(Feedback *self, double value)
+// TODO: find out what to do with id
+double Output_update(Output *self, double value, int id)
 {
   self->value = value;
-  return 0;
-}
-double Feedback_update(Feedback *self)
-{
   return self->value;
 }
 
-void *Feedback_create()
+void *Output_create()
 {
-  Feedback *node = (Feedback *)malloc(sizeof(Feedback));
-  Feedback_init(node);
+  Output *node = (Output *)malloc(sizeof(Output));
+  Output_init(node);
   return (void *)node;
 }
 
@@ -891,6 +890,7 @@ void *Pick_create()
 - [x] Slew
 - [x] Slide
 - [x] TriOsc
+- [ ] Output
 
 */
 
