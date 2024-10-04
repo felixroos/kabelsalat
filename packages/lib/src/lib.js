@@ -850,10 +850,30 @@ export let pick = registerNode("pick", {
 export let clip = registerNode("clip", {
   tags: ["fx"],
   ugen: "Clip",
-  description: "Clip",
+  description: "Hard limits the signal between lo and hi.",
   ins: [{ name: "input" }, { name: "lo" }, { name: "hi" }],
   compile: ({ vars: [input = 0, lo = -1, hi = 1], ...meta }) =>
     langs[meta.lang].defUgen(meta, input, lo, hi),
+});
+
+export let trig = registerNode("trig", {
+  tags: ["trigger"],
+  ugen: "Trig",
+  description:
+    "Emits a trigger impulse whenever the signal becomes positive. Useful to turn gates into triggers.",
+  ins: [
+    { name: "input", default: 0 },
+    { name: "lo", default: -1 },
+    { name: "hi", default: 1 },
+  ],
+  compile: ({ vars: [input = 0, lo = -1, hi = 1], ...meta }) =>
+    langs[meta.lang].defUgen(meta, input, lo, hi),
+  examples: [
+    `pulse(2)
+.trig() // comment out to hear difference
+.ar(.01,.2)
+.mul(sine(200)).out()`,
+  ],
 });
 
 export let split = register(

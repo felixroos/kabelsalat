@@ -782,3 +782,19 @@ export class Clip {
     return Math.min(Math.max(input, lo), hi);
   }
 }
+
+export class Trig {
+  constructor() {
+    this.hi = false;
+  }
+  update(input) {
+    if (!this.hi && input > 0) {
+      this.hi = true;
+      return 1;
+    }
+    if (this.hi && input <= 0) {
+      this.hi = false;
+    }
+    return 0;
+  }
+}
