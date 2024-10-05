@@ -578,6 +578,14 @@ export let abs = registerNode("abs", {
   compile: ({ vars: [input = 0], name, lang }) =>
     langs[lang].def(name, langs[lang].abs(input)),
 });
+export let round = registerNode("round", {
+  tags: ["math"],
+  description: "Rounds the signal to the nearest integer",
+  ins: [{ name: "in" }],
+  examples: [`sine(440.5).round().out()`],
+  compile: ({ vars: [input = 0], name, lang }) =>
+    langs[lang].def(name, langs[lang].round(input)),
+});
 export let min = registerNode("min", {
   tags: ["math"],
   description: "returns the minimum of the given signals",
