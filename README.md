@@ -34,6 +34,21 @@ pnpm --filter "./packages/**" publish --dry-run
 pnpm --filter "./packages/**" publish --access public
 ```
 
+## Experimental "Desktop" Version
+
+There is an experimental "Desktop" version, which serves the built site as a binary (<10MB).
+It's without UI, so you still have to open it in your browser, but it's self-contained, so it works offline and all code is baked into the binary.
+
+```sh
+pnpm build # build site to website/dist
+# make sure you have go installed
+pnpm build-bin # builds all binaries
+./bin/kabelsalat-darwin-arm64 # run site
+# go to http://localhost:8080
+```
+
+Currently it builds Linux and MacOS binaries, but adding others should be trivial.
+
 ## Packages
 
 This project is a monorepo with the following packages:
