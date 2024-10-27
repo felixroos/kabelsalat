@@ -90,6 +90,14 @@ export class AudioView {
     }
   }
 
+  scheduleMessage(msg, time) {
+    this.send({
+      type: "SCHEDULE_MSG",
+      msg,
+      time,
+    });
+  }
+
   setControl(id, value) {
     this.send({
       type: "SET_CONTROL",

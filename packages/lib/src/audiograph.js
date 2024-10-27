@@ -18,6 +18,7 @@ export class AudioGraph {
     this.send = send;
     this.units = [];
     this.fadeTime = 0.1;
+    this.q = []; // scheduler queue
   }
 
   fadeOutLastUnit() {
@@ -89,6 +90,9 @@ export class AudioGraph {
       case "SET_UGEN":
         this.addUgen(msg.className, msg.ugen);
         break;
+      case "SCHEDULE_MSG":
+        this.scheduleMessage(msg);
+        break;
 
       default:
         throw new TypeError(`unknown message type ${msg.type}`);
@@ -107,6 +111,24 @@ export class AudioGraph {
     this.units.forEach((unit) => unit.setControl(msg));
   }
 
+  // scheduledMessage: {msg, time}
+  scheduleMessage(msg) {
+    msg.time = this.playPos + msg.time;
+    if (!this.q.length) {
+      // if empty, just push
+      this.q.push(msg);
+      return;
+    }
+    // not empty
+    // find index where msg.time fits in
+    let i = 0;
+    while (i < this.q.length && this.q[i].time < msg.time) {
+      i++;
+    }
+    // this ensures q stays sorted by time, so we only need to check q[0]
+    this.q.splice(i, 0, msg);
+  }
+
   /**
    * Generate one [left, right] pair of audio samples
    */
@@ -116,6 +138,11 @@ export class AudioGraph {
 
     const sum = [0, 0];
     for (let i = 0; i < this.units.length; i++) {
+      while (this.q.length > 0 && this.q[0].time <= this.playPos) {
+        // trigger due messages. q is sorted, so we only need to check q[0]
+        this.parseMsg(this.q[0].msg);
+        this.q.shift();
+      }
       const unit = this.units[i];
       const lvl = unit.getLevel(this.playPos);
       unit.genSample(
