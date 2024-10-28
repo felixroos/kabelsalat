@@ -93,6 +93,9 @@ export class AudioGraph {
       case "SCHEDULE_MSG":
         this.scheduleMessage(msg);
         break;
+      case "BATCH_MSG":
+        msg.messages.forEach((msg) => this.parseMsg(msg));
+        break;
 
       default:
         throw new TypeError(`unknown message type ${msg.type}`);

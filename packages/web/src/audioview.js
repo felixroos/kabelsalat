@@ -98,12 +98,36 @@ export class AudioView {
     });
   }
 
-  setControl(id, value) {
-    this.send({
+  setControl(id, value, time) {
+    const msg = {
       type: "SET_CONTROL",
       id,
       value,
-    });
+    };
+    if (time) {
+      this.send({ type: "SCHEDULE_MSG", time, msg });
+    } else {
+      this.send(msg);
+    }
+  }
+
+  // controls: { id, value, time }[]
+  setControls(controls) {
+    const msg = {
+      type: "BATCH_MSG",
+      messages: controls.map((c) => {
+        const msg = { type: "SET_CONTROL", id: c.id, value: c.value };
+        if (c.time === undefined) {
+          return msg;
+        }
+        return {
+          type: "SCHEDULE_MSG",
+          time: c.time,
+          msg,
+        };
+      }),
+    };
+    this.send(msg);
   }
 
   async initAudioIn() {
