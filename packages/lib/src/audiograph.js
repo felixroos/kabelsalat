@@ -136,16 +136,18 @@ export class AudioGraph {
    * Generate one [left, right] pair of audio samples
    */
   genSample(inputs) {
+    while (this.q.length > 0 && this.q[0].time <= this.playPos) {
+      // trigger due messages. q is sorted, so we only need to check q[0]
+      this.parseMsg(this.q[0].msg);
+      this.q.shift();
+    }
+
     if (!this.units.length) return [0, 0];
+
     this.playPos += 1 / 44100;
 
     const sum = [0, 0];
     for (let i = 0; i < this.units.length; i++) {
-      while (this.q.length > 0 && this.q[0].time <= this.playPos) {
-        // trigger due messages. q is sorted, so we only need to check q[0]
-        this.parseMsg(this.q[0].msg);
-        this.q.shift();
-      }
       const unit = this.units[i];
       const lvl = unit.getLevel(this.playPos);
       unit.genSample(
