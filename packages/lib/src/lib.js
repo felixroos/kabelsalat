@@ -759,7 +759,6 @@ export let output = registerNode("output", {
   },
 });
 
-export let exit = registerNode("exit", { internal: true });
 export let poly = registerNode("poly");
 export let PI = n(Math.PI);
 
