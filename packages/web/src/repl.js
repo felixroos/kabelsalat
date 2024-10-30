@@ -57,7 +57,7 @@ export class SalatRepl {
     this.onToggle?.(true);
   }
   run(code) {
-    const node = repl.evaluate(code);
+    const node = this.evaluate(code);
     this.play(node);
   }
   stop() {
