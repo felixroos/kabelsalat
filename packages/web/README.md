@@ -21,9 +21,7 @@ This package allows you to use kabelsalat anywhere on the web. Example:
 .fold().mul(.6)
 .out()`;
       const { SalatRepl } = kabelsalat;
-      const repl = new SalatRepl({
-        base: "https://unpkg.com/@kabelsalat/web@0.0.7/dist/",
-      });
+      const repl = new SalatRepl();
       document.getElementById("play").onclick = () => repl.run(code);
       document.getElementById("stop").onclick = () => repl.stop();
     </script>

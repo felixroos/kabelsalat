@@ -2,57 +2,12 @@ import { assert } from "@kabelsalat/lib/src/utils.js";
 import "@kabelsalat/core/src/compiler.js"; // Node.prototype.compile
 import { MIDI, parseMidiMessage } from "@kabelsalat/lib/src/midi.js";
 import { Mouse } from "@kabelsalat/lib/src/mouse.js";
-
-// what follows are attempts at importing the worklet as a url
-// the problem: when ?url is used, the worklet.js file itself is not bundled.
-// the import "import { AudioGraph } from "./audiograph.js";" does not work when bundling iife
-// also see: https://github.com/vitejs/vite/issues/6757
-
-// /assets/worklet-FAueYngB.js
-// iife: DOMException: The user aborted a request.
-// mjs: works
 import workletUrl from "./worklet.js?worker&url";
-
-// ae(t){return new Worker("/assets/worklet-FAueYngB.js",{name:t?.name})}
-// iife: DOMException: The user aborted a request.
-// mjs: DOMException: The user aborted a request.
-//import workletUrl from "./worklet.js?worker";
-
-// data:text/javascript;base64,aW1wb3.....
-// iife: TypeError: Failed to resolve module specifier "./audiograph.js". Invalid relative url or base scheme isn't hierarchical.
-// mjs: TypeError: Failed to resolve module specifier "./audiograph.js". Invalid relative url or base scheme isn't hierarchical.
-//import workletUrl from "./worklet.js?url";
-
-// workletUrl.toString() = data:text/javascript;base64,aW1wb3.....
-// iife: TypeError: Failed to resolve module specifier "./audiograph.js". Invalid relative url or base scheme isn't hierarchical.
-// mjs: TypeError: Failed to resolve module specifier "./audiograph.js". Invalid relative url or base scheme isn't hierarchical.
-//const workletUrl = new URL("./worklet.js", import.meta.url);
-
-// potential solutions:
-// https://github.com/vitejs/vite/issues/15431#issuecomment-1870052169 // didn't work:
-
-/* const modules = import.meta.glob(["./worklet.js"]);
-// get the path of the built module.
-const importPathRegex = /import\(['"]([^'"]+)['"]\)/;
-const importStatement = Object.values(modules)[0].toString();
-console.log("importStatement", importStatement);
-const match = importStatement.match(importPathRegex);
-let workletUrl = "";
-if (match) {
-  const path = match[1];
-  workletUrl = path;
-  } */
-
-// https://stackoverflow.com/questions/76324021/how-to-package-npm-module-with-audioworklet // not tried yet
-
-// console.log("workletUrl", workletUrl);
-
 import recorderUrl from "./recorder.js?worker&url";
 import { audioBuffersToWav } from "./wav.js";
 
 export class AudioView {
-  constructor(base = "") {
-    this.base = base;
+  constructor() {
     this.ugens = new Map();
   }
   async updateGraph(node) {
@@ -193,8 +148,8 @@ export class AudioView {
       );
     }
 
-    await this.audioCtx.audioWorklet.addModule(this.base + workletUrl);
-    await this.audioCtx.audioWorklet.addModule(this.base + recorderUrl);
+    await this.audioCtx.audioWorklet.addModule(workletUrl);
+    await this.audioCtx.audioWorklet.addModule(recorderUrl);
 
     this.audioWorklet = new AudioWorkletNode(
       this.audioCtx,

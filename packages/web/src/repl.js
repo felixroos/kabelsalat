@@ -4,14 +4,8 @@ import * as lib from "@kabelsalat/lib/src/lib.js";
 import { AudioView } from "./audioview.js";
 
 export class SalatRepl {
-  constructor({
-    onToggle,
-    onToggleRecording,
-    beforeEval,
-    base,
-    transpiler,
-  } = {}) {
-    this.audio = new AudioView(base);
+  constructor({ onToggle, onToggleRecording, beforeEval, transpiler } = {}) {
+    this.audio = new AudioView();
     this.onToggle = onToggle;
     this.transpiler = transpiler;
     this.onToggleRecording = onToggleRecording;
