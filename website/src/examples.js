@@ -565,10 +565,10 @@ bd.add(bass).add(hat).add(sn).add(acid).add(mel).mul(0.63)
     label: "distorted guitar",
     code: `audio.fadeTime=2.5;
 
-saw([55,110,220,330]).lpf( sine(.25).range(.3,.7) )
+zaw([55,110,220,330]).lpf( sine(.25).range(.3,.7) )
 .mix(2)
 .mul(impulse(4).perc(.1).lag(.05))
-.add(x=>x.delay(saw(.01).range(.005,.02)).mul(.9))
+.add(x=>x.delay(zaw(.01).range(.005,.02)).mul(.9))
 .add(x=>x.delay(.3).mul(.7))
 .fold().mul(.6)
 .out()`,
