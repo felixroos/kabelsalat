@@ -8,18 +8,21 @@ export class SalatRepl {
     onToggle,
     onToggleRecording,
     beforeEval,
-    base,
     transpiler,
+    localScope = false,
   } = {}) {
-    this.audio = new AudioView(base);
+    this.audio = new AudioView();
     this.onToggle = onToggle;
     this.transpiler = transpiler;
     this.onToggleRecording = onToggleRecording;
     this.beforeEval = beforeEval;
+    this.localScope = localScope;
     if (typeof window !== "undefined") {
-      Object.assign(globalThis, core);
-      Object.assign(globalThis, lib);
-      Object.assign(globalThis, compiler);
+      if (!localScope) {
+        Object.assign(globalThis, core);
+        Object.assign(globalThis, lib);
+        Object.assign(globalThis, compiler);
+      }
       // update state when sliders are moved
       // TODO: remove listener?
       // TODO: could this get problematic for multiple SalatRepl instances in parallel?
@@ -37,11 +40,13 @@ export class SalatRepl {
   }
 
   evaluate(code) {
-    // re-assign instance specific scope before each eval..
-    Object.assign(globalThis, { audio: this.audio });
-    Object.assign(globalThis, {
-      addUgen: this.registerUgen.bind(this),
-    });
+    if (!this.localScope) {
+      // re-assign instance specific scope before each eval..
+      Object.assign(globalThis, { audio: this.audio });
+      Object.assign(globalThis, {
+        addUgen: this.registerUgen.bind(this),
+      });
+    }
     let transpiled;
     if (this.transpiler) {
       transpiled = this.transpiler(code);
@@ -49,7 +54,17 @@ export class SalatRepl {
       transpiled = { output: code };
     }
     this.beforeEval?.(transpiled);
-    return core.evaluate(transpiled.output);
+    let scope;
+    if (this.localScope) {
+      scope = {
+        ...core,
+        ...lib,
+        ...compiler,
+        audio: this.audio,
+        addUgen: this.registerUgen.bind(this),
+      };
+    }
+    return core.evaluate(transpiled.output, scope);
   }
   async play(node) {
     await this.audio.init();

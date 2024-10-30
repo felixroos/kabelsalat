@@ -3,6 +3,7 @@ import { resolve } from "path";
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  base: "./",
   plugins: [],
   build: {
     lib: {

@@ -340,13 +340,20 @@ function flatten(node) {
   });
 }
 
-export function evaluate(code) {
-  // make sure to call Object.assign(globalThis, api);
+export let exit = registerNode("exit", { internal: true });
+
+export function evaluate(code, scope) {
   let nodes = [];
   Node.prototype.out = function (channels = [0, 1]) {
     nodes.push(this.output(channels));
   };
-  Function(code)();
+  if (scope) {
+    // pass all members of scope as function arguments to avoid using global scope
+    Function(...Object.keys(scope), code)(...Object.values(scope));
+  } else {
+    // expect scope to be assigned to globalThis
+    Function(code)();
+  }
   const node = exit(...nodes);
   return node;
 }
