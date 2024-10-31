@@ -13,6 +13,7 @@ export class AudioView {
     this.ugens = new Map();
   }
   async updateGraph(node) {
+    this.graph = node;
     const { src, ugens, registers } = node.compile({
       log: false,
     });
@@ -167,7 +168,29 @@ export class AudioView {
         type: "KABELSALAT_WORKLET_MSG",
         msg: msg.data,
       });
-      const type = msg.data.type;
+
+      const { id, time, type } = msg.data;
+      if (type === "TRIG_MSG") {
+        this.graph.dfs((node) => {
+          if (node.type === "signal" && node.id === id) {
+            const value = node.callback(time, id);
+            if (!isNaN(value)) {
+              // TODO: pass time
+              window.postMessage({
+                type: "KABELSALAT_SET_CONTROL",
+                value,
+                id,
+              });
+            } else if (value !== undefined) {
+              console.warn(
+                `expected number from "on" callback with id "${id}", got "${value}" instead.`
+              );
+            }
+          }
+          return node;
+        });
+      }
+
       if (type === "STOP") {
         const lash = 200;
         setTimeout(() => this.destroy(), msg.data.fadeTime * 1000 + lash);
@@ -254,37 +277,15 @@ function downloadFile(bytes, filename, mimeType) {
   link.click();
 }
 
-let listeners = new Map();
+let signalCount = 0;
 export let signal = register(
   "signal",
-  (input, id, callback) => {
-    if (listeners.has(id)) {
-      // will this work with multichannel expansion?
-      window.removeEventListener("message", listeners.get(id));
-    }
-    window.addEventListener("message", function handler(e) {
-      if (
-        e.data.type === "KABELSALAT_WORKLET_MSG" &&
-        e.data.msg.type === "TRIG_MSG" &&
-        e.data.msg.id === id
-      ) {
-        const value = callback(id, e.data.msg.time);
-        if (!isNaN(value)) {
-          // TODO: pass time
-          window.postMessage({
-            type: "KABELSALAT_SET_CONTROL",
-            value,
-            id,
-          });
-        } else if (value !== undefined) {
-          console.warn(
-            `expected number from "on" callback with id "${id}", got "${value}" instead.`
-          );
-        }
-      }
-      listeners.set(id, handler);
-    });
-    return getNode("signal", input, id);
+  (input, callback) => {
+    const id = signalCount++;
+    const node = getNode("signal", input, id);
+    node.callback = callback; // picked up in message handler
+    node.id = id;
+    return node;
   },
   {
     ugen: "Signal",
