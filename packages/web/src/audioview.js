@@ -5,6 +5,8 @@ import { Mouse } from "@kabelsalat/lib/src/mouse.js";
 import workletUrl from "./worklet.js?worker&url";
 import recorderUrl from "./recorder.js?worker&url";
 import { audioBuffersToWav } from "./wav.js";
+import { register } from "@kabelsalat/core";
+import * as js from "@kabelsalat/lib/src/lang/js.js";
 
 export class AudioView {
   constructor() {
@@ -161,6 +163,10 @@ export class AudioView {
     // Callback to receive messages from the audioworklet
     this.audioWorklet.port.onmessage = (msg) => {
       // console.log("msg from worklet", msg);
+      window.postMessage({
+        type: "KABELSALAT_WORKLET_MSG",
+        msg: msg.data,
+      });
       const type = msg.data.type;
       if (type === "STOP") {
         const lash = 200;
@@ -247,3 +253,43 @@ function downloadFile(bytes, filename, mimeType) {
   link.download = filename;
   link.click();
 }
+
+let listeners = new Map();
+export let signal = register(
+  "signal",
+  (input, id, callback) => {
+    if (listeners.has(id)) {
+      // will this work with multichannel expansion?
+      window.removeEventListener("message", listeners.get(id));
+    }
+    window.addEventListener("message", function handler(e) {
+      if (
+        e.data.type === "KABELSALAT_WORKLET_MSG" &&
+        e.data.msg.type === "TRIG_MSG" &&
+        e.data.msg.id === id
+      ) {
+        const value = callback(id, e.data.msg.time);
+        if (!isNaN(value)) {
+          // TODO: pass time
+          window.postMessage({
+            type: "KABELSALAT_SET_CONTROL",
+            value,
+            id,
+          });
+        } else if (value !== undefined) {
+          console.warn(
+            `expected number from "on" callback with id "${id}", got "${value}" instead.`
+          );
+        }
+      }
+      listeners.set(id, handler);
+    });
+    return getNode("signal", input, id);
+  },
+  {
+    ugen: "Signal",
+    compile: ({ vars: [input, id], ...meta }) => {
+      return js.defUgen(meta, input, id, "time");
+    },
+  }
+);
