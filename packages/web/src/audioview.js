@@ -166,7 +166,7 @@ export class AudioView {
       // console.log("msg from worklet", msg);
 
       const { id, time, type } = msg.data;
-      if (type === "TRIG_MSG") {
+      if (type === "SIGNAL_TRIGGER") {
         this.graph.dfs((node) => {
           if (node.type === "signal" && node.id === id) {
             const value = node.callback(time, id);

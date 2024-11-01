@@ -736,7 +736,7 @@ export class Signal {
     if (!this.up && input > 0) {
       this.up = true;
       this.send({
-        type: "TRIG_MSG",
+        type: "SIGNAL_TRIGGER",
         id,
         time,
       });
