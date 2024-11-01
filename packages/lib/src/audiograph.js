@@ -144,8 +144,6 @@ export class AudioGraph {
 
     if (!this.units.length) return [0, 0];
 
-    this.playPos += 1 / 44100;
-
     const sum = [0, 0];
     for (let i = 0; i < this.units.length; i++) {
       const unit = this.units[i];
@@ -161,6 +159,7 @@ export class AudioGraph {
       sum[0] += unit.outputs[0] * lvl;
       sum[1] += unit.outputs[1] * lvl;
     }
+    this.playPos += 1 / 44100;
     return sum;
   }
   addUgen(className, implementation) {

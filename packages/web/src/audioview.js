@@ -5,12 +5,15 @@ import { Mouse } from "@kabelsalat/lib/src/mouse.js";
 import workletUrl from "./worklet.js?worker&url";
 import recorderUrl from "./recorder.js?worker&url";
 import { audioBuffersToWav } from "./wav.js";
+import { register } from "@kabelsalat/core";
+import * as js from "@kabelsalat/lib/src/lang/js.js";
 
 export class AudioView {
   constructor() {
     this.ugens = new Map();
   }
   async updateGraph(node) {
+    this.graph = node;
     const { src, ugens, registers } = node.compile({
       log: false,
     });
@@ -161,7 +164,29 @@ export class AudioView {
     // Callback to receive messages from the audioworklet
     this.audioWorklet.port.onmessage = (msg) => {
       // console.log("msg from worklet", msg);
-      const type = msg.data.type;
+
+      const { id, time, type } = msg.data;
+      if (type === "SIGNAL_TRIGGER") {
+        this.graph.dfs((node) => {
+          if (node.type === "signal" && node.id === id) {
+            const value = node.callback(time, id);
+            if (!isNaN(value)) {
+              // TODO: pass time
+              window.postMessage({
+                type: "KABELSALAT_SET_CONTROL",
+                value,
+                id,
+              });
+            } else if (value !== undefined) {
+              console.warn(
+                `expected number from "on" callback with id "${id}", got "${value}" instead.`
+              );
+            }
+          }
+          return node;
+        });
+      }
+
       if (type === "STOP") {
         const lash = 200;
         setTimeout(() => this.destroy(), msg.data.fadeTime * 1000 + lash);
@@ -247,3 +272,21 @@ function downloadFile(bytes, filename, mimeType) {
   link.download = filename;
   link.click();
 }
+
+let signalCount = 0;
+export let signal = register(
+  "signal",
+  (input, callback) => {
+    const id = signalCount++;
+    const node = getNode("signal", input, id);
+    node.callback = callback; // picked up in message handler
+    node.id = id;
+    return node;
+  },
+  {
+    ugen: "Signal",
+    compile: ({ vars: [input, id], ...meta }) => {
+      return js.defUgen(meta, input, id, "time");
+    },
+  }
+);

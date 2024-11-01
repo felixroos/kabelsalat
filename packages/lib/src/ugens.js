@@ -721,6 +721,32 @@ export class MidiFreq extends MidiIn {
   }
 }
 
+export class Signal {
+  constructor(id, state, sampleRate, send) {
+    this.up = false;
+    this.send = send;
+    this.value = 0;
+    this.type = "cc";
+  }
+  setValue(value) {
+    this.value = value;
+  }
+  update(input, id, time) {
+    this.id = id;
+    if (!this.up && input > 0) {
+      this.up = true;
+      this.send({
+        type: "SIGNAL_TRIGGER",
+        id,
+        time,
+      });
+      return this.value;
+    }
+    this.up = input > 0;
+    return this.value;
+  }
+}
+
 export class CC extends AudioNode {
   constructor(id, state, sampleRate, send) {
     super(id, state, sampleRate, send);

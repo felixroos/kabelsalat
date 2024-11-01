@@ -22,6 +22,7 @@ export class SalatRepl {
         Object.assign(globalThis, core);
         Object.assign(globalThis, lib);
         Object.assign(globalThis, compiler);
+        Object.assign(globalThis, { repl: this });
       }
       // update state when sliders are moved
       // TODO: remove listener?
@@ -62,6 +63,7 @@ export class SalatRepl {
         ...compiler,
         audio: this.audio,
         addUgen: this.registerUgen.bind(this),
+        repl: this,
       };
     }
     return core.evaluate(transpiled.output, scope);
