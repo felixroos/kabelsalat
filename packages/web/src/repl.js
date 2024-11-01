@@ -17,12 +17,10 @@ export class SalatRepl {
     this.onToggleRecording = onToggleRecording;
     this.beforeEval = beforeEval;
     this.localScope = localScope;
+    const scope = { ...core, ...lib, ...compiler, repl: this };
     if (typeof window !== "undefined") {
       if (!localScope) {
-        Object.assign(globalThis, core);
-        Object.assign(globalThis, lib);
-        Object.assign(globalThis, compiler);
-        Object.assign(globalThis, { repl: this });
+        Object.assign(globalThis, scope);
       }
       // update state when sliders are moved
       // TODO: remove listener?
@@ -41,12 +39,14 @@ export class SalatRepl {
   }
 
   evaluate(code) {
+    const innerScope = {
+      audio: this.audio,
+      addUgen: this.registerUgen.bind(this),
+      repl: this,
+    };
     if (!this.localScope) {
       // re-assign instance specific scope before each eval..
-      Object.assign(globalThis, { audio: this.audio });
-      Object.assign(globalThis, {
-        addUgen: this.registerUgen.bind(this),
-      });
+      Object.assign(globalThis, innerScope);
     }
     let transpiled;
     if (this.transpiler) {
@@ -58,12 +58,8 @@ export class SalatRepl {
     let scope;
     if (this.localScope) {
       scope = {
-        ...core,
-        ...lib,
-        ...compiler,
-        audio: this.audio,
-        addUgen: this.registerUgen.bind(this),
-        repl: this,
+        ...scope,
+        ...innerScope,
       };
     }
     return core.evaluate(transpiled.output, scope);
