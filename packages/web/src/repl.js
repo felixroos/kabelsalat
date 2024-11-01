@@ -1,6 +1,7 @@
 import * as core from "@kabelsalat/core/src/index.js";
 import * as compiler from "@kabelsalat/core/src/compiler.js";
 import * as lib from "@kabelsalat/lib/src/lib.js";
+import * as strudel from "@kabelsalat/strudel";
 import { AudioView } from "./audioview.js";
 
 export class SalatRepl {
@@ -17,7 +18,7 @@ export class SalatRepl {
     this.onToggleRecording = onToggleRecording;
     this.beforeEval = beforeEval;
     this.localScope = localScope;
-    const scope = { ...core, ...lib, ...compiler, repl: this };
+    const scope = { ...core, ...lib, ...compiler, ...strudel, repl: this };
     if (typeof window !== "undefined") {
       if (!localScope) {
         Object.assign(globalThis, scope);
