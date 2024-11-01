@@ -164,10 +164,6 @@ export class AudioView {
     // Callback to receive messages from the audioworklet
     this.audioWorklet.port.onmessage = (msg) => {
       // console.log("msg from worklet", msg);
-      window.postMessage({
-        type: "KABELSALAT_WORKLET_MSG",
-        msg: msg.data,
-      });
 
       const { id, time, type } = msg.data;
       if (type === "TRIG_MSG") {
