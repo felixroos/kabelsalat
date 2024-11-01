@@ -83,16 +83,6 @@ importers:
         specifier: ^5.2.0
         version: 5.3.1
 
-  packages/strudel:
-    dependencies:
-      '@kabelsalat/core':
-        specifier: workspace:*
-        version: link:../core
-    devDependencies:
-      vite:
-        specifier: ^5.2.0
-        version: 5.3.1
-
   packages/transpiler:
     dependencies:
       acorn:
@@ -117,9 +107,6 @@ importers:
       '@kabelsalat/lib':
         specifier: workspace:*
         version: link:../lib
-      '@kabelsalat/strudel':
-        specifier: workspace:*
-        version: link:../strudel
     devDependencies:
       vite:
         specifier: ^5.2.0

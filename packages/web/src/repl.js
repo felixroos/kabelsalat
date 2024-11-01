@@ -1,8 +1,6 @@
 import * as core from "@kabelsalat/core/src/index.js";
 import * as compiler from "@kabelsalat/core/src/compiler.js";
 import * as lib from "@kabelsalat/lib/src/lib.js";
-import * as strudel from "@kabelsalat/strudel";
-
 import { AudioView } from "./audioview.js";
 
 export class SalatRepl {
@@ -19,10 +17,12 @@ export class SalatRepl {
     this.onToggleRecording = onToggleRecording;
     this.beforeEval = beforeEval;
     this.localScope = localScope;
-    const scope = { ...core, ...lib, ...compiler, ...strudel, repl: this };
     if (typeof window !== "undefined") {
       if (!localScope) {
-        Object.assign(globalThis, scope);
+        Object.assign(globalThis, core);
+        Object.assign(globalThis, lib);
+        Object.assign(globalThis, compiler);
+        Object.assign(globalThis, { repl: this });
       }
       // update state when sliders are moved
       // TODO: remove listener?
@@ -41,14 +41,12 @@ export class SalatRepl {
   }
 
   evaluate(code) {
-    const innerScope = {
-      audio: this.audio,
-      addUgen: this.registerUgen.bind(this),
-      repl: this,
-    };
     if (!this.localScope) {
       // re-assign instance specific scope before each eval..
-      Object.assign(globalThis, innerScope);
+      Object.assign(globalThis, { audio: this.audio });
+      Object.assign(globalThis, {
+        addUgen: this.registerUgen.bind(this),
+      });
     }
     let transpiled;
     if (this.transpiler) {
@@ -60,8 +58,12 @@ export class SalatRepl {
     let scope;
     if (this.localScope) {
       scope = {
-        ...scope,
-        ...innerScope,
+        ...core,
+        ...lib,
+        ...compiler,
+        audio: this.audio,
+        addUgen: this.registerUgen.bind(this),
+        repl: this,
       };
     }
     return core.evaluate(transpiled.output, scope);
