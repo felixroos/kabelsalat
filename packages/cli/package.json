@@ -7,15 +7,22 @@
   "license": "AGPL-3.0-or-later",
   "scripts": {
     "test": "node src/cli.js",
+    
     "ks2c": "pnpm ks2c:compile && pnpm ks2c:build && pnpm ks2c:run",
+    "ks2c:compile": "cd src && node ks2c.js",
+    "ks2c:build_gcc": "cd src && gcc -o kabelsalat kabelsalat.js.c -lm",
+    "ks2c:build": "cd src && clang -Os -flto -o kabelsalat kabelsalat.js.c",
+    "ks2c:run": "cd src && ./kabelsalat | sox -traw -r44100 -b32 -e float -c 2 - -tcoreaudio",
+
     "ks2c-osx": "pnpm ks2c-osx:compile && pnpm ks2c-osx:build && pnpm ks2c-osx:run",
     "ks2c-osx:compile": "cd src && node ks2c-osx.js",
     "ks2c-osx:build": "cd src && clang -Os -framework AudioToolbox -flto -o kabelsalat-osx kabelsalat.js-osx.c",
     "ks2c-osx:run": "cd src && ./kabelsalat-osx",
-    "ks2c:compile": "cd src && node ks2c.js",
-    "ks2c:build_gcc": "cd src && gcc -o kabelsalat kabelsalat.js.c -lm",
-    "ks2c:build": "cd src && clang -Os -flto -o kabelsalat kabelsalat.js.c",
-    "ks2c:run": "cd src && ./kabelsalat | sox -traw -r44100 -b32 -e float -c 2 - -tcoreaudio"
+
+    "ks2c-pa": "pnpm ks2c-pa:compile && pnpm ks2c-pa:build && pnpm ks2c-pa:run",
+    "ks2c-pa:compile": "cd src && node ks2c-pa.js",
+    "ks2c-pa:build": "cd src && gcc -Os kabelsalat.js-pa.c -flto -o kabelsalat-pa -I/opt/homebrew/include -L/opt/homebrew/lib -lportaudio -lm",
+    "ks2c-pa:run": "cd src && ./kabelsalat-pa"
   },
   "dependencies": {
     "@kabelsalat/core": "workspace:*",
