@@ -2,7 +2,13 @@ kabelsalat.js
 src/clib/dsp
 src/clib/wav.c
 src/clib/alsa.md
-src/kabelsalat
 src/kabelsalat.js.c
+src/kabelsalat
+src/kabelsalat.js-osx.c
+src/kabelsalat-osx
+src/kabelsalat.js-pa.c
+src/kabelsalat-pa
 src/clib/sine_wave
 src/clib/sine_wave.c
+src/clib/sine_portaudio.c
+src/clib/sine_portaudio

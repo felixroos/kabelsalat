@@ -12,7 +12,9 @@
 #define SAMPLE_TIME (1.0 / SAMPLE_RATE)
 #define MAX(x, y) (((x) > (y)) ? (x) : (y))
 #define MIN(x, y) (((x) < (y)) ? (x) : (y))
-#define RANDOM_FLOAT ((float)arc4random() / (float)UINT32_MAX)
+#define RANDOM_FLOAT ((float)arc4random() / (float)UINT32_MAX) // libbsd
+//#define RANDOM_FLOAT ((float)rand() / (float)RAND_MAX) // stdlib
+//#define RANDOM_FLOAT ((float)random() / (float)0x7FFFFFFF) // POSIX
 
 // helpers
 
