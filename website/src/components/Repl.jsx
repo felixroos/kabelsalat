@@ -1,14 +1,15 @@
-import { Show, createSignal, onCleanup, onMount } from "solid-js";
+import { createSignal, onCleanup, onMount, Show } from "solid-js";
 import "@kabelsalat/graphviz";
 import { SalatRepl } from "@kabelsalat/web";
 import { Icon } from "./Icon";
 import { Reference } from "./Reference";
+import { $settings, Settings } from "./Settings";
 import { examples } from "../examples";
 import { persistentAtom } from "@nanostores/persistent";
 import { useStore } from "@nanostores/solid";
-import { History, addToHistory, $history } from "./History";
+import { $history, addToHistory, History } from "./History";
 import { Codemirror, codemirrorView } from "./Codemirror";
-import { updateWidgets, flash } from "@kabelsalat/codemirror";
+import { flash, updateWidgets } from "@kabelsalat/codemirror";
 import { transpiler } from "@kabelsalat/transpiler";
 
 export const $hideWelcome = persistentAtom("hideWelcome", "false");
@@ -52,7 +53,9 @@ let vizSettings = { resolveModules: false };
 let TAB_GRAPH = "graph";
 let TAB_DOCS = "docs";
 let TAB_PATCHES = "browse";
-const panels = [TAB_GRAPH, TAB_PATCHES, TAB_DOCS];
+let TAB_SETTINGS = "settings";
+
+const panels = [TAB_GRAPH, TAB_PATCHES, TAB_DOCS, TAB_SETTINGS];
 
 function getURLCode() {
   let url = new URL(window.location);
@@ -80,6 +83,7 @@ function updateCode(code) {
 }
 
 export function Repl() {
+  const settings = useStore($settings);
   let [started, setStarted] = createSignal(false);
   let [recording, setRecording] = createSignal(false);
   const repl = new SalatRepl({
@@ -232,6 +236,7 @@ export function Repl() {
         }`}
       >
         <Codemirror
+          settings={settings()}
           code={code()}
           onChange={setCode}
           onEvaluate={() => run()}
@@ -282,6 +287,12 @@ export function Repl() {
                   <Reference />
                 </div>
               </Show>
+              <Show when={activePanel() === TAB_SETTINGS}>
+                <div class="prose prose-invert">
+                  <h2>settings</h2>
+                  <Settings />
+                </div>
+              </Show>
               <Show when={activePanel() === TAB_PATCHES}>
                 <h2 class="text-xl text-white pb-4">examples</h2>
                 <For each={examples}>
@@ -325,7 +336,7 @@ export function base64ToUnicode(base64String) {
   const utf8Bytes = new Uint8Array(
     atob(base64String)
       .split("")
-      .map((char) => char.charCodeAt(0))
+      .map((char) => char.charCodeAt(0)),
   );
   const decodedText = new TextDecoder().decode(utf8Bytes);
   return decodedText;

@@ -1,4 +1,4 @@
-import { For, createSignal } from "solid-js";
+import { createSignal, For } from "solid-js";
 import { nodeRegistry } from "@kabelsalat/core";
 import { MiniRepl } from "./MiniRepl.jsx";
 
@@ -18,18 +18,19 @@ const items = Array.from(nodeRegistry.entries())
   .filter(([_, schema]) => !schema.internal)
   .sort(([a], [b]) => a.localeCompare(b));
 const tags = Array.from(
-  new Set(items.map((item) => item[1].tags).flat())
+  new Set(items.map((item) => item[1].tags).flat()),
 ).filter(Boolean);
 
 const tagRefs = Object.fromEntries(
   tags.map((tag) => [
     tag,
     items.filter(([_, schema]) => schema.tags?.includes(tag)).length,
-  ])
+  ]),
 );
 
 export function Reference() {
   const [selectedTags, setSelectedTags] = createSignal([]);
+
   const toggleTag = (tag) => {
     let next;
     if (selectedTags().includes(tag)) {
@@ -40,15 +41,16 @@ export function Reference() {
     }
     setSelectedTags(next);
   };
+
   const filtered = () =>
     selectedTags().length === 0
       ? items
       : items.filter((item) =>
-          selectedTags().reduce(
-            (acc, tag) => acc && item[1].tags?.includes(tag),
-            true
-          )
-        );
+        selectedTags().reduce(
+          (acc, tag) => acc && item[1].tags?.includes(tag),
+          true,
+        ),
+      );
   return (
     <div>
       <div>
