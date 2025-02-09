@@ -23,7 +23,6 @@ export function initEditor({
   onStop,
 }) {
   const keybindingsCompartment = new Compartment();
-
   let editor = new EditorView({
     extensions: [
       //basicSetup,
@@ -70,7 +69,7 @@ export function initEditor({
               return true;
             },
           },
-        ]),
+        ])
       ),
     ],
     parent: root,

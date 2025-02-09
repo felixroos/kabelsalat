@@ -7,13 +7,13 @@ import { defaultKeymap, historyKeymap } from "@codemirror/commands";
 
 const vscodePlugin = ViewPlugin.fromClass(
   class {
-    constructor() { }
+    constructor() {}
   },
   {
     provide: () => {
       return Prec.highest(keymap.of([...vscodeKeymap]));
     },
-  },
+  }
 );
 const vscodeExtension = (options) => [vscodePlugin].concat(options ?? []);
 
