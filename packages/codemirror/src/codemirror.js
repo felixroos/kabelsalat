@@ -4,16 +4,15 @@ import { javascript } from "@codemirror/lang-javascript";
 import { insertNewline } from "@codemirror/commands";
 import { widgetPlugin } from "./widgets.js";
 import { flashField } from "./flash.js";
+import { keybindings } from "./keybindings.js";
 import {
-  lineNumbers,
-  highlightActiveLineGutter,
   highlightActiveLine,
+  highlightActiveLineGutter,
   keymap,
+  lineNumbers,
 } from "@codemirror/view";
-
 import { bracketMatching } from "@codemirror/language";
 import { Compartment, Prec } from "@codemirror/state";
-import { keybindings } from "./keybindings.js";
 
 export function initEditor({
   root,
@@ -24,6 +23,7 @@ export function initEditor({
   onStop,
 }) {
   const keybindingsCompartment = new Compartment();
+
   let editor = new EditorView({
     extensions: [
       //basicSetup,
@@ -68,19 +68,19 @@ export function initEditor({
             run: (view) => {
               insertNewline(view);
               return true;
-            }
-          }
-        ])
-      )
+            },
+          },
+        ]),
+      ),
     ],
-    parent: root
+    parent: root,
   });
 
   const setCode = (code) => {
     const changes = {
       from: 0,
       to: editor.state.doc.length,
-      insert: code
+      insert: code,
     };
     editor.dispatch({ changes });
   };
@@ -90,7 +90,7 @@ export function initEditor({
 
   const setKeybindings = (bindings) => {
     editor.dispatch({
-      effects: keybindingsCompartment.reconfigure(keybindings(bindings))
+      effects: keybindingsCompartment.reconfigure(keybindings(bindings)),
     });
   };
 
