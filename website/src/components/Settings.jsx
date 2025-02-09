@@ -44,8 +44,7 @@ function ButtonGroup({ items, value, onChange }) {
           class={
             "border-b h-8 whitespace-nowrap " +
             (value() === key ? "border-foreground" : "border-transparent")
-          }
-        >
+          }>
           {label.toLowerCase()}
         </button>
       ))}
