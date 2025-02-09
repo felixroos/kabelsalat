@@ -138,56 +138,52 @@ export function Repl() {
           <div
             class={`font-bold font-mono text-xl
         bg-gradient-to-r from-teal-400 to-fuchsia-300 inline-block text-transparent bg-clip-text cursor-pointer`}
-            onClick={() => setZen((z) => !z)}
-          >
+            onClick={() => setZen((z) => !z)}>
             🔌 kabelsalat
           </div>
           <Show when={!zen()}>
             <div class="flex justify-start items-center space-x-4 font-light">
               <button
                 onClick={() => (started() ? repl.stop() : run())}
-                class="items-center flex space-x-1 hover:opacity-50"
-              >
+                class="items-center flex space-x-1 hover:opacity-50">
                 {!started() ? (
-                    <>
-                      <Icon type="play" />
-                      <span class="animate-pulse hidden sm:block">play</span>
-                    </>
-                  ) : (
-                    <>
-                      <Icon type="stop" />
-                      <span class="hidden sm:block">stop</span>
-                    </>
-                  )}
+                  <>
+                    <Icon type="play" />
+                    <span class="animate-pulse hidden sm:block">play</span>
+                  </>
+                ) : (
+                  <>
+                    <Icon type="stop" />
+                    <span class="hidden sm:block">stop</span>
+                  </>
+                )}
               </button>
               <button
                 onClick={() => run()}
-                class="items-center flex space-x-1 hover:opacity-50"
-              >
+                class="items-center flex space-x-1 hover:opacity-50">
                 <Icon type="refresh" />
                 <span class="hidden sm:block">run</span>
               </button>
               <button
                 onClick={() =>
-                  recording() ? repl.stopRecording() : repl.record()}
-                class="items-center flex space-x-1 hover:opacity-50"
-              >
+                  recording() ? repl.stopRecording() : repl.record()
+                }
+                class="items-center flex space-x-1 hover:opacity-50">
                 {!recording() ? (
-                    <>
-                      <Icon type="record" />
-                      <span class="hidden sm:block">rec</span>
-                    </>
-                  ) : (
-                    <>
-                      <Icon type="recordstop" />
-                      <span class="hidden sm:block">rec.stop</span>
-                    </>
-                  )}
+                  <>
+                    <Icon type="record" />
+                    <span class="hidden sm:block">rec</span>
+                  </>
+                ) : (
+                  <>
+                    <Icon type="recordstop" />
+                    <span class="hidden sm:block">rec.stop</span>
+                  </>
+                )}
               </button>
               <a
                 class="items-center flex space-x-1 hover:opacity-50"
-                href="/learn"
-              >
+                href="/learn">
                 <Icon type="learn" />
                 <span class="hidden sm:block">learn</span>
               </a>
@@ -201,8 +197,7 @@ export function Repl() {
             started() ? "animate-pulse" : ""
           } 
         bg-gradient-to-r from-teal-400 to-fuchsia-300 inline-block text-transparent bg-clip-text cursor-pointer fixed top-2 right-4 z-10`}
-          onClick={() => setZen((z) => !z)}
-        >
+          onClick={() => setZen((z) => !z)}>
           🔌
         </div>
       </Show>
@@ -232,8 +227,7 @@ export function Repl() {
       <div
         class={`grid flex-auto shrink grow overflow-hidden ${
           zen() ? `sm:grid-cols-1` : "sm:grid-cols-2"
-        }`}
-      >
+        }`}>
         <Codemirror
           settings={settings()}
           code={code()}
@@ -243,18 +237,18 @@ export function Repl() {
         />
         <Show when={!zen()}>
           <div
-            class={`hidden sm:flex flex-col h-full overflow-hidden border-l border-stone-800`}
-          >
+            class={`hidden sm:flex flex-col h-full overflow-hidden border-l border-stone-800`}>
             <nav class={`border-b border-stone-800 py-0 px-4 flex space-x-4`}>
               <For each={panels}>
                 {(panel) => (
                   <div
                     onClick={() => setActivePanel(panel)}
-                    class={`select-none hover:opacity-50 cursor-pointer text-teal-600 py-1 ` +
+                    class={
+                      `select-none hover:opacity-50 cursor-pointer text-teal-600 py-1 ` +
                       (activePanel() === panel
                         ? `border-b-2 border-teal-600`
-                        : "")}
-                  >
+                        : "")
+                    }>
                     {panel}
                   </div>
                 )}
@@ -262,8 +256,7 @@ export function Repl() {
             </nav>
             <div
               id="scroll-container"
-              class={`select-none bg-stone-900 overflow-auto text-gray-500 p-4 grow-0 h-full`}
-            >
+              class={`select-none bg-stone-900 overflow-auto text-gray-500 p-4 grow-0 h-full`}>
               <Show when={activePanel() === TAB_GRAPH}>
                 <div
                   ref={(el) => {
@@ -275,9 +268,7 @@ export function Repl() {
                     } catch (err) {
                       handleError(err);
                     }
-                  }}
-                >
-                </div>
+                  }}></div>
               </Show>
               <Show when={activePanel() === TAB_DOCS}>
                 <div class="prose prose-invert">
@@ -301,8 +292,7 @@ export function Repl() {
                             ? " border-b border-teal-600"
                             : ""
                         }`}
-                        onClick={() => run(example.code)}
-                      >
+                        onClick={() => run(example.code)}>
                         {example.label}
                       </a>
                     </div>
@@ -333,7 +323,7 @@ export function base64ToUnicode(base64String) {
   const utf8Bytes = new Uint8Array(
     atob(base64String)
       .split("")
-      .map((char) => char.charCodeAt(0)),
+      .map((char) => char.charCodeAt(0))
   );
   const decodedText = new TextDecoder().decode(utf8Bytes);
   return decodedText;
