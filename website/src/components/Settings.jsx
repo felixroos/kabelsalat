@@ -8,10 +8,7 @@ const defaultSettings = {
 export const $settings = persistentAtom(
   "kabel-salat-settings",
   defaultSettings,
-  {
-    encode: JSON.stringify,
-    decode: JSON.parse,
-  },
+  { encode: JSON.stringify, decode: JSON.parse }
 );
 
 const updateSettings = (key, value) =>
@@ -39,13 +36,15 @@ export function Settings() {
 
 function ButtonGroup({ items, value, onChange }) {
   return (
-    <div className="flex max-w-lg ">
+    <div className="flex gap-2 max-w-lg ">
       {Object.entries(items).map(([key, label]) => (
         <button
           key={key}
           onClick={() => onChange(key)}
-          class={"mx-2 border-b h-8 whitespace-nowrap " +
-            (value() === key ? "border-foreground" : "border-transparent")}
+          class={
+            "border-b h-8 whitespace-nowrap " +
+            (value() === key ? "border-foreground" : "border-transparent")
+          }
         >
           {label.toLowerCase()}
         </button>

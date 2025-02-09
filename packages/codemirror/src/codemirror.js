@@ -5,10 +5,10 @@ import { insertNewline } from "@codemirror/commands";
 import { widgetPlugin } from "./widgets.js";
 import { flashField } from "./flash.js";
 import {
-  highlightActiveLine,
-  highlightActiveLineGutter,
-  keymap,
   lineNumbers,
+  highlightActiveLineGutter,
+  highlightActiveLine,
+  keymap,
 } from "@codemirror/view";
 
 import { bracketMatching } from "@codemirror/language";
@@ -68,30 +68,29 @@ export function initEditor({
             run: (view) => {
               insertNewline(view);
               return true;
-            },
-          },
-        ]),
-      ),
+            }
+          }
+        ])
+      )
     ],
-    parent: root,
+    parent: root
   });
 
   const setCode = (code) => {
     const changes = {
       from: 0,
       to: editor.state.doc.length,
-      insert: code,
+      insert: code
     };
     editor.dispatch({ changes });
   };
 
   setCode(code);
-
   const getCode = () => editor.state.doc.toString();
 
   const setKeybindings = (bindings) => {
     editor.dispatch({
-      effects: keybindingsCompartment.reconfigure(keybindings(bindings)),
+      effects: keybindingsCompartment.reconfigure(keybindings(bindings))
     });
   };
 

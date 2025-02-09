@@ -149,16 +149,16 @@ export function Repl() {
                 class="items-center flex space-x-1 hover:opacity-50"
               >
                 {!started() ? (
-                  <>
-                    <Icon type="play" />
-                    <span class="animate-pulse hidden sm:block">play</span>
-                  </>
-                ) : (
-                  <>
-                    <Icon type="stop" />
-                    <span class="hidden sm:block">stop</span>
-                  </>
-                )}
+                    <>
+                      <Icon type="play" />
+                      <span class="animate-pulse hidden sm:block">play</span>
+                    </>
+                  ) : (
+                    <>
+                      <Icon type="stop" />
+                      <span class="hidden sm:block">stop</span>
+                    </>
+                  )}
               </button>
               <button
                 onClick={() => run()}
@@ -169,21 +169,20 @@ export function Repl() {
               </button>
               <button
                 onClick={() =>
-                  recording() ? repl.stopRecording() : repl.record()
-                }
+                  recording() ? repl.stopRecording() : repl.record()}
                 class="items-center flex space-x-1 hover:opacity-50"
               >
                 {!recording() ? (
-                  <>
-                    <Icon type="record" />
-                    <span class="hidden sm:block">rec</span>
-                  </>
-                ) : (
-                  <>
-                    <Icon type="recordstop" />
-                    <span class="hidden sm:block">rec.stop</span>
-                  </>
-                )}
+                    <>
+                      <Icon type="record" />
+                      <span class="hidden sm:block">rec</span>
+                    </>
+                  ) : (
+                    <>
+                      <Icon type="recordstop" />
+                      <span class="hidden sm:block">rec.stop</span>
+                    </>
+                  )}
               </button>
               <a
                 class="items-center flex space-x-1 hover:opacity-50"
@@ -198,8 +197,9 @@ export function Repl() {
       </Show>
       <Show when={zen()}>
         <div
-          class={`font-bold font-mono text-xl ${started() ? "animate-pulse" : ""
-            } 
+          class={`font-bold font-mono text-xl ${
+            started() ? "animate-pulse" : ""
+          } 
         bg-gradient-to-r from-teal-400 to-fuchsia-300 inline-block text-transparent bg-clip-text cursor-pointer fixed top-2 right-4 z-10`}
           onClick={() => setZen((z) => !z)}
         >
@@ -230,8 +230,9 @@ export function Repl() {
         </div>
       )}
       <div
-        class={`grid flex-auto shrink grow overflow-hidden ${zen() ? `sm:grid-cols-1` : "sm:grid-cols-2"
-          }`}
+        class={`grid flex-auto shrink grow overflow-hidden ${
+          zen() ? `sm:grid-cols-1` : "sm:grid-cols-2"
+        }`}
       >
         <Codemirror
           settings={settings()}
@@ -249,12 +250,10 @@ export function Repl() {
                 {(panel) => (
                   <div
                     onClick={() => setActivePanel(panel)}
-                    class={
-                      `select-none hover:opacity-50 cursor-pointer text-teal-600 py-1 ` +
+                    class={`select-none hover:opacity-50 cursor-pointer text-teal-600 py-1 ` +
                       (activePanel() === panel
                         ? `border-b-2 border-teal-600`
-                        : "")
-                    }
+                        : "")}
                   >
                     {panel}
                   </div>
@@ -277,7 +276,8 @@ export function Repl() {
                       handleError(err);
                     }
                   }}
-                ></div>
+                >
+                </div>
               </Show>
               <Show when={activePanel() === TAB_DOCS}>
                 <div class="prose prose-invert">
@@ -296,10 +296,11 @@ export function Repl() {
                   {(example) => (
                     <div class="not-prose">
                       <a
-                        class={`text-teal-600 cursor-pointer hover:opacity-50${code() === example.code
+                        class={`text-teal-600 cursor-pointer hover:opacity-50${
+                          code() === example.code
                             ? " border-b border-teal-600"
                             : ""
-                          }`}
+                        }`}
                         onClick={() => run(example.code)}
                       >
                         {example.label}
