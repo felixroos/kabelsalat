@@ -198,9 +198,8 @@ export function Repl() {
       </Show>
       <Show when={zen()}>
         <div
-          class={`font-bold font-mono text-xl ${
-            started() ? "animate-pulse" : ""
-          } 
+          class={`font-bold font-mono text-xl ${started() ? "animate-pulse" : ""
+            } 
         bg-gradient-to-r from-teal-400 to-fuchsia-300 inline-block text-transparent bg-clip-text cursor-pointer fixed top-2 right-4 z-10`}
           onClick={() => setZen((z) => !z)}
         >
@@ -231,9 +230,8 @@ export function Repl() {
         </div>
       )}
       <div
-        class={`grid flex-auto shrink grow overflow-hidden ${
-          zen() ? `sm:grid-cols-1` : "sm:grid-cols-2"
-        }`}
+        class={`grid flex-auto shrink grow overflow-hidden ${zen() ? `sm:grid-cols-1` : "sm:grid-cols-2"
+          }`}
       >
         <Codemirror
           settings={settings()}
@@ -289,7 +287,6 @@ export function Repl() {
               </Show>
               <Show when={activePanel() === TAB_SETTINGS}>
                 <div class="prose prose-invert">
-                  <h2>settings</h2>
                   <Settings />
                 </div>
               </Show>
@@ -299,11 +296,10 @@ export function Repl() {
                   {(example) => (
                     <div class="not-prose">
                       <a
-                        class={`text-teal-600 cursor-pointer hover:opacity-50${
-                          code() === example.code
+                        class={`text-teal-600 cursor-pointer hover:opacity-50${code() === example.code
                             ? " border-b border-teal-600"
                             : ""
-                        }`}
+                          }`}
                         onClick={() => run(example.code)}
                       >
                         {example.label}

@@ -14,7 +14,7 @@ export const $settings = persistentAtom(
   },
 );
 
-export const updateSettings = (key, value) =>
+const updateSettings = (key, value) =>
   $settings.set({ ...$settings.get(), [key]: value });
 
 export function Settings() {
@@ -22,7 +22,7 @@ export function Settings() {
   const keybindings = () => settings().keybindings;
   return (
     <div class="grid gap-2">
-      <label>Keybindings</label>
+      <h4>Keybindings</h4>
       <ButtonGroup
         items={{
           vim: "Vim",
@@ -30,10 +30,8 @@ export function Settings() {
           vscode: "VSCode",
           codemirror: "Codemirror",
         }}
-        onChange={(key) => {
-          updateSettings("keybindings", key);
-        }}
         value={keybindings}
+        onChange={(key) => updateSettings("keybindings", key)}
       />
     </div>
   );
@@ -46,11 +44,8 @@ function ButtonGroup({ items, value, onChange }) {
         <button
           key={key}
           onClick={() => onChange(key)}
-          data-selected={value === key}
-          class={
-            "px-2 border-b h-8 whitespace-nowrap " +
-            (value() === key ? "border-foreground" : "border-transparent")
-          }
+          class={"mx-2 border-b h-8 whitespace-nowrap " +
+            (value() === key ? "border-foreground" : "border-transparent")}
         >
           {label.toLowerCase()}
         </button>
