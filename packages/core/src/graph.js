@@ -347,9 +347,11 @@ export function evaluate(code, scope) {
     nodes.push(this.output(channels));
   };
   if (scope) {
+    scope.out = (node = n(0), ch) => node.out(ch);
     // pass all members of scope as function arguments to avoid using global scope
     Function(...Object.keys(scope), code)(...Object.values(scope));
   } else {
+    globalThis.out = (node = n(0), ch) => node.out(ch);
     // expect scope to be assigned to globalThis
     Function(code)();
   }
