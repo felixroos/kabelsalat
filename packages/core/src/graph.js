@@ -175,9 +175,9 @@ export function module(name, fn, schema) {
       const id = moduleId++;
       // TODO: support function as arg for feedback => parseInput expects 2 args
       args = args.map((input, i) =>
-        Node.parseInput(input).asModuleInput(name, id, i)
+        Node.parseInput(input).asModuleInput?.(name, id, i)
       );
-      return fn(...args).asModuleOutput(name, id);
+      return fn(...args).asModuleOutput?.(name, id);
     },
     schema
   );
