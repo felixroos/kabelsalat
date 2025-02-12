@@ -164,7 +164,7 @@ export let clock = registerNode("clock", {
 });
 export let clockdiv = registerNode("clockdiv", {
   ugen: "ClockDiv",
-  tags: ["clock"],
+  tags: ["clock", "trigger"],
   description: "Clock signal divider",
   examples: [`impulse(8).clockdiv(2).ad(.1,.1).mul(sine(220)).out()`],
   ins: [
