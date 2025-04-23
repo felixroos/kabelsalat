@@ -14,16 +14,16 @@ saw(55).lpf(sine(2).add(1.5).mul(300))
 
 this is the mapping from kabelsalat to sc ugens:
 
-| ks           | sc                      | comment                                         |
-| ------------ | ----------------------- | ----------------------------------------------- |
-| [x] saw      | Saw                     |                                                 |
-| [x] sine     | SinOsc                  |                                                 |
-| [x] lpf      | RLPF                    | sc is in hz + res is different                  |
-| [x] adsr     | EnvGen + Env.adsr       | attack phase will not finish when gate gets low |
-| [ ] clock    |                         | use impulse for now                             |
-| [ ] clockdiv |                         |                                                 |
-| [x] delay    | Delay                   |                                                 |
-| [x] distort  | AnalogVintageDistortion | has more options..                              |
-| [x] hold     | Latch                   |                                                 |
-| [x] noise    | WhiteNoise              |                                                 |
-| [x] brown    | BrownNoise              |                                                 |
+| ks       | sc                      | comment                                         |
+| -------- | ----------------------- | ----------------------------------------------- |
+| saw      | Saw                     |                                                 |
+| sine     | SinOsc                  |                                                 |
+| lpf      | RLPF                    | sc is in hz + res is different                  |
+| adsr     | EnvGen + Env.adsr       | attack phase will not finish when gate gets low |
+| clock    |                         | use impulse for now                             |
+| clockdiv |                         |                                                 |
+| delay    | Delay                   |                                                 |
+| distort  | AnalogVintageDistortion | has more options..                              |
+| hold     | Latch                   |                                                 |
+| noise    | WhiteNoise              |                                                 |
+| brown    | BrownNoise              |                                                 |
