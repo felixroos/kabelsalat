@@ -531,6 +531,13 @@ export let cos = registerNode("cos", {
   compile: ({ vars: [input = 0], name, lang }) =>
     langs[lang].def(name, langs[lang].defCos(input)),
 });
+export let tan = registerNode("tan", {
+  tags: ["math"],
+  description: "calculates the tan of the input signal",
+  ins: [{ name: "in" }],
+  compile: ({ vars: [input = 0], name, lang }) =>
+    langs[lang].def(name, langs[lang].defTan(input)),
+});
 export let acos = registerNode("acos", {
   tags: ["math"],
   description: "calculates the acos of the input signal",
@@ -633,6 +640,14 @@ export let ceil = registerNode("ceil", {
   examples: [`sine(440.5).ceil().out()`],
   compile: ({ vars: [input = 0], name, lang }) =>
     langs[lang].def(name, langs[lang].ceil(input)),
+});
+export let sign = registerNode("sign", {
+  tags: ["math"],
+  description: "Returns 1 if positive and -1 if negative. uses Math.sign",
+  ins: [{ name: "in" }],
+  examples: [`sine(440.5).ceil().out()`],
+  compile: ({ vars: [input = 0], name, lang }) =>
+    langs[lang].def(name, langs[lang].sign(input)),
 });
 export let min = registerNode("min", {
   tags: ["math"],

@@ -1,5 +1,6 @@
 export let defSin = (input) => `sin(${input})`;
 export let defCos = (input) => `cos(${input})`;
+export let defTan = (input) => `tan(${input})`;
 export let defAsin = (input) => `asin(${input})`;
 export let defAcos = (input) => `acos(${input})`;
 export let defAtan = (input) => `atan(${input})`;
