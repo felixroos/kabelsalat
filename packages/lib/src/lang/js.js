@@ -1,5 +1,8 @@
 export let defSin = (input) => `Math.sin(${input})`;
 export let defCos = (input) => `Math.cos(${input})`;
+export let defAsin = (input) => `Math.asin(${input})`;
+export let defAcos = (input) => `Math.acos(${input})`;
+export let defAtan = (input) => `Math.atan(${input})`;
 export let def = (name, value, comment) =>
   `${name} = ${value};${comment ? ` /* ${comment} */` : ""}`;
 
@@ -18,6 +21,8 @@ export let log = (input) => `Math.log(${input})`;
 export let mod = (a, b) => `${a}%${b}`;
 export let abs = (input) => `Math.abs(${input})`;
 export let round = (input) => `Math.round(${input})`;
+export let floor = (input) => `Math.floor(${input})`;
+export let ceil = (input) => `Math.ceil(${input})`;
 export let min = (a, b) => `Math.min(${a}, ${b})`;
 export let max = (a, b) => `Math.max(${a}, ${b})`;
 export let pair_make = (a, b) => `[${a}, ${b}]`;
