@@ -531,6 +531,27 @@ export let cos = registerNode("cos", {
   compile: ({ vars: [input = 0], name, lang }) =>
     langs[lang].def(name, langs[lang].defCos(input)),
 });
+export let acos = registerNode("acos", {
+  tags: ["math"],
+  description: "calculates the acos of the input signal",
+  ins: [{ name: "in" }],
+  compile: ({ vars: [input = 0], name, lang }) =>
+    langs[lang].def(name, langs[lang].defAcos(input)),
+});
+export let asin = registerNode("asin", {
+  tags: ["math"],
+  description: "calculates the asin of the input signal",
+  ins: [{ name: "in" }],
+  compile: ({ vars: [input = 0], name, lang }) =>
+    langs[lang].def(name, langs[lang].defAsin(input)),
+});
+export let atan = registerNode("atan", {
+  tags: ["math"],
+  description: "calculates the atan of the input signal",
+  ins: [{ name: "in" }],
+  compile: ({ vars: [input = 0], name, lang }) =>
+    langs[lang].def(name, langs[lang].defAtan(input)),
+});
 export let mul = registerNode("mul", {
   tags: ["math"],
   description: "Multiplies the given signals.",
@@ -584,6 +605,34 @@ export let round = registerNode("round", {
   examples: [`sine(440.5).round().out()`],
   compile: ({ vars: [input = 0], name, lang }) =>
     langs[lang].def(name, langs[lang].round(input)),
+});
+export let clamp = registerNode("clamp", {
+  tags: ["math"],
+  description: "Clamps the signal to stay within the given range",
+  ins: [{ name: "in" }, { name: "min" }, { name: "max" }],
+  examples: [`sine(440.5).clamp(-.6,.6).out()`],
+  compile: ({ vars: [input = 0, min = -1, max = 1], name, lang }) => {
+    const minV = langs[lang].min(min, max);
+    const maxV = langs[lang].max(min, max);
+    const clamped = langs[lang].min(langs[lang].max(input, minV), maxV);
+    return langs[lang].def(name, clamped);
+  },
+});
+export let floor = registerNode("floor", {
+  tags: ["math"],
+  description: "Rounds the signal down",
+  ins: [{ name: "in" }],
+  examples: [`sine(440.5).floor().out()`],
+  compile: ({ vars: [input = 0], name, lang }) =>
+    langs[lang].def(name, langs[lang].floor(input)),
+});
+export let ceil = registerNode("ceil", {
+  tags: ["math"],
+  description: "Rounds the signal up",
+  ins: [{ name: "in" }],
+  examples: [`sine(440.5).ceil().out()`],
+  compile: ({ vars: [input = 0], name, lang }) =>
+    langs[lang].def(name, langs[lang].ceil(input)),
 });
 export let min = registerNode("min", {
   tags: ["math"],
@@ -667,6 +716,13 @@ export let or = registerNode("or", {
   ins: [{ name: "a" }, { name: "b" }],
   compile: ({ vars: [a = 0, b = 0], name, lang }) =>
     langs[lang].def(name, `${a} || ${b} ? 1 : 0`),
+});
+export let bool = registerNode("bool", {
+  tags: ["logic"],
+  description: "returns 1 signal is non zero. inspired by genish",
+  ins: [{ name: "a" }],
+  compile: ({ vars: [a = 0], name, lang }) =>
+    langs[lang].def(name, `(${a} === 0 ? 0 : 1)`),
 });
 export let range = registerNode("range", {
   tags: ["math"],
