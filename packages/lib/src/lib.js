@@ -696,6 +696,20 @@ export let greater = registerNode("greater", {
   compile: ({ vars: [a = 0, b = 0], name, lang }) =>
     langs[lang].def(name, `${a} > ${b}`),
 });
+export let lower = registerNode("lower", {
+  tags: ["logic"],
+  description: "returns 1 if input is lower then threshold",
+  ins: [{ name: "in" }, { name: "threshold" }],
+  examples: [
+    `lower(sine(1),0)
+.bipolar().range(100,200)
+.sine().out()`,
+  ],
+  compile: ({ vars: [a = 0, b = 0], name, lang }) =>
+    langs[lang].def(name, `${a} < ${b}`),
+});
+export let gt = greater;
+export let lt = lower;
 export let xor = registerNode("xor", {
   tags: ["logic"],
   description: "returns 1 if exactly one of the inputs is 1",
@@ -717,12 +731,27 @@ export let or = registerNode("or", {
   compile: ({ vars: [a = 0, b = 0], name, lang }) =>
     langs[lang].def(name, `${a} || ${b} ? 1 : 0`),
 });
+export let not = registerNode("not", {
+  tags: ["logic"],
+  description: "returns 1 if input is 0, otherwise 0",
+  ins: [{ name: "in" }],
+  compile: ({ vars: [input = 0], name, lang }) =>
+    langs[lang].def(name, `(${input} === 0 ? 1 : 0)`),
+});
 export let bool = registerNode("bool", {
   tags: ["logic"],
   description: "returns 1 signal is non zero. inspired by genish",
   ins: [{ name: "a" }],
   compile: ({ vars: [a = 0], name, lang }) =>
     langs[lang].def(name, `(${a} === 0 ? 0 : 1)`),
+});
+export let ifelse = registerNode("ifelse", {
+  tags: ["logic"],
+  description: "if control is 1, a is returned, otherwise b",
+  ins: [{ name: "control" }, { name: "a" }, { name: "b" }],
+  compile: ({ vars: [control = 0, a = 0, b = 0], name, lang }) =>
+    langs[lang].def(name, `(${control} === 1 ? ${a} : ${b})`),
+  examples: [`ifelse(pulse(1), sine(220), sine(330)).out()`],
 });
 export let range = registerNode("range", {
   tags: ["math"],
@@ -919,6 +948,12 @@ export let pick = registerNode("pick", {
   ugen: "Pick",
   description: "Pick",
   ins: [{ name: "index" }, { name: "inputs", dynamic: true }],
+  description: "picks input of given index",
+  examples: [
+    `sine(.25).range(0,2).round()
+.pick(...sine([220,330,440]).ins)
+.out()`,
+  ],
   compile: ({ vars, ...meta }) => langs[meta.lang].defUgen(meta, ...vars),
 });
 
