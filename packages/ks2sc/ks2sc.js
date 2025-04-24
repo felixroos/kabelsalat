@@ -76,7 +76,10 @@ const registerOp = (name, op) =>
 // RLPF with res 0 sounds awful
 let compileLPF = compileWith(
   ([input, freq, res = 0]) =>
-    `RLPF.ar(${input}, LinLin.ar(${freq}.asAudioRateInput, 0,1, 0,20000), ${res}+1)`
+    //`RLPF.ar(${input}, ${freq}.asAudioRateInput.exprange(1.0,SampleRate.ir/2), ${res}+1)`
+    `MoogVCF.ar(${input}, ${freq}.asAudioRateInput.exprange(1.0,SampleRate.ir/2), ${res})`
+  //`MoogVCF.ar(${input}, ${freq}.asAudioRateInput.exprange(1.0,SampleRate.ir/2), ${res})`
+  //`MoogLadder.ar(${input}, ${freq}.asAudioRateInput.exprange(1.0,SampleRate.ir/2), ${res})`
 ); // todo: map exponentially without killing my system audio
 
 Object.assign(globalThis, {
