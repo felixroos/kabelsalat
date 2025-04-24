@@ -54,17 +54,12 @@ export class AudioGraph {
    * Update the audio graph given a new compiled unit
    */
   newUnit(schema) {
+    // create and fade in new unit sample generator
     const unit = new Unit(this.unitID++, schema, this.sampleRate, this.send);
     this.units.push(unit);
     unit.fadeIn(this.playPos, this.fadeTime);
 
     this.fadeOutOldUnits();
-
-    // filter out done units
-    this.units = this.units.filter((unit) => !unit.isDone(this.playPos));
-
-    // create and fade in new unit sample generator
-
     console.log(
       `${schema.ugens.length} ugens spawned, ${this.units.length} units alive`
     );
