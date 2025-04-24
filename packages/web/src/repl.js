@@ -35,7 +35,7 @@ export class SalatRepl {
     }
     const self = this;
     // this is the "dynamic" alternative to .out
-    Node.prototype.spawn = function (channels = [0, 1], duration) {
+    core.Node.prototype.spawn = function (channels = [0, 1], duration) {
       self.audio.spawn(this.output(channels).exit(), duration);
     };
   }
