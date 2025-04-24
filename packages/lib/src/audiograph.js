@@ -25,10 +25,7 @@ export class AudioGraph {
 
   fadeOutUnit(unit) {
     unit.fadeOut(this.playPos, this.fadeTime);
-    this.scheduleMessage({
-      msg: { type: "FREE_UNIT", id: unit.id },
-      time: this.fadeTime,
-    });
+    this.freeUnit(unit.id, this.fadeTime);
   }
   fadeOutAllUnits() {
     this.units.forEach((unit) => this.fadeOutUnit(unit));
@@ -53,21 +50,33 @@ export class AudioGraph {
   /**
    * Update the audio graph given a new compiled unit
    */
-  newUnit(schema) {
+  spawnUnit(schema, duration) {
     // create and fade in new unit sample generator
     const unit = new Unit(this.unitID++, schema, this.sampleRate, this.send);
     this.units.push(unit);
     unit.fadeIn(this.playPos, this.fadeTime);
 
     this.fadeOutOldUnits();
-    console.log(
-      `${schema.ugens.length} ugens spawned, ${this.units.length} units alive`
-    );
+    // with ${schema.ugens.length} ugens
+    console.log(`spawn unit ${unit.id}, units alive: ${this.units.length}`);
+    if (duration) {
+      this.freeUnit(unit.id, duration);
+    }
   }
 
-  freeUnit(id) {
+  freeUnit(id, timeout) {
+    if (timeout) {
+      this.scheduleMessage({
+        msg: { type: "FREE_UNIT", id },
+        time: timeout,
+      });
+      return;
+    }
+    const lenBefore = this.units.length;
     this.units = this.units.filter((unit) => unit.id !== id);
-    console.log(`free unit ${id}, units left: ${this.units.length}`);
+    if (lenBefore > this.units.length) {
+      console.log(`free unit ${id}, units alive: ${this.units.length}`);
+    }
   }
 
   /**
@@ -77,8 +86,8 @@ export class AudioGraph {
     // let node = "nodeId" in msg ? this.nodes[msg.nodeId] : null;
 
     switch (msg.type) {
-      case "NEW_UNIT":
-        this.newUnit(msg.unit);
+      case "SPAWN_UNIT":
+        this.spawnUnit(msg.unit, msg.duration);
         break;
       case "FREE_UNIT":
         this.freeUnit(msg.id);

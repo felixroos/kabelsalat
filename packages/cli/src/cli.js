@@ -79,7 +79,7 @@ function update(code) {
   try {
     const node = core.evaluate(code);
     const unit = node.compile();
-    audioGraph.parseMsg({ type: "NEW_UNIT", unit });
+    audioGraph.parseMsg({ type: "SPAWN_UNIT", unit });
   } catch (err) {
     console.log("evaluation error:");
     console.log(err);

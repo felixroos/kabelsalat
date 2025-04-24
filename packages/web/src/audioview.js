@@ -12,7 +12,7 @@ export class AudioView {
   constructor() {
     this.ugens = new Map();
   }
-  async spawn(node) {
+  async spawn(node, duration) {
     this.graph = node;
     const { src, ugens, registers } = node.compile({
       log: false,
@@ -31,8 +31,9 @@ export class AudioView {
     }
     this.sendCustomUgens();
     this.send({
-      type: "NEW_UNIT",
+      type: "SPAWN_UNIT",
       unit: { src, ugens, registers },
+      duration, // experimental
     });
   }
 
