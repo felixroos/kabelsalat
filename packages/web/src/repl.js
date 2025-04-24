@@ -70,7 +70,7 @@ export class SalatRepl {
   }
   async play(node) {
     await this.audio.init();
-    this.audio.updateGraph(node);
+    this.audio.spawn(node);
     this.onToggle?.(true);
   }
   run(code) {

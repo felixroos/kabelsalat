@@ -12,12 +12,14 @@ export class AudioView {
   constructor() {
     this.ugens = new Map();
   }
-  async updateGraph(node) {
+  async spawn(node) {
     this.graph = node;
     const { src, ugens, registers } = node.compile({
       log: false,
     });
-    this.initMouse();
+    if (!this.mouse && src.includes("mouse")) {
+      this.initMouse();
+    }
     if (
       !this.midiInited &&
       ugens.some((ugen) => ugen.type.startsWith("Midi"))
@@ -27,7 +29,7 @@ export class AudioView {
     if (!this.audioIn && ugens.some((ugen) => ugen.type === "AudioIn")) {
       await this.initAudioIn();
     }
-    this.sendUgens();
+    this.sendCustomUgens();
     this.send({
       type: "NEW_UNIT",
       unit: { src, ugens, registers },
@@ -38,14 +40,23 @@ export class AudioView {
   registerUgen(ugen) {
     this.ugens.set(ugen.name, ugen);
   }
-  sendUgens() {
+  // custom ugens
+  sendCustomUgens() {
+    if (!this.ugens.size) {
+      return;
+    }
+    let messages = [];
     for (let [name, ugen] of this.ugens) {
-      this.send({
+      messages.push({
         type: "SET_UGEN",
         className: name,
         ugen: ugen + "",
       });
     }
+    this.send({
+      type: "BATCH_MSG",
+      messages,
+    });
   }
 
   scheduleMessage(msg, time) {
@@ -110,6 +121,7 @@ export class AudioView {
     });
   }
   initMouse() {
+    console.log("init mouse");
     this.mouse = new Mouse();
     this.mouse.on("move", (x, y) => {
       this.setControl("mouseX", x);
@@ -195,7 +207,7 @@ export class AudioView {
 
     this.recorder = new window.AudioWorkletNode(this.audioCtx, "recorder");
     this.audioWorklet.connect(this.recorder);
-    this.sendUgens();
+    this.sendCustomUgens();
     this.recorder.connect(this.audioCtx.destination);
 
     this.recorder.port.onmessage = (e) => {
