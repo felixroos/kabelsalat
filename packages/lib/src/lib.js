@@ -969,6 +969,7 @@ export let pick = registerNode("pick", {
 .pick(...sine([220,330,440]).ins)
 .out()`,
   ],
+  // tbd: check if meta is single poly node, then use node.ins
   compile: ({ vars, ...meta }) => langs[meta.lang].defUgen(meta, ...vars),
 });
 
@@ -986,13 +987,10 @@ export let trig = registerNode("trig", {
   ugen: "Trig",
   description:
     "Emits a trigger impulse whenever the signal becomes positive. Useful to turn gates into triggers.",
-  ins: [
-    { name: "input", default: 0 },
-    { name: "lo", default: -1 },
-    { name: "hi", default: 1 },
-  ],
-  compile: ({ vars: [input = 0, lo = -1, hi = 1], ...meta }) =>
-    langs[meta.lang].defUgen(meta, input, lo, hi),
+  // sc has a second arg for dur..
+  ins: [{ name: "input", default: 0 }],
+  compile: ({ vars: [input = 0], ...meta }) =>
+    langs[meta.lang].defUgen(meta, input),
   examples: [
     `pulse(2)
 .trig() // comment out to hear difference
