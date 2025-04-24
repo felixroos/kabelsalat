@@ -16,14 +16,30 @@ this is the mapping from kabelsalat to sc ugens:
 
 | ks       | sc                      | comment                                         |
 | -------- | ----------------------- | ----------------------------------------------- |
-| saw      | Saw                     |                                                 |
-| sine     | SinOsc                  |                                                 |
-| lpf      | RLPF                    | sc is in hz + res is different                  |
 | adsr     | EnvGen + Env.adsr       | attack phase will not finish when gate gets low |
 | clock    |                         | use impulse for now                             |
-| clockdiv |                         |                                                 |
+| clockdiv | PulseDivider            |                                                 |
 | delay    | Delay                   |                                                 |
 | distort  | AnalogVintageDistortion | has more options..                              |
 | hold     | Latch                   |                                                 |
 | noise    | WhiteNoise              |                                                 |
+| dust     | Dust                    |                                                 |
 | brown    | BrownNoise              |                                                 |
+| pink     | PinkNoise               |                                                 |
+| impulse  | Impulse                 |                                                 |
+| pulse    | LFPulse                 | between -1 and 1. will soon be bandlimited      |
+| zaw      | LFSaw                   |                                                 |
+| saw      | Saw                     |                                                 |
+| sine     | SinOsc                  |                                                 |
+| tri      | LFTri                   | no bandlimited Triangle in SuperCollider?       |
+| lag      | Lag                     |                                                 |
+| slew     | Slew                    |                                                 |
+| slide    | Lag                     | not implemented in ks2sc                        |
+| lpf      | RLPF                    | sc is in hz + res is different                  |
+| bpf      | BPF                     | sounds very different                           |
+| fold     | Fold                    | sounds slightly different                       |
+| range    | (x+1)/2                 | assumes bipolar input                           |
+| seq      | Dseq                    | wrapped with Demand                             |
+| pick     | Select                  | ks uses dynamic arity                           |
+| remap    | linlin                  |                                                 |
+| clip     | Clip                    |                                                 |
