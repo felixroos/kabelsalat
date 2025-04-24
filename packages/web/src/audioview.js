@@ -262,6 +262,9 @@ export class AudioView {
   set fadeTime(fadeTime) {
     this.send({ type: "FADE_TIME", fadeTime });
   }
+  set maxUnits(maxUnits) {
+    this.send({ type: "MAX_UNITS", maxUnits });
+  }
 }
 
 // Trigger a file download in the browser
