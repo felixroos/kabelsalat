@@ -3,7 +3,7 @@ import readline from "node:readline";
 const child = spawn("sclang", [], { stdio: "pipe" });
 
 child.stdout.on("data", (data) => {
-  //console.log(`sc: ${data}`);
+  //  console.log(`sc: ${data}`);
 });
 
 child.stderr.on("data", (data) => {
@@ -73,27 +73,30 @@ const registerOp = (name, op) =>
     compileWith((args) => args.join(op))
   );
 
-const lerp = (v, min, max) => v * (max - min) + min;
-function lerpx(x, min, max, base = 2) {
-  const normalized = (Math.pow(base, x) - 1) / (base - 1);
-  return lerp(normalized, min, max);
-}
-const norm2hz = (norm, sampleRate = 44100) =>
-  lerpx(Number(norm), 0, sampleRate / 2);
+// RLPF with res 0 sounds awful
+let compileLPF = compileWith(
+  ([input, freq, res = 0]) =>
+    `RLPF.ar(${input}, LinLin.ar(${freq}.asAudioRateInput, 0,1, 0,20000), ${res}+1)`
+); // todo: map exponentially without killing my system audio
 
 Object.assign(globalThis, {
-  out: register(
+  register,
+  Node,
+  /* out: register(
     "out",
     compileWith((args) => args[0]) // dummy..
-  ),
+  ), */
   mul: registerOp("mul", "*"),
   div: registerOp("div", "/"),
   add: registerOp("add", "+"),
   sub: registerOp("sub", "-"),
   saw: registerUgen("saw", "Saw"),
   sine: registerUgen("sine", "SinOsc"),
-  lpf: registerUgen("lpf", "RLPF"),
+  //lpf: registerUgen("lpf", "RLPF"),
+  lpf: register("lpf", compileLPF),
+  filter: register("filter", compileLPF),
   impulse: registerUgen("impulse", "Impulse"),
+  clockdiv: registerUgen("clockdiv", "PulseDivider"),
   adsr: register(
     "adsr",
     compileWith(
@@ -121,17 +124,102 @@ Object.assign(globalThis, {
   // noise().hold(impulse(2)).mul(sine(200))
   noise: registerUgen("noise", "WhiteNoise"),
   brown: registerUgen("brown", "BrownNoise"),
+  dust: registerUgen("dust", "Dust"),
+  pink: registerUgen("pink", "PinkNoise"),
+  pulse: register(
+    "pulse",
+    compileWith(([freq = 1, pw = 0.5]) => `LFPulse.ar(${freq}, 0, ${pw})*2-1`)
+  ),
+  zaw: registerUgen("zaw", "LFSaw"),
+  tri: registerUgen("tri", "LFTri"),
+  // noise().add(1).div(2).mul(800).hold(impulse(4)).lag(.4).sine()
+  lag: registerUgen("lag", "Lag"),
+  slew: registerUgen("slew", "Slew"),
+  bpf: registerUgen("bpf", "BPF"),
+  fold: register(
+    "fold",
+    compileWith(
+      ([input, rate = 1]) => `Fold.ar(${input}*${rate}, lo: -1, hi: 1)`
+    )
+  ),
+  // impulse(2).seq(220,330,440,550).sine()
+  seq: register(
+    "seq",
+    compileWith(
+      ([trig, ...values]) =>
+        `Demand.ar(${trig}, 0, Dseq([${values.join(",")}], inf))`
+    )
+  ),
+  // impulse(1).seq(0,1).pick(sine(220),sine(330)).out()
+  pick: register(
+    "pick",
+    compileWith(
+      ([index, ...values]) => `Select.ar(${index}, [${values.join(",")}])`
+    )
+  ),
+  // audioin
+  // midiin
+  // midigate
+  // signal / cc / midicc
+  remap: register(
+    "remap",
+    compileWith(
+      ([input, imin = -1, imax = 1, omin, omax]) =>
+        `${input}.linlin(${imin},${imax},${omin},${omax})`
+    )
+  ),
+  range: register(
+    "range",
+    compileWith(
+      (
+        [input, min = -1, max = 1] // tbd: curve option
+      ) => `((${input}+1)*0.5)*(${max}-${min})+${min}`
+    )
+  ),
+  // sine(220).mul(4).clip().out()
+  clip: register(
+    "clip",
+    compileWith(
+      ([input, min = -1, max = 1]) => `Clip.ar(${input}, ${min},${max})`
+    )
+  ),
+  trig: register(
+    "trig",
+    compileWith(([input]) => `Trig.ar(${input}, SampleDur.ir)`)
+  ),
+  midinote: register(
+    "midinote",
+    compileWith(([input]) => `${input}.midicps`)
+  ),
+  n: register(
+    "n",
+    compileWith(([input]) => `${input}`)
+  ),
+}); // tbd: n
+
+Object.assign(globalThis, {
+  perc: register("perc", (trig, decay) => trig.adsr(0, 0, 1, decay)),
 });
 
 function ks2scd(code) {
-  const fn = new Function(`return ${code}`);
-  const node = fn();
-  const { lines, last } = node.compile();
+  const prelude = `
+  Node.prototype.out = function () {
+    globalThis.outNode = this;
+  }`;
+  //globalThis.out = out;
+  const fn = new Function(`${prelude}; ${code}`); //  globalThis.outNode = sine(442)
+  const res = fn();
+  globalThis.outNode = globalThis.outNode ?? res;
+  //console.log("outNode", globalThis.outNode);
+  if (!globalThis.outNode) {
+    throw new Error("no output node. you must call .out() at the end");
+  }
+  const { lines, last } = globalThis.outNode.compile();
   const compiled = lines.join("\n");
   const scd = `(s.waitForBoot(){
   (Ndef(\\synth, {
     ${compiled}
-    [${last},${last}]
+    [${last},${last}]*0.3
   }).play;)
 })`;
   return scd;
@@ -149,14 +237,31 @@ const rl = readline.createInterface({
   //terminal: false,
   prompt: "kabelsalat> ",
 });
-rl.prompt();
-rl.on("line", (input) => {
+
+function evaluate(code) {
   try {
-    const scd = ks2scd(input);
+    console.log("\n");
+    const scd = ks2scd(code);
     console.log("sclang: \n", scd);
     runScd(scd);
   } catch (err) {
     console.error("error:", err);
   }
+  rl.clearLine(process.stdout, 0);
   rl.prompt();
+}
+
+let buffer = [];
+let debounceTimeout = null;
+const DEBOUNCE_DELAY = 100;
+
+rl.prompt();
+rl.on("line", (line) => {
+  buffer.push(line);
+  if (debounceTimeout) clearTimeout(debounceTimeout);
+  debounceTimeout = setTimeout(() => {
+    const code = buffer.join("\n");
+    evaluate(code);
+    buffer = [];
+  }, DEBOUNCE_DELAY);
 });
