@@ -27,6 +27,12 @@ export class AudioGraph {
     unit.fadeOut(this.playPos, this.fadeTime);
     this.freeUnit(unit.id, this.fadeTime);
   }
+  fadeOutUnitById(id) {
+    const unit = this.units.find((unit) => unit.id === id);
+    if (unit) {
+      this.fadeOutUnit(unit);
+    }
+  }
   fadeOutAllUnits() {
     this.units.forEach((unit) => this.fadeOutUnit(unit));
   }
@@ -60,7 +66,10 @@ export class AudioGraph {
     // with ${schema.ugens.length} ugens
     console.log(`spawn unit ${unit.id}, units alive: ${this.units.length}`);
     if (duration) {
-      this.freeUnit(unit.id, duration);
+      this.scheduleMessage({
+        msg: { type: "FADE_OUT_UNIT", id: unit.id },
+        time: duration,
+      });
     }
   }
 
@@ -92,7 +101,9 @@ export class AudioGraph {
       case "FREE_UNIT":
         this.freeUnit(msg.id);
         break;
-
+      case "FADE_OUT_UNIT":
+        this.fadeOutUnitById(msg.id);
+        break;
       /* case "SET_STATE":
         node.setState(msg.state);
         break; */
