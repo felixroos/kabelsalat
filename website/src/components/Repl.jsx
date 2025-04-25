@@ -110,6 +110,7 @@ export function Repl() {
 
   let container;
   async function run(_code = code()) {
+    await repl.audio.init();
     try {
       // reset fadeTime?
       setCode(_code);
