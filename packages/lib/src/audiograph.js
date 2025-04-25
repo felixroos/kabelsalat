@@ -104,18 +104,12 @@ export class AudioGraph {
       case "FADE_OUT_UNIT":
         this.fadeOutUnitById(msg.id);
         break;
-      /* case "SET_STATE":
-        node.setState(msg.state);
-        break; */
-
       case "NOTE_ON":
         this.noteOn(msg);
         break;
-
       case "CC":
         this.midiCC(msg);
         break;
-
       case "SET_CONTROL":
         this.setControl(msg);
         break;
@@ -125,7 +119,6 @@ export class AudioGraph {
       case "MAX_UNITS":
         this.maxUnits = Number(msg.maxUnits);
         break;
-
       case "STOP":
         this.stop();
         break;
@@ -138,7 +131,6 @@ export class AudioGraph {
       case "BATCH_MSG":
         msg.messages.forEach((msg) => this.parseMsg(msg));
         break;
-
       default:
         throw new TypeError(`unknown message type ${msg.type}`);
     }
