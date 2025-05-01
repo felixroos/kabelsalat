@@ -1,5 +1,6 @@
 import { defineConfig } from "vite";
 import { resolve } from "path";
+import bundleAudioWorkletPlugin from "vite-plugin-bundle-audioworklet";
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -11,7 +12,7 @@ export default defineConfig({
   // both don't work out of the box (404), but the latter can be worked around by copying the file to public/assets
   // the former doesn't work with copying because it seems node_modules is filtered out when serving files
   // all of this is relevant for esm, in cjs it seems to work with base, not sure what happens without...
-  plugins: [],
+  plugins: [bundleAudioWorkletPlugin()],
   build: {
     lib: {
       name: "kabelsalat",

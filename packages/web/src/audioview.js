@@ -2,8 +2,8 @@ import { assert } from "@kabelsalat/lib/src/utils.js";
 import "@kabelsalat/core/src/compiler.js"; // Node.prototype.compile
 import { MIDI, parseMidiMessage } from "@kabelsalat/lib/src/midi.js";
 import { Mouse } from "@kabelsalat/lib/src/mouse.js";
-import workletUrl from "./worklet.js?worker&url";
-import recorderUrl from "./recorder.js?worker&url";
+import workletUrl from "./worklet.js?audioworklet";
+import recorderUrl from "./recorder.js?audioworklet";
 import { audioBuffersToWav } from "./wav.js";
 import { register } from "@kabelsalat/core";
 import * as js from "@kabelsalat/lib/src/lang/js.js";
