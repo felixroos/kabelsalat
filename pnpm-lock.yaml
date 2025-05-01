@@ -111,6 +111,9 @@ importers:
       vite:
         specifier: ^5.2.0
         version: 5.3.1
+      vite-plugin-bundle-audioworklet:
+        specifier: 0.1.1
+        version: 0.1.1
 
   test:
     dependencies:
@@ -194,6 +197,9 @@ importers:
       vite:
         specifier: ^5.2.0
         version: 5.3.1
+      vite-plugin-bundle-audioworklet:
+        specifier: 0.1.1
+        version: 0.1.1
       vite-plugin-solid:
         specifier: ^2.10.2
         version: 2.10.2(solid-js@1.8.18)(vite@5.3.1)
@@ -4073,6 +4079,9 @@ packages:
     resolution: {integrity: sha512-LdsW4pxj0Ot69FAoXZ1yTnA9bjGohr2yNBU7QKRxpz8ITSkhuDl6h3zS/tvgz4qrNjeRnvrWeXQ8ZF7Um4W00Q==}
     engines: {node: ^18.0.0 || >=20.0.0}
     hasBin: true
+
+  vite-plugin-bundle-audioworklet@0.1.1:
+    resolution: {integrity: sha512-CYZArbUk7GxhYsMjibfbkqy6O0JK3wUo2WARWbwtYn+IAVHdxe1CGMSis9+vq3GoxhhdRaUsBq1bFrtfnR0uIw==}
 
   vite-plugin-solid@2.10.2:
     resolution: {integrity: sha512-AOEtwMe2baBSXMXdo+BUwECC8IFHcKS6WQV/1NEd+Q7vHPap5fmIhLcAzr+DUJ04/KHx/1UBU0l1/GWP+rMAPQ==}
@@ -9050,6 +9059,8 @@ snapshots:
       - sugarss
       - supports-color
       - terser
+
+  vite-plugin-bundle-audioworklet@0.1.1: {}
 
   vite-plugin-solid@2.10.2(solid-js@1.8.18)(vite@5.3.1):
     dependencies:
