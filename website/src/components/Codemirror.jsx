@@ -11,15 +11,17 @@ export function Codemirror(props) {
       cm.setCode(props.code);
     }
   });
+
+  createEffect(() => {
+    cm.setKeybindings(props.settings.keybindings);
+  });
+
   return (
     <div class="resize-none bg-stone-900 shrink-0 focus:ring-0 outline-0 border-0 h-full overflow-hidden">
       <div
         class="w-full max-w-full overflow-hidden h-full"
         ref={(el) => {
-          cm = initEditor({
-            root: el,
-            ...props,
-          });
+          cm = initEditor({ root: el, ...props });
           setView(cm.editor);
         }}
       ></div>
