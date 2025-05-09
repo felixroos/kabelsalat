@@ -1,7 +1,8 @@
 # @kabelsalat/web
 
-This package allows you to use kabelsalat anywhere on the web. Example:
+This package allows you to use kabelsalat anywhere on the web. 
 
+## Using an inline script
 ```html
 <!DOCTYPE html>
 <html>
@@ -28,3 +29,29 @@ This package allows you to use kabelsalat anywhere on the web. Example:
   </body>
 </html>
 ```
+
+## Using ES6 import:
+```js
+import { SalatRepl } from '@kabelsalat/web'
+```
+
+## Connecting the Repl to other outputs
+By default, the Repl will create an audio context and connect to its destination. If you want to connect the Repl to another component, simply pass an AudioNode on instantiation:
+```js
+import { SalatRepl } from '@kabelsalat/web'
+
+// create an audio context
+const audioCtx = new AudioContext({
+  latencyHint: "interactive",
+  sampleRate: 44100,
+})
+
+// create an abritrary audio node
+const gain = new GainNode(audioCtx)
+// connect to the destination
+gain.connect(audioCtx.destination);
+
+const repl = new SalatRepl({outputNode: gain})
+```
+
+
