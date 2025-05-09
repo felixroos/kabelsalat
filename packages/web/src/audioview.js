@@ -240,10 +240,10 @@ export class AudioView {
     this.recorder?.disconnect();
     this.recorder = null;
 
-    // if a the output node is set, we don't want to close the context
+    // if a custom output node has been set, keep the audio context alive to avoid interfering with the user's signal chain
     !this.outputNode && this.audioCtx?.close();
     
-    // but we will nullify it to ensure the init method will be called again
+    // but nullify it at our end so that the init() method runs again
     this.audioCtx = null;
   }
 
