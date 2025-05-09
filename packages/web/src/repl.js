@@ -10,8 +10,10 @@ export class SalatRepl {
     beforeEval,
     transpiler,
     localScope = false,
+    outputNode = null,
   } = {}) {
-    this.audio = new AudioView();
+    this.outputNode = outputNode;
+    this.audio = new AudioView(this.outputNode);
     this.onToggle = onToggle;
     this.transpiler = transpiler;
     this.onToggleRecording = onToggleRecording;
