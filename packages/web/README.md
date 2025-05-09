@@ -36,22 +36,23 @@ import { SalatRepl } from '@kabelsalat/web'
 ```
 
 ## Connecting the Repl to other outputs
-By default, the Repl will create an audio context and connect to its destination. If you want to connect the Repl to another component, simply pass an AudioNode on instantiation:
-```js
-import { SalatRepl } from '@kabelsalat/web'
+Connecting the Repl to other audio nodes:
 
-// create an audio context
+By default, SalatRepl creates an AudioContext and connects to its destination. To connect the Repl to a different audio node (e.g., GainNode, BiquadFilterNode), pass the desired AudioNode as the 'outputNode' parameter during instantiation.
+
+```js
+// Create a new AudioContext with standard settings
 const audioCtx = new AudioContext({
   latencyHint: "interactive",
   sampleRate: 44100,
-})
+});
 
-// create an abritrary audio node
-const gain = new GainNode(audioCtx)
-// connect to the destination
+// Create a GainNode to adjust volume levels
+const gain = new GainNode(audioCtx);
+
+// Connect the GainNode to the AudioContext's destination (e.g., speakers)
 gain.connect(audioCtx.destination);
 
-const repl = new SalatRepl({outputNode: gain})
+// Instantiate the Repl, passing the GainNode as the output node
+const repl = new SalatRepl({ outputNode: gain });
 ```
-
-
