@@ -9,8 +9,9 @@ import { register } from "@kabelsalat/core";
 import * as js from "@kabelsalat/lib/src/lang/js.js";
 
 export class AudioView {
-  constructor() {
+  constructor(outputNode = null) {
     this.ugens = new Map();
+    this.outputNode = outputNode;
   }
   async spawn(node, duration) {
     this.graph = node;
@@ -151,7 +152,7 @@ export class AudioView {
     }
     assert(!this.audioCtx);
 
-    this.audioCtx = new AudioContext({
+    this.audioCtx = this.outputNode?.context || new AudioContext({
       latencyHint: "interactive",
       sampleRate: 44100,
     });
@@ -209,7 +210,7 @@ export class AudioView {
     this.recorder = new window.AudioWorkletNode(this.audioCtx, "recorder");
     this.audioWorklet.connect(this.recorder);
     this.sendCustomUgens();
-    this.recorder.connect(this.audioCtx.destination);
+    this.recorder.connect(this.outputNode || this.audioCtx.destination);
 
     this.recorder.port.onmessage = (e) => {
       if (e.data.eventType === "data") {
@@ -239,7 +240,10 @@ export class AudioView {
     this.recorder?.disconnect();
     this.recorder = null;
 
-    this.audioCtx?.close();
+    // if a the output node is set, we don't want to close the context
+    !this.outputNode && this.audioCtx?.close();
+    
+    // but we will nullify it to ensure the init method will be called again
     this.audioCtx = null;
   }
 
