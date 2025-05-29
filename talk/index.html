@@ -1,0 +1,3358 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>iclc 2025: kabelsalat</title>
+    <link
+      rel="icon"
+      type="image/png"
+      href="https://kabel.salat.dev/favicon.png"
+    />
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        height: 100%;
+        overflow: hidden;
+      }
+      body {
+        background-color: #1d1918;
+        margin: auto;
+        font-family: monospace;
+        font-size: 1.2em;
+        color: #edd;
+        padding: 20px 8px;
+        padding: 0;
+      }
+      .logo {
+        background: #1d1918;
+        z-index: 2000;
+        display: flex;
+        top: 0;
+        left: 20px;
+        width: 80px;
+        position: absolute;
+        align-items: flex-end;
+        img {
+          height: 50px;
+        }
+      }
+      .chapters {
+        img {
+          width: 200px;
+        }
+        font-size: 0.8em;
+        h1 {
+          margin: 0;
+          opacity: 0.4;
+          &.active {
+            opacity: 1;
+            /* text-decoration: underline; */
+          }
+        }
+        &:not(.centered) {
+          position: fixed;
+          top: 80px;
+          left: 20px;
+        }
+        .centered {
+          img {
+            display: none;
+          }
+        }
+      }
+      .hero {
+        margin-top: -80px;
+        width: 800px;
+        max-width: 100%;
+      }
+      button {
+        background: #222;
+        border: 2px solid #555;
+        color: white;
+        font-size: 1em;
+        padding: 2px 4px 4px 4px;
+        cursor: pointer;
+        &:hover {
+          background: #333;
+        }
+        &:active {
+          background: #666;
+        }
+      }
+      node-garden,
+      dsp-repl,
+      node-viz,
+      details {
+        width: 100%;
+        max-width: 800px;
+      }
+      section {
+        * {
+          flex-shrink: 0;
+          max-width: 800px;
+        }
+        position: absolute;
+        top: 0;
+        left: 0;
+        transition: all 0.5s ease-in-out;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 40px 20px;
+        width: 100%;
+        font-size: 1.5em;
+        img {
+          max-width: 90%;
+        }
+        padding-bottom: 500px;
+        padding-left: 240px;
+        opacity: 0;
+        width: 100%;
+        height: 100%;
+        /* padding-bottom: 500px; */
+        overflow: auto;
+        h1,
+        h2,
+        h3 {
+          /* position: sticky; */
+          top: 0px;
+          padding: 8px;
+          z-index: 1000;
+          background: #1d1918;
+          margin-bottom: 20px;
+        }
+      }
+      @media screen and (max-width: 1000px) {
+        .chapters {
+          display: none;
+        }
+        section {
+          padding: 50px 20px;
+        }
+      }
+      @font-face {
+        font-family: "FontWithASyntaxHighlighter";
+        src: url("./FontWithASyntaxHighlighter-Regular.woff2") format("woff2");
+      }
+      a {
+        color: cyan;
+        font-size: 1em;
+      }
+      textarea,
+      pre:not(.pristine) {
+        box-sizing: border-box;
+        font-family: "FontWithASyntaxHighlighter", monospace;
+        padding: 8px;
+        font-size: 0.8em;
+        border: 0;
+        outline: none;
+        overflow: auto;
+        background-color: #44444490;
+        color: white;
+        width: 100%;
+        margin: 8px 0;
+        box-sizing: border-box;
+        max-width: 800px;
+      }
+      pre.pristine {
+        margin: 16px;
+        font-family: monospace;
+        font-size: 1.5em;
+      }
+      #lines {
+        height: 200px;
+      }
+    </style>
+    <!-- codeblock -->
+    <script>
+      // render codeblock from script tag
+      let codeblock = (scriptElement, indent = 0) => {
+        const script = document.currentScript;
+        const pre = document.createElement("pre");
+        pre.textContent = getCode(scriptElement, indent);
+        script.after(pre);
+      };
+      function getCode(scriptElement, indent = 0) {
+        return scriptElement.innerText
+          .split("\n")
+          .map((line) => line.slice(indent))
+          .filter((x) => x && !x.startsWith("codeblock("))
+          .join("\n");
+      }
+    </script>
+    <!-- node-garden -->
+    <script>
+      class CloneTemplate extends HTMLElement {
+        static observedAttributes = ["tid"];
+        init() {
+          const template = document.getElementById(this.getAttribute("tid"));
+          const clone = template.content.cloneNode(true);
+          const container = document.createElement("div");
+          container.appendChild(clone);
+          this.appendChild(container);
+        }
+        connectedCallback() {
+          setTimeout(() => {
+            this.init();
+          }, 0);
+        }
+      }
+      customElements.define("clone-template", CloneTemplate);
+
+      class NodeViz extends HTMLElement {
+        static observedAttributes = ["code", "dir", "height"];
+        init() {
+          const container = document.createElement("div");
+          container.style.height = this.getAttribute("height");
+          container.style.width = "100%";
+          this.code = this.getAttribute("code");
+          const dir = this.getAttribute("dir") ?? "LR";
+          const node = new Function(this.code)();
+          renderNode(
+            node,
+            container,
+            (gvnode, node) => {
+              gvnode.color = node.color || "white";
+              return gvnode;
+            },
+            (edge) => edge,
+            dir
+          );
+          this.appendChild(container);
+        }
+        connectedCallback() {
+          setTimeout(() => {
+            this.init();
+          }, 0);
+        }
+      }
+      customElements.define("node-viz", NodeViz);
+
+      class NodeGarden extends HTMLElement {
+        static observedAttributes = ["code", "rows"];
+        init() {
+          const code =
+            this.getAttribute("code") ||
+            (this.innerHTML + "")
+              .replace("<!--", "")
+              .replace("-->", "")
+              .trim() ||
+            "";
+          this.innerHTML = "";
+          const rows = this.getAttribute("rows") ?? 6;
+
+          this.insertAdjacentHTML(
+            "beforeend",
+            `
+      <div style="padding:0;width:100%">
+        <textarea id="code" spellcheck="false" rows="${rows}" style="margin:0;border-bottom:2px solid #222;width:100%;font-size:.8em"></textarea>
+        <div style="position:relative">
+          <pre class="result"></pre>
+          
+          <div style="display:flex;position:absolute;right:0;top:0">
+            <button style="margin-right:8px" class="run">run</button>
+            <button style="margin-right:8px" class="reset">reset</button>
+            <button class="step">step</button>
+            <button class="contract">-</button>
+            <button class="expand">+</button>
+          </div>
+        </div>
+        <div class="viz" style="display:flex;justify-content:center;padding:10px;height:220px;margin:10px"></div>
+        <div style="text-align:right">
+          <details>
+            <summary>show json</summary>
+            <pre class="json" style="text-align:left;font-size:.5em"></pre>
+          </details>
+          <details>
+            <summary>show steps</summary>
+            <pre class="steps" style="text-align:left"></pre>
+          </details>
+        </div>
+      </div>`
+          );
+          // repl logic
+          const input = this.querySelector("textarea");
+          this.result = this.querySelector(".result");
+          this.steps = this.querySelector(".steps");
+          this.vizContainer = this.querySelector(".viz");
+          this.runButton = this.querySelector(".run");
+          this.stepButton = this.querySelector(".step");
+          this.resetButton = this.querySelector(".reset");
+          this.contractButton = this.querySelector(".contract");
+          this.expandButton = this.querySelector(".expand");
+          input.value = code;
+          this.input = input;
+          this.reset();
+
+          this.stepButton.addEventListener("click", () => this.step());
+          this.runButton.addEventListener("click", () => this.update());
+          this.resetButton.addEventListener("click", () => this.reset());
+          this.contractButton.addEventListener("click", () => this.contract());
+          this.expandButton.addEventListener("click", () => this.expand());
+
+          input.addEventListener("keydown", (e) => {
+            if ((e.ctrlKey || e.altKey) && e.key === "Enter") {
+              this.update();
+            } else if ((e.ctrlKey || e.altKey) && e.key === ".") {
+              e.preventDefault();
+              this.stop();
+            }
+          });
+        }
+        setCode(code) {
+          this.code = code;
+          this.input.value = code;
+          this.update();
+        }
+        reset() {
+          this.results = [];
+          this.update();
+          this.results = []; // maybe this is not needed..
+          this.currentNode = null;
+          this.visited = [];
+          delete this.stepper;
+          this.steps.innerText = "// click step to start walking";
+          // this.render();
+        }
+        render() {
+          renderNode(this.node, this.vizContainer);
+        }
+        nodeColor(node) {
+          const cid = this.currentNode?.id;
+          if (node.id === cid) {
+            return "magenta";
+          }
+          if (this.results[node.id] !== undefined) {
+            return "cyan";
+          }
+          if (this.visited.find((v) => v.id === node.id)) {
+            return "yellow";
+          }
+          return "white";
+        }
+        renderStepped() {
+          const cid = this.currentNode?.id;
+          renderNode(
+            this.node,
+            this.vizContainer,
+            (node) => {
+              node.color = this.nodeColor(node);
+              const n = this.nodes[node.id];
+              return node;
+            },
+            (edge) => {
+              const source = this.nodes[edge.source];
+              const target = this.nodes[edge.target];
+              const argIndex = target.ins.findIndex(
+                (input) => input.id === edge.source
+              );
+              const sourceColor = this.nodeColor(source);
+              const targetColor = this.nodeColor(target);
+
+              if (edge.target === cid) {
+                edge.color = "magenta";
+              } else if (sourceColor === "cyan") {
+                edge.color = "cyan";
+              } else if (this.visited.find((v) => v.id === edge.target)) {
+                edge.color = "yellow";
+              }
+              const hasResult = this.results[edge.source] !== undefined;
+              if (!hasResult && ["magenta"].includes(edge.color)) {
+                edge.label = "?";
+              } else if (["yellow"].includes(edge.color)) {
+                edge.label = "?";
+              } else if (edge.target <= cid || cid === undefined) {
+                edge.label = target.args?.[argIndex] ?? "";
+              } else {
+                edge.label = this.results[edge.source] ?? "";
+              }
+              return edge;
+            }
+          );
+        }
+        evaluate() {
+          const fn = new Function("self", this.input.value);
+          this.node = fn(this);
+          this.nodes = Array.from(topoSort(this.node));
+          this.nodes.forEach((node, i) => {
+            node.id = i;
+          });
+          try {
+            const json = JSON.stringify(this.node, null, 2)
+              .split("\n")
+              // cleanup json
+              .filter(
+                (line) =>
+                  !line.includes('"config": {},') && !line.includes('"id":')
+              )
+              .join("\n");
+            this.querySelector(".json").innerText = json;
+          } catch (err) {}
+        }
+        async update() {
+          // this.results = []; // clear state
+          expansions = 0;
+          this.evaluate();
+          this.render();
+          this.result.innerText = `= ${this.node.run([], this.results)}`;
+        }
+        step() {
+          if (!this.stepper) {
+            this.visited = [];
+            //this.results = []; // uncomment to disable feedback
+            this.stepper = this.node.step(this.visited, this.results);
+            this.result.innerText = "= ?";
+          }
+          const next = this.stepper.next();
+          this.currentNode = next.value;
+          const cid = this.currentNode?.id;
+
+          this.renderStepped();
+          const calculations =
+            this.results
+              .map((result, i) => {
+                const n = this.nodes[i];
+                if (!this.visited.includes(n) || n.id >= cid) {
+                  return "";
+                }
+                //const output = result
+                const output = cid < i ? "?" : result ?? "??";
+                return `r[${i}] = ${n.type}(${n.ins
+                  .map((input, i) =>
+                    input instanceof Node ? `r[${input.id}]` : input
+                  )
+                  .join(", ")}) = ${output}`;
+              })
+              .filter(Boolean)
+              .join("\n") || `// searching computable nodes`;
+          this.steps.innerText = calculations;
+          if (!this.currentNode) {
+            this.result.innerText = `= ${
+              this.results[this.results.length - 1]
+            }`;
+            delete this.stepper;
+            return;
+          }
+        }
+        connectedCallback() {
+          setTimeout(() => {
+            this.init();
+          }, 0);
+        }
+        attributeChangedCallback(name, oldValue, newValue) {
+          if (name === "code") {
+            this.setCode(newValue);
+          }
+        }
+        contract() {
+          this.renderExpansion(expansion - 1);
+        }
+        expand() {
+          this.renderExpansion(expansion + 1);
+        }
+        renderExpansion(_expansion = 0) {
+          expansion = Math.max(_expansion, 0);
+          expansion = Math.min(expansion, nextExpansion);
+          expansions = 0;
+          this.evaluate();
+          let nodes = Array.from(topoSort(this.node));
+          renderNode(this.node, this.vizContainer, (gvnode) => {
+            const node = nodes[gvnode.id];
+            if (node.type === "poly") {
+              gvnode.color = "orchid";
+            } else if (node.ins.find((input) => input?.type === "poly")) {
+              gvnode.color = "cyan";
+            }
+            return gvnode;
+          });
+
+          if (!nodes.slice(0, -1).find((node) => node.type === "poly")) {
+            nextExpansion = expansion; // cannot step more
+            console.log("done expanding");
+          } else {
+            nextExpansion = expansion + 1; // at least one more...
+          }
+        }
+      }
+      customElements.define("node-garden", NodeGarden);
+    </script>
+    <!-- graphviz -->
+    <script>
+      function gvjson2dot(json, dir = "LR") {
+        const { nodes, edges } = json;
+        let renderProps = (props) =>
+          `[${Object.entries(props)
+            .map(([key, value]) => `${key}="${value}"`)
+            .join(",")}]`;
+        return `digraph {
+            bgcolor="transparent";
+            rankdir="${dir}";
+            node [penwidth=4];
+            edge [penwidth=2];
+            ${nodes
+              .map((node) => `  "${node.id}" ${renderProps(node)}`)
+              .join("\n")}
+            ${edges
+              .map(
+                (edge) =>
+                  `  ${edge.source} -> ${edge.target} ${renderProps(edge)}`
+              )
+              .join("\n")}
+            }`;
+      }
+      const numberTypes = ["n", "float"]; // hydra
+      function node2gvjson(graph, editNode, editEdge) {
+        const nodes = [],
+          edges = [];
+
+        let style = {
+          color: "white",
+          fontcolor: "white",
+          fontsize: "10",
+          fontname: "monospace",
+        };
+        const sorted = Array.from(topoSort(graph)).map((node, i) => {
+          node.id = i;
+          return node;
+        });
+        sorted.forEach((node, i) => {
+          if (numberTypes.includes(node.type)) {
+            return;
+          }
+          node.id = i;
+          const label = `${node.type} ${node.ins
+            .map((input) => {
+              if (numberTypes.includes(input.type)) {
+                input = input.value;
+              }
+              if (typeof input === "number") {
+                return Math.round(input * 10000) / 10000;
+              }
+              return "_";
+            })
+            .join(" ")}`;
+          let gvnode = {
+            id: node.id,
+            label,
+            ordering: "in",
+            width: "0.5",
+            height: "0.4",
+            ...style,
+          };
+          if (editNode) {
+            gvnode = editNode(gvnode, node, i);
+          }
+          nodes.push(gvnode);
+          for (let i in node.ins) {
+            if (
+              typeof node.ins[i] !== "object" ||
+              numberTypes.includes(node.ins[i].type)
+            ) {
+              continue;
+            }
+            if (node.ins[i].id === undefined) {
+              console.log("undefined source id", node.ins[i], "for node", node);
+            }
+            let gvedge = {
+              label: "",
+              id: edges.length,
+              source: node.ins[i].id ?? "whuuuat",
+              target: node.id,
+              directed: "true",
+              ...style,
+            };
+            if (editEdge) {
+              gvedge = editEdge(gvedge, node, i);
+            }
+            edges.push(gvedge);
+          }
+          return node;
+        });
+        return { nodes, edges };
+      }
+      function node2dot(node, editNode, editEdge, dir) {
+        const flat = node2gvjson(node, editNode, editEdge);
+        const dot = gvjson2dot(flat, dir);
+        return dot;
+      }
+      async function renderDot(dot, container) {
+        // this breaks my rule of self-contained html :/
+        // but graphviz is just so good..
+        // i don't want to segway into graph layouting rn...
+        // download the file here: https://unpkg.com/@hpcc-js/wasm@2.18.0/dist/graphviz.js
+        // sorry if you're living in 2051 and npm has collapsed already..
+        const { Graphviz } = await import("./graphviz.js");
+        const graphvizLoaded = Graphviz.load();
+        const graphviz = await graphvizLoaded;
+        const svg = await graphviz.layout(dot, "svg", "dot", {});
+        const base64 = btoa(unescape(encodeURIComponent(svg)));
+        const dataUrl = `data:image/svg+xml;base64,${base64}`;
+        const img = document.createElement("img");
+        img.src = dataUrl;
+        img.style.maxHeight = "800px";
+        img.style.width = "100%";
+        container.innerText = "";
+        container.style = "display:flex;justify-content:center;margin:16px 0px";
+        container.appendChild(img);
+      }
+      function nodes2gvjson(nodes, editNode, editEdge) {
+        const gvnodes = [],
+          gvedges = [];
+
+        let style = {
+          color: "white",
+          fontcolor: "white",
+          fontsize: "10",
+          fontname: "monospace",
+        };
+        let getInput = (input) => {
+          if (typeof input === "string") {
+            return nodes[Number(input)];
+          }
+          return input;
+        };
+        nodes.forEach((node, i) => {
+          const ins = node.ins.map(getInput);
+          const label = `${node.type} ${ins
+            .map((input) =>
+              typeof input === "object"
+                ? "_"
+                : Math.round(input * 10000) / 10000
+            )
+            .join(" ")}`;
+          let gvnode = {
+            id: node.id,
+            label,
+            ordering: "in",
+            width: "0.5",
+            height: "0.4",
+            ...style,
+          };
+          if (editNode) {
+            gvnode = editNode(gvnode, node, i);
+          }
+          gvnodes.push(gvnode);
+          for (let i in ins) {
+            if (typeof ins[i] !== "object") {
+              continue;
+            }
+            if (ins[i].id === undefined) {
+              console.log("undefined source id", ins[i], "for node", node);
+            }
+            let gvedge = {
+              label: "",
+              id: gvedges.length,
+              source: ins[i].id ?? "whuuuat",
+              target: node.id,
+              directed: "true",
+              ...style,
+            };
+            if (editEdge) {
+              gvedge = editEdge(gvedge);
+            }
+            gvedges.push(gvedge);
+          }
+          return node;
+        });
+        return { nodes: gvnodes, edges: gvedges };
+      }
+      function renderNode(node, container, editNode, editEdge, dir) {
+        const dot = node2dot(node, editNode, editEdge, dir);
+        return renderDot(dot, container);
+      }
+      function nodes2dot(nodes, editNode, editEdge, dir) {
+        const flat = nodes2gvjson(nodes, editNode, editEdge);
+        const dot = gvjson2dot(flat, dir);
+        return dot;
+      }
+      function renderNodes(nodes, container, editNode, editEdge, dir) {
+        const dot = nodes2dot(nodes, editNode, editEdge, dir);
+        return renderDot(dot, container);
+      }
+    </script>
+    <!-- DSP-worklet -->
+    <template class="DSP-worklet">
+      <script>
+        class DspProcessor extends AudioWorkletProcessor {
+          dsp = () => {};
+          l = 0;
+          r = 0;
+          SR = sampleRate;
+          ISR = 1 / sampleRate;
+          constructor() {
+            super();
+            this.t = 0;
+            this.S = 0;
+            this.active = true;
+            this.frames = Math.floor(sampleRate / 30);
+            this.framebuffers = [
+              new Float32Array(this.frames),
+              new Float32Array(this.frames),
+            ];
+            this.msg = {
+              framebuffers: this.framebuffers,
+            };
+            globalThis.$ = this;
+            this.port.onmessage = (e) => {
+              const msg = e.data;
+              if (msg && msg.code) {
+                //new Function("$", msg.code)(this);
+                new Function(msg.code)();
+              } else if (msg === "stop") {
+                this.active = false;
+              }
+            };
+          }
+          process(inputs, outputs, parameters) {
+            const output = outputs[0];
+            for (let i = 0; i < output[0].length; i++) {
+              this.dsp(this.t / sampleRate);
+              output[0][i] = this.l;
+              output[1][i] = this.r;
+              this.t++;
+              this.S = this.t * this.ISR;
+              this.framebuffers[0][this.t % this.frames] = this.l;
+              this.framebuffers[1][this.t % this.frames] = this.r;
+              if (this.t % this.frames === 0 && this.t > 0) {
+                this.port.postMessage(this.msg);
+              }
+            }
+            return this.active;
+          }
+        }
+      </script>
+    </template>
+    <!-- dsp-repl -->
+    <script>
+      const ctx = new AudioContext();
+      // init audio context
+      document.addEventListener("click", function firstClick() {
+        ctx.resume(); // autoply policy
+        document.removeEventListener("click", firstClick);
+      });
+
+      const _lerp = (v, min, max) => v * (max - min) + min;
+      const invLerp = (v, min, max) => (v - min) / (max - min);
+      const remap = (v, vmin, vmax, omin, omax) =>
+        _lerp(invLerp(v, vmin, vmax), omin, omax);
+
+      class DSPRepl extends HTMLElement {
+        static observedAttributes = [
+          "code",
+          "rows",
+          "next",
+          "viz",
+          "font-size",
+          "dir",
+        ];
+        worklet;
+        init() {
+          let fontSize = this.getAttribute("font-size") ?? 24;
+          const code =
+            this.getAttribute("code") ||
+            (this.innerHTML + "").replace("<!--", "").replace("-->", "").trim();
+
+          const rows = this.getAttribute("rows") ?? 4;
+          if (!code) {
+            return;
+          }
+          this.innerHTML = "";
+          this.insertAdjacentHTML(
+            "beforeend",
+            `<div style="border:0px solid #222;padding:0;position:relative">
+            <textarea spellcheck="false" rows="${rows}"></textarea>
+            <div style="user-select:none;cursor:pointer;position:absolute;top:0;right:0">
+            <button class="play">run</button> <button class="stop">stop</button>
+            </div>
+            <details class="steps-details" style="opacity:0">
+              <summary>show compiled output</summary>
+              <pre class="steps"></pre>
+            </details>
+            <canvas width="400" height="80"></canvas>
+            ${
+              !!this.getAttribute("viz")
+                ? `
+              <div
+                class="viz"
+                style="display:flex;justify-content:center;padding:10px"
+              ></div>`
+                : ""
+            }
+          </div>`
+          );
+          // draw logic
+          this.vizContainer = this.querySelector(".viz");
+          this.stepsDetails = this.querySelector(".steps-details");
+          this.stepsContainer = this.querySelector(".steps");
+          this.canvas = this.querySelector("canvas");
+          this.canvas.width = this.canvas.clientWidth * window.devicePixelRatio;
+          this.canvas.height =
+            this.canvas.clientHeight * window.devicePixelRatio;
+          this.drawContext = this.canvas.getContext("2d");
+          /* this.drawSilence(this.drawContext); */
+
+          // repl logic
+          const input = this.querySelector("textarea");
+          input.value = code;
+          input.style = `margin:0;border-bottom:2px solid #222;font-size:${fontSize}px`;
+          this.input = input;
+
+          this.querySelector(".play").onclick = () => this.update(input.value);
+          this.querySelector(".stop").onclick = () => this.stop();
+          input.addEventListener("keydown", async (e) => {
+            if ((e.ctrlKey || e.altKey) && e.key === "Enter") {
+              const hash = btoa(input.value);
+              let urlCode = window.location.hash.slice(1);
+              this.update(input.value);
+            }
+            if ((e.ctrlKey || e.altKey) && e.code === "Period") {
+              e.preventDefault();
+              this.stop();
+            }
+          });
+        }
+        async initWorklet() {
+          if (this.worklet) {
+            return;
+          }
+          await ctx.resume();
+          this.worklet = await this.runWorklet(ctx, this.input.value);
+          this.worklet.port.onmessage = (e) => {
+            if (e.data.framebuffers) {
+              const [l, r] = e.data.framebuffers;
+              requestAnimationFrame(() => {
+                this.drawBuffer(l, [-4, 1]);
+                this.drawBuffer(r, [-1, 4], false);
+              });
+            } else if (e.data.viz) {
+              const nodes = JSON.parse(e.data.viz);
+              this.vizContainer &&
+                renderNodes(
+                  nodes,
+                  this.vizContainer,
+                  (gvnode, node) => {
+                    if (node.type === "fadeout") {
+                      gvnode.color = "red";
+                    } else if (node.type === "fadein") {
+                      gvnode.color = "green";
+                    }
+                    return gvnode;
+                  },
+                  null,
+                  this.getAttribute("dir")
+                );
+            } else if (e.data.code && this.stepsContainer) {
+              this.stepsDetails.style.opacity = 1;
+              this.stepsContainer.innerText = `// this runs for every sample:\n${e.data.code}`;
+            }
+          };
+        }
+
+        async update(code) {
+          await this.initWorklet();
+          /* console.log("update:::", code); */
+          if (this.getAttribute("next")) {
+            globalThis.$ = this;
+            const fn = new Function(code)();
+          } else {
+            this.worklet.port.postMessage({ code });
+          }
+        }
+        stop() {
+          this.worklet?.disconnect();
+          this.worklet?.port.postMessage("stop");
+          if (typeof $ !== "undefined") {
+            delete $.n;
+            delete $.nodes;
+          }
+          this.worklet = undefined;
+        }
+
+        async runWorklet(ac) {
+          const name = `worklet-${Date.now()}`;
+          const math = Object.getOwnPropertyNames(Math).join(",");
+          let prelude = `const {${math}} = Math;\nObject.assign(globalThis,{${math}})\n`;
+          // add DSP scripts
+          document
+            .querySelector("template.DSP-prelude")
+            .content.querySelectorAll("script")
+            .forEach((script) => {
+              prelude += script.textContent;
+            });
+
+          let workletCode = document
+            .querySelector("template.DSP-worklet")
+            .content.querySelector("script").textContent;
+
+          workletCode = `${prelude}\n${workletCode}\nregisterProcessor('${name}', DspProcessor);`;
+
+          await ac.resume();
+          const dataURL = `data:text/javascript;base64,${btoa(workletCode)}`;
+          await ac.audioWorklet.addModule(dataURL);
+          const node = new AudioWorkletNode(ac, name, {
+            outputChannelCount: [2],
+          });
+          node.connect(ac.destination);
+          return node;
+        }
+
+        drawBuffer(samples, range = [-1, 1], clear = true) {
+          clear &&
+            this.drawContext.clearRect(
+              0,
+              0,
+              this.drawContext.canvas.width,
+              this.drawContext.canvas.height
+            );
+          this.plot(
+            (x) => samples[Math.floor(x)], // this is bad..
+            this.drawContext,
+            [1, samples.length],
+            range,
+            "white",
+            2
+          );
+        }
+        // plot function, see /plot.html
+        plot(
+          fn,
+          ctx,
+          xrange = [-1, 1],
+          yrange = [-1, 1],
+          color = "black",
+          lineWidth = 4
+        ) {
+          // these 3 functions are very good to know..
+          const lerp = (v, min, max) => v * (max - min) + min;
+          const invLerp = (v, min, max) => (v - min) / (max - min);
+          const remap = (v, vmin, vmax, omin, omax) =>
+            lerp(invLerp(v, vmin, vmax), omin, omax);
+          // prepare draw context
+          ctx.lineWidth = lineWidth;
+          ctx.strokeStyle = color;
+          // function ranges
+          const [x0, x1] = xrange;
+          const [y0, y1] = yrange;
+          // draw ranges
+          const [px0, px1] = [0, ctx.canvas.width];
+          const [py0, py1] = [ctx.canvas.height - ctx.lineWidth, ctx.lineWidth];
+          // actual draw logic
+          ctx.beginPath();
+          for (let px = 0; px < ctx.canvas.width; px++) {
+            const x = remap(px, px0, px1, x0, x1);
+            const y = fn(x);
+            const py = remap(y, y0, y1, py0, py1);
+            px === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+          }
+          ctx.stroke();
+        }
+        drawSilence(ctx, color = "white", lineWidth = 2) {
+          const canvas = ctx.canvas;
+          ctx.strokeStyle = color;
+          ctx.lineWidth = lineWidth;
+          ctx.beginPath();
+          ctx.moveTo(0, canvas.height / 2);
+          ctx.lineTo(canvas.width, canvas.height / 2);
+          ctx.stroke();
+        }
+
+        connectedCallback() {
+          setTimeout(() => {
+            this.init();
+          }, 0);
+        }
+        attributeChangedCallback(name, oldValue, newValue) {
+          this.init();
+        }
+      }
+      customElements.define("dsp-repl", DSPRepl);
+    </script>
+    <template class="DSP-prelude">
+      <!-- Node -->
+      <script>
+        // https://garten.salat.dev/kabelsalat/graph-computation.html
+        class DspNode {
+          constructor(type, ins, update, compileSelf) {
+            this.type = type;
+            update && (this.update = update);
+            compileSelf && (this.compileSelf = compileSelf);
+            this.ins = ins;
+            this.expand();
+          }
+          run() {
+            const args = this.ins.map((input) => {
+              if (input instanceof Node) {
+                return input.run();
+              }
+              return input;
+            });
+            return this.update(...args);
+          }
+        }
+
+        globalThis.Node = DspNode;
+        function compilePoly(r, args) {
+          return `$.l=${args[0]}*0.3;$.r=${args[1] || args[0]}*0.3;`;
+        }
+        Node.prototype.parseInput = function (input) {
+          if (typeof input === "function") {
+            input = input(this); // lambda feedback
+          }
+          // multichannel expansion
+          if (Array.isArray(input)) {
+            input = poly(...input);
+          }
+          return input;
+        };
+
+        // multichannel expansion
+        Node.prototype.expand = function () {
+          let type = this.type,
+            ins = this.ins,
+            update = this.update,
+            compileSelf = this.compileSelf;
+          let maxExpansions = 0;
+          this.ins = ins.map((input) => {
+            input = this.parseInput(input);
+            if (input.type === "poly") {
+              maxExpansions = Math.max(maxExpansions, input.ins.length);
+            }
+            return input;
+          });
+          if (maxExpansions > 0) {
+            this.type = "poly";
+            this.update = (...args) => args;
+            this.compileSelf = compilePoly;
+            // make mono if only one channel
+
+            this.ins = Array(maxExpansions)
+              .fill(0)
+              .map((_, i) => {
+                const clone = new this.constructor(
+                  type,
+                  [],
+                  update,
+                  compileSelf
+                );
+                clone.ins = ins.map((input) => {
+                  input = clone.parseInput(input);
+                  if (input.type === "poly") {
+                    return input.ins[i % input.ins.length];
+                  }
+                  return input;
+                });
+                return clone;
+              });
+          }
+        };
+        Node.prototype.compile = function (memory) {
+          let nodes = Array.from(topoSort(this));
+          // console.log(memory.join("\n"));
+          let r = memory ? memory : Array(nodes.length).fill(0);
+          const getRef = (input) =>
+            typeof input !== "object" ? input : `r[${nodes.indexOf(input)}]`;
+          let lines = [];
+          for (let id in nodes) {
+            const node = nodes[id];
+            const args = node.ins.map(getRef);
+            const ref = getRef(node);
+            if (!node.compileSelf) {
+              lines.push(`${ref} = n[${id}].update(${args.join(",")})`);
+            } else {
+              lines.push(node.compileSelf(ref, args, node, id));
+            }
+            lines[lines.length - 1] += ` // ${node.type}`;
+          }
+          const last = getRef(nodes[nodes.length - 1]);
+          // lines.push(`return ${last}`);
+          const code = lines.join("\n");
+          console.log("-------compiled--------");
+          console.log(code);
+          const update = new Function("n", "r", code);
+          const node = new Node("compiled", [], () => update(nodes, r));
+          node.code = code;
+          $.port.postMessage({ code: code });
+          return node;
+        };
+        Node.prototype.viz = function () {
+          try {
+            const nodes = Array.from(topoSort(this));
+            let flat = nodes.map((node, id) => ({
+              id,
+              type: node.type,
+              ins: node.ins.map((input) =>
+                input instanceof Node ? String(nodes.indexOf(input)) : input
+              ),
+            }));
+            $.port.postMessage({ viz: JSON.stringify(flat) });
+          } catch (err) {
+            console.warn("non serializable node. probably because of feedback");
+          }
+          return this;
+        };
+        globalThis.register = (type, getNode) => {
+          Node.prototype[type] = function (...args) {
+            return getNode(this, ...args);
+          };
+          return getNode;
+        };
+        globalThis.registerFn = (type, update) =>
+          register(type, (...args) => new Node(type, args, update));
+
+        globalThis.registerClass = (type, NodeClass) =>
+          register(type, (...args) => new NodeClass(type, args));
+
+        globalThis.registerRaw = (type, compileSelf) =>
+          register(type, (...args) => {
+            const argNames = Array.from(
+              { length: args.length },
+              (_, i) => `a${i}`
+            );
+            const body = `${compileSelf("let v", argNames)}; return v;`;
+            const update = new Function(...argNames, body);
+            return new Node(type, args, update, compileSelf);
+          });
+        globalThis.poly = register(
+          "poly",
+          (...args) => new Node("poly", args, null, compilePoly)
+        );
+      </script>
+      <!-- topoSort -->
+      <script>
+        // https://garten.salat.dev/kabelsalat/graph-compilation.html
+        // sort nodes by dependencies (using generator function to be able to step through)
+        function* topoSort(node, visited = new Set()) {
+          if (!(node instanceof Node) || visited.has(node)) {
+            return; // constant values or already visited nodes
+          }
+          visited.add(node);
+          for (let input of node.ins) {
+            yield* topoSort(input, visited);
+          }
+          yield node;
+        }
+      </script>
+      <script id="play-method">
+        Node.prototype.play = function () {
+          this.viz();
+          const out = polify(this); // we need a poly node at the end
+          if (out.ins.length > 2) {
+            console.warn("more than 2 channels! only using first 2");
+          }
+          // out.type = "out";
+          let compiled = out.compile();
+          $.dsp = () => compiled.run();
+          return compiled;
+        };
+        Node.prototype.out = Node.prototype.play;
+      </script>
+      <script id="collect-method">
+        Node.prototype.collect = function (max = 1) {
+          $.nodes ??= [];
+          $.nodes.push(this);
+          $.nodes = $.nodes.slice(-max);
+          return add(...$.nodes);
+        };
+      </script>
+      <script id="group-method">
+        globalThis.polify = register("polyify", (input) =>
+          input.type === "poly" ? input : poly(input)
+        );
+        Node.prototype.group = function (max = 1, fadeIn = 0, fadeOut = 0.1) {
+          $.nodes ??= [];
+          let len = $.nodes.length;
+          // fade out / retire old nodes
+
+          $.nodes = $.nodes.reduce((acc, node, i) => {
+            // assumes nodes is poly node with at least 1 channel
+            const in0 = node.ins[0];
+            //console.log("in0", in0);
+            if (in0.type === "fadeout" && in0.done) {
+              return acc; // omit already silent node
+            }
+            if (in0.type === "fadein" && in0.done) {
+              // unwrap fadein node
+              node.ins = node.ins.map((input) => input.ins[0]);
+            }
+            if (in0.type !== "fadeout" && len - i >= max) {
+              if (!fadeOut) {
+                return acc;
+              }
+              node = fadeout(node, fadeOut);
+            }
+            acc.push(node);
+            return acc;
+          }, []);
+
+          // fade in new node
+          let node = fadeIn ? this.fadein(fadeIn) : this;
+          // make sure node is always poly (simplifies checks in reducer above)
+          node = polify(node);
+          $.nodes.push(node);
+          return add(...$.nodes);
+        };
+        Node.prototype.spawn = function (max = 1, fadeIn = 1, fadeOut = 1) {
+          return this.group(max, fadeIn, fadeOut).out();
+        };
+      </script>
+      <script id="fade">
+        // maybe these could be combined into a single Node
+        class FadeIn extends Node {
+          start = $.S;
+          done = false;
+          update(input, fadeTime = 1) {
+            const progress = ($.S - this.start) / fadeTime;
+            if (progress >= 1) {
+              this.done = true;
+              return input;
+            }
+            const gain = Math.min(1, progress);
+            return input * gain;
+          }
+        }
+
+        globalThis.FadeIn = FadeIn;
+        globalThis.fadein = registerClass("fadein", FadeIn);
+        class FadeOut extends Node {
+          start = $.S;
+          done = false;
+          update(input, fadeTime = 1) {
+            this.init = true;
+            const progress = ($.S - this.start) / fadeTime;
+            if (progress >= 1) {
+              this.done = true;
+              return 0;
+            }
+            const gain = 1 - Math.min(1, progress);
+            return input * gain;
+          }
+        }
+        globalThis.FadeOut = FadeOut;
+        globalThis.fadeout = registerClass("fadeout", FadeOut);
+      </script>
+      <script>
+        const ISR = 1 / sampleRate;
+        // https://garten.salat.dev/audio-DSP/oscillators.html
+        class SineOsc extends Node {
+          phase = 0;
+          update(freq) {
+            const value = Math.sin(this.phase * 2 * Math.PI);
+            this.phase = (this.phase + freq / sampleRate) % 1;
+            return value;
+          }
+        }
+        globalThis.SineOsc = SineOsc;
+        globalThis.sine = registerClass("sine", SineOsc);
+
+        class ZawOsc extends Node {
+          phase = 0;
+          update(freq) {
+            this.phase += ISR * freq;
+            return (this.phase % 1) * 2 - 1;
+          }
+        }
+        globalThis.ZawOsc = ZawOsc;
+        globalThis.zaw = registerClass("zaw", ZawOsc);
+
+        function polyBlep(t, dt) {
+          // 0 <= t < 1
+          if (t < dt) {
+            t /= dt;
+            // 2 * (t - t^2/2 - 0.5)
+            return t + t - t * t - 1;
+          }
+          // -1 < t < 0
+          if (t > 1 - dt) {
+            t = (t - 1) / dt;
+            // 2 * (t^2/2 + t + 0.5)
+            return t * t + t + t + 1;
+          }
+          // 0 otherwise
+          return 0;
+        }
+        class SawOsc extends Node {
+          //phase = Math.random();
+          phase = 0;
+          update(freq) {
+            const dt = freq / sampleRate;
+            let p = polyBlep(this.phase, dt);
+            let s = 2 * this.phase - 1 - p;
+            this.phase += dt;
+            if (this.phase > 1) {
+              this.phase -= 1;
+            }
+            return s;
+          }
+        }
+        globalThis.SawOsc = SawOsc;
+        globalThis.saw = registerClass("saw", SawOsc);
+
+        class TriOsc extends Node {
+          phase = 0;
+          update(freq) {
+            this.phase += ISR * freq;
+            let phase = this.phase % 1;
+            let value = phase < 0.5 ? 2 * phase : 1 - 2 * (phase - 0.5);
+            return value * 2 - 1;
+          }
+        }
+        globalThis.TriOsc = TriOsc;
+        globalThis.tri = registerClass("tri", TriOsc);
+
+        globalThis.mix = register("mix", (input, channels = 1) => {
+          if (![1, 2].includes(channels)) {
+            channels = 2;
+            console.warn(
+              "mix only supports 1 or 2 channels atm.. falling back to 2"
+            );
+          }
+          if (input.type !== "poly") {
+            return input;
+          }
+          if (channels === 2) {
+            const panned = input.ins.map((channel, i, ins) => {
+              // we can do this at eval time: channels are fixed!
+              const pos = (i / (ins.length - 1)) * 2 - 1;
+              const deg = ((pos + 1) * Math.PI) / 4;
+              const stereo = channel.mul([Math.cos(deg), Math.sin(deg)]);
+              return stereo;
+            });
+            return add(...panned);
+          }
+          return add(...input.ins);
+        });
+
+        class Lpf extends Node {
+          s0 = 0;
+          s1 = 0;
+          update(s, cutoff, resonance = 0) {
+            // Out of bound values can produce NaNs
+            cutoff = Math.min(cutoff, 1);
+            resonance = Math.max(resonance, 0);
+            var c = Math.pow(0.5, (1 - cutoff) / 0.125);
+            var r = Math.pow(0.5, (resonance + 0.125) / 0.125);
+            var mrc = 1 - r * c;
+            var v0 = this.s0;
+            var v1 = this.s1;
+            // Apply the filter to the sample
+            v0 = mrc * v0 - c * v1 + c * s;
+            v1 = mrc * v1 + c * v0;
+            s = v1;
+            this.s0 = v0;
+            this.s1 = v1;
+            return s;
+          }
+        }
+        globalThis.Lpf = Lpf;
+        globalThis.lpf = registerClass("lpf", Lpf);
+
+        class PulseOsc extends Node {
+          phase = 0;
+          update(freq, duty = 0.5) {
+            this.phase += ISR * freq;
+            let cyclePos = this.phase % 1;
+            return cyclePos < duty ? 1 : -1;
+          }
+        }
+        globalThis.PulseOsc = PulseOsc;
+        globalThis.pulse = registerClass("pulse", PulseOsc);
+
+        class Dust extends Node {
+          update = (density) =>
+            Math.random() < density * ISR ? Math.random() : 0;
+        }
+        globalThis.Dust = Dust;
+        globalThis.dust = registerClass("dust", Dust);
+
+        class Impulse extends Node {
+          phase = 1;
+          update(freq) {
+            this.phase += ISR * freq;
+            let v = this.phase >= 1 ? 1 : 0;
+            this.phase = this.phase % 1;
+            return v;
+          }
+        }
+        globalThis.Impulse = Impulse;
+        globalThis.impulse = registerClass("impulse", Impulse);
+
+        class ClockDiv extends Node {
+          inSgn = true;
+          outSgn = true;
+          clockCnt = 0;
+          update(clock, factor) {
+            let curSgn = clock > 0;
+            if (this.inSgn != curSgn) {
+              this.clockCnt++;
+              if (this.clockCnt >= factor) {
+                this.clockCnt = 0;
+                this.outSgn = !this.outSgn;
+              }
+            }
+
+            this.inSgn = curSgn;
+            return this.outSgn ? 1 : -1;
+          }
+        }
+        globalThis.ClockDiv = ClockDiv;
+        globalThis.clockdiv = registerClass("clockdiv", ClockDiv);
+
+        globalThis.noise = registerRaw(
+          "noise",
+          (r) => `${r} = Math.random() * 2 - 1`
+        );
+
+        class Hold extends Node {
+          value = 0;
+          trigSgn = false;
+          update(input, trig) {
+            if (!this.trigSgn && trig > 0) this.value = input;
+            this.trigSgn = trig > 0;
+            return this.value;
+          }
+        }
+        globalThis.Hold = Hold;
+        globalThis.hold = registerClass("hold", Hold);
+
+        function lerp(x, y0, y1) {
+          if (x >= 1) return y1;
+
+          return y0 + x * (y1 - y0);
+        }
+
+        class ADSR extends Node {
+          state = "off";
+          startTime = 0;
+          startVal = 0;
+
+          update(gate, attack, decay, susVal, release) {
+            let curTime = $.S; // $.S = time in seconds
+            switch (this.state) {
+              case "off": {
+                if (gate > 0) {
+                  this.state = "attack";
+                  this.startTime = curTime;
+                  this.startVal = 0;
+                }
+                return 0;
+              }
+              case "attack": {
+                let time = curTime - this.startTime;
+                if (time > attack) {
+                  this.state = "decay";
+                  this.startTime = curTime;
+                  return 1;
+                }
+                return lerp(time / attack, this.startVal, 1);
+              }
+              case "decay": {
+                let time = curTime - this.startTime;
+                let curVal = lerp(time / decay, 1, susVal);
+                if (gate <= 0) {
+                  this.state = "release";
+                  this.startTime = curTime;
+                  this.startVal = curVal;
+                  return curVal;
+                }
+                if (time > decay) {
+                  this.state = "sustain";
+                  this.startTime = curTime;
+                  return susVal;
+                }
+                return curVal;
+              }
+              case "sustain": {
+                if (gate <= 0) {
+                  this.state = "release";
+                  this.startTime = curTime;
+                  this.startVal = susVal;
+                }
+                return susVal;
+              }
+              case "release": {
+                let time = curTime - this.startTime;
+                if (time > release) {
+                  this.state = "off";
+                  return 0;
+                }
+                let curVal = lerp(time / release, this.startVal, 0);
+                if (gate > 0) {
+                  this.state = "attack";
+                  this.startTime = curTime;
+                  this.startVal = curVal;
+                }
+                return curVal;
+              }
+            }
+            throw "invalid envelope state";
+          }
+        }
+        globalThis.ADSR = ADSR;
+        globalThis.adsr = registerClass("adsr", ADSR);
+
+        globalThis.ad = register("ad", (gate = 0, attack = 0.02, decay = 0.1) =>
+          adsr(gate, attack, decay, 0, decay)
+        );
+        /*
+        impulse(1).ad(.1).mul(sine(200))
+.add(x=>x.delay(.1).mul(.8))
+.out()*/
+        const MAX_DELAY_TIME = 10;
+        class Delay extends Node {
+          writeIdx = 0;
+          readIdx = 0;
+          buffer = new Float32Array(MAX_DELAY_TIME * sampleRate); // .fill(0)
+          write(s, delayTime) {
+            this.writeIdx = (this.writeIdx + 1) % this.buffer.length;
+            this.buffer[this.writeIdx] = s;
+            // Calculate how far in the past to read
+            let numSamples = Math.min(
+              Math.floor(sampleRate * delayTime),
+              this.buffer.length - 1
+            );
+            this.readIdx = this.writeIdx - numSamples;
+            // If past the start of the buffer, wrap around
+            if (this.readIdx < 0) this.readIdx += this.buffer.length;
+          }
+          update(input, delayTime) {
+            this.write(input, delayTime);
+            return this.buffer[this.readIdx];
+          }
+        }
+        globalThis.Delay = Delay;
+        globalThis.delay = registerClass("delay", Delay);
+
+        class Fold extends Node {
+          update(input = 0, rate = 0) {
+            if (rate < 0) rate = 0;
+            rate = rate + 1;
+            input = input * rate;
+            return (
+              4 *
+              (Math.abs(0.25 * input + 0.25 - Math.round(0.25 * input + 0.25)) -
+                0.25)
+            );
+          }
+        }
+        globalThis.Fold = Fold;
+        globalThis.fold = registerClass("fold", Fold);
+
+        let perc = register("perc", (gate, decay) => gate.adsr(0, 0, 1, decay));
+
+        class Lag extends Node {
+          lagUnit = 4410;
+          s = 0;
+          update(input, rate) {
+            // Remap so the useful range is around [0, 1]
+            rate = rate * this.lagUnit;
+            if (rate < 1) rate = 1;
+            this.s += (1 / rate) * (input - this.s);
+            return this.s;
+          }
+        }
+        globalThis.Lag = Lag;
+        globalThis.lag = registerClass("lag", Lag);
+
+        class Slew extends Node {
+          last = 0;
+          update(input, up, dn) {
+            const upStep = up * ISR;
+            const downStep = dn * ISR;
+            let delta = input - this.last;
+            if (delta > upStep) {
+              delta = upStep;
+            } else if (delta < -downStep) {
+              delta = -downStep;
+            }
+            this.last += delta;
+            return this.last;
+          }
+        }
+        globalThis.Slew = Slew;
+        globalThis.slew = registerClass("slew", Slew);
+
+        globalThis.applyDistortion = (x, amount) => {
+          amount = Math.min(Math.max(amount, 0), 1);
+          amount -= 0.01;
+          var k = (2 * amount) / (1 - amount);
+          var y = ((1 + k) * x) / (1 + k * Math.abs(x));
+          return y;
+        };
+        globalThis.distort = registerRaw(
+          "distort",
+          (r, a) => `${r} = applyDistortion(${a.join(",")})`
+        );
+        globalThis.hpf = register("hpf", (input, cutoff, resonance = 0) =>
+          input.sub(input.lpf(cutoff, resonance))
+        );
+
+        class Sequence extends Node {
+          clockSgn = true;
+          step = 0;
+          first = true;
+          update(clock, ...ins) {
+            if (!this.clockSgn && clock > 0) {
+              this.step = (this.step + 1) % ins.length;
+              this.clockSgn = clock > 0;
+              return 0; // set first sample to zero to retrigger gates on step change...
+            }
+            this.clockSgn = clock > 0;
+            return ins[this.step];
+          }
+        }
+        globalThis.Sequence = Sequence;
+        globalThis.seq = registerClass("seq", Sequence);
+        globalThis.midinote = registerRaw(
+          "midinote",
+          (r, [note]) => `${r} = (2 ** ((${note} - 69) / 12) * 440)`
+        );
+
+        globalThis.midi2freq = (midi) => Math.pow(2, (midi - 69) / 12) * 440;
+
+        globalThis.range = registerRaw(
+          "range",
+          (r, [bip, a, b]) => `${r} = ((${bip} + 1) / 2) * (${b} - ${a}) + ${a}`
+        );
+        /* let log = registerNode("log", (r, a) => `${r} = Math.log(${a})`);
+        let exp = registerNode("exp", (r, a) => `${r} = Math.exp(${a})`);
+        let sin = registerNode("sin", (r, a) => `${r} = Math.sin(${a})`);
+        let cos = registerNode("cos", (r, a) => `${r} = Math.cos(${a})`); */
+
+        globalThis.unipolar = registerRaw(
+          "unipolar",
+          (r, [bip]) => `${r} = (${bip}+1)/2;`
+        );
+        globalThis.bipolar = registerRaw(
+          "bipolar",
+          (r, [uni]) => `${r} = ${uni}*2-1;`
+        );
+
+        globalThis._rangex = (sig, min, max) => {
+          let logmin = Math.log(min);
+          let range = Math.log(max) - logmin;
+          const unipolar = (sig + 1) / 2;
+          return Math.exp(unipolar * range + logmin);
+        };
+        globalThis.rangex = registerRaw(
+          "rangex",
+          (r, args) => `${r} = _rangex(${args.join(",")})`
+        );
+
+        globalThis.pan = register("pan", (input, pos) => {
+          // (pos+1)/2 * PI/2 = (pos+1) * PI * 0.25
+          return input;
+          /* pos = add(pos, 1).mul(Math.PI, 0.25);
+          return input.mul([Math.cos(pos), Math.sin(pos)]); */
+        });
+
+        globalThis.add = registerRaw("add", (r, a) => `${r} = ${a.join("+")}`);
+        globalThis.sub = registerRaw("sub", (r, a) => `${r} = ${a.join("-")}`);
+        globalThis.mul = registerRaw("mul", (r, a) => `${r} = ${a.join("*")}`);
+        globalThis.div = registerRaw("div", (r, a) => `${r} = ${a.join("/")}`);
+        globalThis.mod = registerRaw("mod", (r, a) => `${r} = ${a.join("%")}`);
+        globalThis.n = registerRaw("n", (r, x) => `${r} = ${x}`);
+
+        Node.prototype.apply = function (x) {
+          return x(this);
+        };
+        // sine(240).raw(([n]) => `${n}/16`)
+        /* let raw = register("raw", (...args) => {
+          const compileSelf = args[args.length - 1];
+          return new Node("raw", args.slice(0, -1), null, compileSelf);
+        }); */
+        /* let raw = (type, compileSelf) =>
+          register((...args) => new Node(type, args, null, compileSelf));
+        let raw = registerRaw('raw', ()) */
+        // sine(100).raw((arg) => `${arg}/2`)
+        Object.assign(globalThis, {
+          Node,
+        });
+      </script>
+    </template>
+    <script>
+      function register(type, getNode = (...args) => new Node(type, args)) {
+        // register method for chaining
+        Node.prototype[type] = function (...args) {
+          return getNode(this, ...args);
+        };
+        return getNode;
+      }
+      let registerFn = (type, update) =>
+        register(type, (...args) => new Node(type, args, { update }));
+
+      let registerUgen = (type, name) =>
+        register(
+          type,
+          (...args) =>
+            new Node(type, args, {
+              compileSetup: (r) => `${r} = new ${name}('${type}',[])`,
+            })
+        );
+
+      const registerRaw = (type, compileSelf) =>
+        register(type, (...args) => {
+          const argNames = Array.from(
+            { length: args.length },
+            (_, i) => `a${i}`
+          );
+          const body = `${compileSelf("let v", argNames)}; return v;`;
+          const update = new Function(...argNames, body);
+          return new Node(type, args, { update, compileSelf });
+        });
+    </script>
+    <script id="node-expansion">
+      function compilePoly(r, args) {
+        return `$.l=${args[0]}*0.3;$.r=${args[1] || args[0]}*0.3;`;
+      }
+      let polify = register("polify", (input) =>
+        input.type === "poly" ? input : poly(input)
+      );
+      let poly = register(
+        "poly",
+        (...args) => new Node("poly", args, { compileSelf: compilePoly })
+      );
+      // these variables are for the stepwise viz (very dirty hack)
+      let expansions = 0;
+      let expansion = -1;
+      let nextExpansion = 1;
+
+      // this is the "full" version
+      Node = class {
+        constructor(type, ins, config) {
+          this.type = type;
+          this.config = config;
+          const { update, compileSelf, compileSetup } = config || {};
+          update && (this.update = update);
+          compileSelf && (this.compileSelf = compileSelf);
+          compileSetup && (this.compileSetup = compileSetup);
+
+          // multichannel expansion
+          let maxExpansions = 0;
+          this.ins = ins.map((input) => {
+            input = this.parseInput(input);
+            if (input.type === "poly") {
+              maxExpansions = Math.max(maxExpansions, input.ins.length);
+            }
+            return input;
+          });
+          if (expansion !== -1 && expansions >= expansion) {
+            return; // dirty hack for viz (not needed otherwise)
+          }
+          if (maxExpansions > 0) {
+            expansions++; // dirty hack for viz (not needed otherwise)
+            this.type = "poly";
+            this.update = (...args) => args;
+            this.compileSelf = compilePoly;
+            // make mono if only one channel
+
+            this.ins = Array(maxExpansions)
+              .fill(0)
+              .map((_, i) => {
+                const clone = new this.constructor(type, [], config);
+                clone.ins = ins.map((input) => {
+                  input = clone.parseInput(input);
+                  if (input.type === "poly") {
+                    return input.ins[i % input.ins.length];
+                  }
+                  return input;
+                });
+                return clone;
+              });
+          }
+        }
+      };
+      Node.prototype.parseInput = function (input) {
+        if (typeof input === "function") {
+          input = input(this); // lambda feedback
+        }
+        if (Array.isArray(input)) {
+          input = poly(...input);
+        }
+        return input;
+      };
+      Node.prototype.input = function (node) {
+        this.ins[0] = node;
+        return this;
+      };
+    </script>
+    <!-- Node.run -->
+    <script id="node-run">
+      Node.prototype.run = function (visited = [], results = []) {
+        if (visited.includes(this)) {
+          return results[this.id] ?? 0;
+        }
+        // run children (depth first)
+        const args = this.ins.map((input) => {
+          if (input instanceof Node) {
+            return input.run([...visited, this], results);
+          }
+          return input;
+        });
+        // pass children results to update
+        const result = this.update(...args);
+        results[this.id] = result;
+        return result;
+      };
+    </script>
+    <script id="node-compile">
+      // this compile only runs for the worklet test
+      Node.prototype.compile = function (memory) {
+        let nodes = Array.from(topoSort(this));
+        // console.log(memory.join("\n"));
+        let r = memory ? memory : Array(nodes.length).fill(0);
+        const getRef = (input) =>
+          typeof input !== "object" ? input : `r[${nodes.indexOf(input)}]`;
+        let setup = [
+          `let r = new Float32Array(${nodes.length})`,
+          `let n = [];`,
+        ];
+        let lines = [];
+        for (let id in nodes) {
+          const node = nodes[id];
+          const args = node.ins.map(getRef);
+          const ref = getRef(node);
+          if (node.compileSetup) {
+            setup.push(node.compileSetup(`n[${id}]`));
+          }
+          if (!node.compileSelf) {
+            lines.push(`${ref} = n[${id}].update(${args.join(",")})`);
+          } else {
+            lines.push(node.compileSelf(ref, args, node, id));
+          }
+          lines[lines.length - 1] += ` // ${node.type}`;
+        }
+        const last = getRef(nodes[nodes.length - 1]);
+        return { setup: setup.join("\n"), lines: lines.join("\n") };
+      };
+    </script>
+    <script id="node-play">
+      const fadein = registerUgen("fadein", "FadeIn");
+      const fadeout = registerUgen("fadeout", "FadeOut");
+      const sine = registerUgen("sine", "SineOsc");
+      const zaw = registerUgen("zaw", "ZawOsc");
+      const saw = registerUgen("saw", "SawOsc");
+      const lpf = registerUgen("lpf", "Lpf");
+      const pulse = registerUgen("pulse", "PulseOsc");
+      const dust = registerUgen("dust", "Dust");
+      const impulse = registerUgen("impulse", "Impulse");
+      const hold = registerUgen("hold", "Hold");
+      const adsr = registerUgen("adsr", "ADSR");
+      const delay = registerUgen("delay", "Delay");
+      const fold = registerUgen("fold", "Fold");
+      const lag = registerUgen("lag", "Lag");
+      const slew = registerUgen("slew", "Slew");
+      const seq = registerUgen("seq", "Sequence");
+      const noise = registerRaw("noise", (r) => `${r} = Math.random() * 2 - 1`);
+
+      const applyDistortion = (x, amount) => {
+        amount = Math.min(Math.max(amount, 0), 1);
+        amount -= 0.01;
+        var k = (2 * amount) / (1 - amount);
+        var y = ((1 + k) * x) / (1 + k * Math.abs(x));
+        return y;
+      };
+      const distort = registerRaw(
+        "distort",
+        (r, a) => `${r} = applyDistortion(${a.join(",")})`
+      );
+      const hpf = register("hpf", (input, cutoff, resonance = 0) =>
+        input.sub(input.lpf(cutoff, resonance))
+      );
+
+      const mix = register("mix", (input, channels = 1) => {
+        if (![1, 2].includes(channels)) {
+          channels = 2;
+          console.warn(
+            "mix only supports 1 or 2 channels atm.. falling back to 2"
+          );
+        }
+        if (input.type !== "poly") {
+          return input;
+        }
+        if (channels === 2) {
+          const panned = input.ins.map((channel, i, ins) => {
+            // we can do this at eval time: channels are fixed!
+            const pos = (i / (ins.length - 1)) * 2 - 1;
+            const deg = ((pos + 1) * Math.PI) / 4;
+            const stereo = channel.mul([Math.cos(deg), Math.sin(deg)]);
+            return stereo;
+          });
+          return add(...panned);
+        }
+        return add(...input.ins);
+      });
+      const ad = register("ad", (gate = 0, attack = 0.02, decay = 0.1) =>
+        adsr(gate, attack, decay, 0, decay)
+      );
+
+      const range = registerRaw(
+        "range",
+        (r, [bip, a, b]) => `${r} = ((${bip} + 1) / 2) * (${b} - ${a}) + ${a}`
+      );
+
+      const unipolar = registerRaw(
+        "unipolar",
+        (r, [bip]) => `${r} = (${bip}+1)/2;`
+      );
+      const bipolar = registerRaw(
+        "bipolar",
+        (r, [uni]) => `${r} = ${uni}*2-1;`
+      );
+
+      const midi2freq = (midi) => Math.pow(2, (midi - 69) / 12) * 440;
+
+      const _rangex = (sig, min, max) => {
+        let logmin = Math.log(min);
+        let range = Math.log(max) - logmin;
+        const unipolar = (sig + 1) / 2;
+        return Math.exp(unipolar * range + logmin);
+      };
+      const rangex = registerRaw(
+        "rangex",
+        (r, args) => `${r} = _rangex(${args.join(",")})`
+      );
+
+      const pan = register("pan", (input, pos) => {
+        // (pos+1)/2 * PI/2 = (pos+1) * PI * 0.25
+        return input;
+        /* pos = add(pos, 1).mul(Math.PI, 0.25);
+          return input.mul([Math.cos(pos), Math.sin(pos)]); */
+      });
+
+      const midinote = registerRaw(
+        "midinote",
+        (r, [note]) => `${r} = (2 ** ((${note} - 69) / 12) * 440)`
+      );
+
+      Node.prototype.apply = function (x) {
+        return x(this);
+      };
+
+      Node.prototype.play = function () {
+        // the last node must be poly to assign to $.l when compiled
+        const out = this.type === "poly" ? this : n([this]);
+        if (out.ins.length > 2) {
+          // how about mix(2) in this case?
+          console.warn("more than 2 channels! only using first 2");
+        }
+        out.viz();
+        let code = out.compile();
+        $.worklet.port.postMessage({ code });
+      };
+      Node.prototype.group = function (max = 1, fadeIn = 0, fadeOut = 0.1) {
+        $.nodes ??= [];
+        let len = $.nodes.length; // save len before messing with array (you never know)
+        // fade out / retire old nodes
+        $.nodes = $.nodes.reduce((acc, node, i) => {
+          // assumes nodes is poly node with at least 1 channel
+          const in0 = node.ins[0];
+          console.log("in0", in0);
+          if (in0.type === "fadeout" && ctx.currentTime > in0.config.doneTime) {
+            return acc; // omit already silent node
+          }
+          if (in0.type === "fadein" && ctx.currentTime > in0.config.doneTime) {
+            // unwrap node that's done fading in
+            node.ins = node.ins.map((input) => input.ins[0]);
+          }
+          if (in0.type !== "fadeout" && len - i >= max) {
+            if (!fadeOut) {
+              return acc;
+            }
+            node = fadeout(node, fadeOut);
+          }
+          acc.push(node);
+          return acc;
+        }, []);
+
+        // fade in new node
+        let node = this;
+        // make sure node is always poly (simplifies checks in reducer above)
+        if (node.type !== "poly") {
+          node = poly(node);
+        }
+        if (fadeIn) {
+          node = fadein(node, fadeIn); // remember: node is poly
+        }
+        $.nodes.push(node);
+        return add(...$.nodes);
+      };
+      Node.prototype.spawn = function (max, fadeIn, fadeOut) {
+        return this.group(max, fadeIn, fadeOut).out();
+      };
+      Node.prototype.viz = function () {
+        try {
+          $.vizContainer && renderNode(this, $.vizContainer);
+        } catch (err) {
+          console.warn("non serializable node. probably because of feedback");
+        }
+        return this;
+      };
+    </script>
+    <!-- Node.step -->
+    <script>
+      Node.prototype.step = function* (visited = [], results = []) {
+        if (visited.includes(this)) {
+          return results[this.id] ?? 0;
+        }
+        yield this;
+        let args = [];
+        let isLeaf = true;
+        visited.push(this);
+        for (let input of this.ins) {
+          if (input instanceof Node) {
+            isLeaf = false;
+            yield* input.step(visited, results);
+            const arg = input.run(visited, results);
+            args.push(arg);
+          } else {
+            args.push(input);
+          }
+        }
+        this.args = args;
+        const result = this.update(...args);
+        results[this.id] = result;
+        if (!isLeaf) {
+          yield this;
+        }
+        //results[this.id] = result;
+      };
+      //codeblock(document.currentScript, 8);
+    </script>
+    <script id="math-nodes">
+      // register some nodes
+      /* let add = registerFn("add", (a, b) => a + b);
+      let sub = registerFn("sub", (a, b) => a - b);
+      let mul = registerFn("mul", (a, b) => a * b);
+      let div = registerFn("div", (a, b) => a / b);
+      let mod = registerFn("mod", (a, b) => a % b);
+      let n = registerFn("n", (a) => a); */
+      let dep = registerFn("dep", (a) => a);
+
+      let out = registerFn("out", (a) => a);
+      let add = registerRaw("add", (r, a) => `${r} = ${a.join("+")}`);
+      let sub = registerRaw("sub", (r, a) => `${r} = ${a.join("-")}`);
+      let mul = registerRaw("mul", (r, a) => `${r} = ${a.join("*")}`);
+      let div = registerRaw("div", (r, a) => `${r} = ${a.join("/")}`);
+      let mod = registerRaw("mod", (r, a) => `${r} = ${a.join("%")}`);
+
+      let n = registerRaw("n", (r, x) => `${r} = ${x}`);
+    </script>
+    <!-- topoSort -->
+    <script>
+      function isNode(node) {
+        // node instanceof Node <- fails for serialized nodes (like hydro)
+        return (
+          typeof node === "object" &&
+          Array.isArray(node.ins) &&
+          typeof node.type === "string"
+        );
+      }
+      // sort nodes by dependencies (using generator function to be able to step through)
+      function* topoSort(node, visited = new Set()) {
+        /* if (!(node instanceof Node) || visited.has(node)) { */
+        if (!isNode(node) || visited.has(node)) {
+          return; // constant values or already visited nodes
+        }
+        visited.add(node);
+        for (let input of node.ins) {
+          yield* topoSort(input, visited);
+        }
+        yield node;
+      }
+    </script>
+  </head>
+  <body>
+    <div class="logo">
+      <img src="./img/kabelsalat_logo_scrot.png" />
+    </div>
+
+    <template id="chapter0">
+      <h1 class="active">1.graph based</h1>
+      <h1 class="active">2.language</h1>
+      <h1 class="active">3.for</h1>
+      <h1 class="active">4.audio</h1>
+      <h1 class="active">5.visual</h1>
+      <h1 class="active">6.live coding</h1>
+      <h1 class="active">7.on the web</h1>
+      <h1 class="active">8.and beyond</h1>
+    </template>
+
+    <template id="chapter1">
+      <h1 class="active">1.graph based</h1>
+      <h1>2.language</h1>
+      <h1>3.for</h1>
+      <h1>4.audio</h1>
+      <h1>5.visual</h1>
+      <h1>6.live coding</h1>
+      <h1>7.on the web</h1>
+      <h1>8.and beyond</h1>
+    </template>
+    <template id="chapter2">
+      <h1>1.graph based</h1>
+      <h1 class="active">2.language</h1>
+      <h1>3.for</h1>
+      <h1>4.audio</h1>
+      <h1>5.visual</h1>
+      <h1>6.live coding</h1>
+      <h1>7.on the web</h1>
+      <h1>8.and beyond</h1>
+    </template>
+    <template id="chapter3">
+      <h1>1.graph based</h1>
+      <h1>2.language</h1>
+      <h1 class="active">3.for</h1>
+      <h1>4.audio</h1>
+      <h1>5.visual</h1>
+      <h1>6.live coding</h1>
+      <h1>7.on the web</h1>
+      <h1>8.and beyond</h1>
+    </template>
+    <template id="chapter4">
+      <h1>1.graph based</h1>
+      <h1>2.language</h1>
+      <h1>3.for</h1>
+      <h1 class="active">4.audio</h1>
+      <h1>5.visual</h1>
+      <h1>6.live coding</h1>
+      <h1>7.on the web</h1>
+      <h1>8.and beyond</h1>
+    </template>
+    <template id="chapter5">
+      <h1>1.graph based</h1>
+      <h1>2.language</h1>
+      <h1>3.for</h1>
+      <h1>4.audio</h1>
+      <h1 class="active">5.visual</h1>
+      <h1>6.live coding</h1>
+      <h1>7.on the web</h1>
+      <h1>8.and beyond</h1>
+    </template>
+    <template id="chapter6">
+      <h1>1.graph based</h1>
+      <h1>2.language</h1>
+      <h1>3.for</h1>
+      <h1>4.audio</h1>
+      <h1>5.visual</h1>
+      <h1 class="active">6.live coding</h1>
+      <h1>7.on the web</h1>
+      <h1>8.and beyond</h1>
+    </template>
+    <template id="chapter7">
+      <h1>1.graph based</h1>
+      <h1>2.language</h1>
+      <h1>3.for</h1>
+      <h1>4.audio</h1>
+      <h1>5.visual</h1>
+      <h1>6.live coding</h1>
+      <h1 class="active">7.on the web</h1>
+      <h1>8.and beyond</h1>
+    </template>
+    <template id="chapter8">
+      <h1>1.graph based</h1>
+      <h1>2.language</h1>
+      <h1>3.for</h1>
+      <h1>4.audio</h1>
+      <h1>5.visual</h1>
+      <h1>6.live coding</h1>
+      <h1>7.on the web</h1>
+      <h1 class="active">8.and beyond</h1>
+    </template>
+    <template id="hero0">
+      <h2 style="font-size: 3em; z-index: 3000; position: absolute">
+        kabelsalat
+      </h2>
+      <img
+        alt="graph"
+        src="https://www.businessinsider.de/wp-content/uploads/2016/02/kabelsalat.jpg"
+        class="hero"
+      />
+    </template>
+    <section>
+      <clone-template tid="hero0"></clone-template>
+      <clone-template tid="chapter0" class="chapters"></clone-template>
+      <ul>
+        <li>Spoken "Cable Salad"</li>
+        <li>Paper by</li>
+        <ul>
+          <li>
+            Felix Roos
+            <a href="https://post.lurk.org/@froos" target="_blank"
+              >@froos@post.lurk.org</a
+            >
+          </li>
+          <li>
+            Raphaël Forment
+            <a href="https://post.lurk.org/@bubobubo" target="_blank"
+              >@bubobubo@post.lurk.org</a
+            >
+          </li>
+        </ul>
+        <li>
+          <a
+            href="https://kabel.salat.dev/#Ly8gc2hhbGwgd2UgdHJhbmNlLCBidXR0b25zICYgc2xpZGVycyB2ZXJzaW9uCi8vIGJ5IHB1bHUgOiBodHRwczovL3B1bHVzb3VuZC5maQoKLy8gdXNlIHRoZSBjb250cm9scyBiZWxvdyB0byB0b2dnbGUgYW5kIHR3ZWFrIHRoZSBzb3VuZHMhCmxldCB0cmFja19jdHJscyA9IFsKICBbQigwKSwgQigwKV0sIC8vIGtpY2s6IG9uLCBmaWxsCiAgW0IoMCksIEIoMCldLCAvLyBoYXQ6IG9uLCBmaWxsCiAgW0IoMCldLCAvLyBzbmFyZTogb24KICBbQigxKV0sIC8vIGJhc3M6IG9uCiAgW0IoMCksIF8oMC4wKV0sIC8vIG1lbDE6IG9uLCBjdXRvZmYKICBbQigwKSwgQigwKSwgXygwLjApXSwgLy8gbWVsMjogb24sIG9jdGF2ZSwgZGVsYXkKICBbQigwKV0sIC8vIG1lbDM6IG9uCl07CmxldCBnbG9iYWxfY3RybHMgPSBbCiAgXygwLjApLCAvLyBtYXN0ZXIgZGVsYXkKXTsKCmxldCBjenJlc3NhdyA9IG1vZHVsZSgiY3pyZXNzYXciLCAoZnJlcSwgbSkgPT4gewogIGxldCBwaGFzZSA9IHNhdyhmcmVxKS51bmlwb2xhcigpOwogIGxldCBzYXd0b290aCA9IHBoYXNlLnN1YigxKTsKICBsZXQgY29zaW5lID0gc2luZSgwLCAwLCBwaGFzZS5tdWwobSkuYWRkKDEpLm1vZCgxKS5zdWIoMC4yNSkpLnJhbmdlKDAsIDEpOwogIHJldHVybiBzYXd0b290aC5tdWwoY29zaW5lKTsKfSk7CgpsZXQgYnpzbSA9IG1vZHVsZSgiYnpzbSIsICh0cmlnLCBmcmVxID0gNTUsIGZhYyA9IDQsIHZzd2VlcCA9IDAuNSkgPT4gewogIGxldCBwMCA9IDAuMDA2Njk5Njg3OwogIGxldCBwMSA9IDAuMDAwMDE4ODQ2MDY7CiAgbGV0IHAgPSBzdWIoMSwgdnN3ZWVwKS5tdWwocDApLmFkZChtdWwodnN3ZWVwLCBwMSkpOwogIGxldCBmcmVxMSA9IGZyZXE7CiAgbGV0IGZyZXEwID0gbXVsKGZyZXExLCBmYWMpOwogIGxldCBmcmVxX3ggPSB0cmlnLmFkKDAsIDEpLnJhbmdlKDEsIDApOwogIGxldCBmcmVxX3kgPSBhZGQoZnJlcTEsIHN1YihmcmVxMCwgZnJlcTEpLmRpdihhZGQoMSwgZnJlcV94LmRpdihwKSkpKTsKICByZXR1cm4gZnJlcV95LnNpbmUodHJpZyk7Cn0pOwoKbGV0IGltcHNlcSA9IG1vZHVsZSgiaW1wc2VxIiwgKHRyaWcsIC4uLnN0ZXApID0%2BCiAgdHJpZy5zZXEoLi4uc3RlcCkubXVsKHRyaWcucGVyYygwKSkKKTsKbGV0IGZlZWQgPSByZWdpc3RlcigiZmVlZCIsICh4LCBmKSA9PgogIHguYXBwbHkoKGRyeSkgPT4gewogICAgbGV0IHdldDsKICAgIHJldHVybiBkcnkKICAgICAgLmFkZCgoeCkgPT4gewogICAgICAgIHdldCA9IGYoeCk7CiAgICAgICAgcmV0dXJuIHdldDsKICAgICAgfSkKICAgICAgLmFwcGx5KHggPT4gd2V0KQogIH0pCik7CgpsZXQgbGFjZSA9IHJlZ2lzdGVyKCJsYWNlIiwgKHgsIC4uLnZhbHMpID0%2BIHsKICBsZXQgbGFjZVByb2R1Y3QgPSAobGlzdHMpID0%2BIHsKICAgIGxldCBjb3VudGVycyA9IEFycmF5KGxpc3RzLmxlbmd0aCkuZmlsbCgwKTsKICAgIGxldCBmaXJzdCA9IHRydWU7CiAgICBsZXQgcmVzdWx0ID0gW107CiAgICB3aGlsZSAoZmlyc3QgfHwgY291bnRlcnMuc29tZSgoYykgPT4gYyA%2BIDApKSB7CiAgICAgIHJlc3VsdC5wdXNoKGNvdW50ZXJzLm1hcCgoYywgaSkgPT4gbGlzdHNbaV1bY10pKTsKICAgICAgY291bnRlcnMuZm9yRWFjaCgoY291bnRlciwgaSkgPT4gewogICAgICAgIGNvdW50ZXJzW2ldID0gKGNvdW50ZXIgKyAxKSAlIGxpc3RzW2ldLmxlbmd0aDsKICAgICAgfSk7CiAgICAgIGZpcnN0ID0gZmFsc2U7CiAgICB9CiAgICByZXR1cm4gcmVzdWx0OwogIH07CgogIGxldCBsYWNlRXhwYW5kT25jZSA9IChsaXN0KSA9PiB7CiAgICBsZXQgc3VibGlzdHMgPSBsaXN0LmZpbHRlcigoeCkgPT4geC5sZW5ndGggPiAwKTsKICAgIGxldCBzdWJsaXN0SW5kaWNlcyA9IGxpc3QKICAgICAgLm1hcCgoeCwgaSkgPT4gaSkKICAgICAgLmZpbHRlcigoaSkgPT4gbGlzdFtpXS5sZW5ndGggPiAwKTsKICAgIGlmIChzdWJsaXN0cy5sZW5ndGggPT09IDApIHsKICAgICAgcmV0dXJuIGxpc3Q7CiAgICB9IGVsc2UgewogICAgICBsZXQgcHJvZHVjdCA9IGxhY2VQcm9kdWN0KHN1Ymxpc3RzKTsKICAgICAgcmV0dXJuIHByb2R1Y3QKICAgICAgICAubWFwKChwcm9kdWN0VmFscywgaSkgPT4gewogICAgICAgICAgbGV0IHN1Ymxpc3Q7CiAgICAgICAgICBzdWJsaXN0ID0gWy4uLmxpc3RdOwogICAgICAgICAgc3VibGlzdEluZGljZXMuZm9yRWFjaCgocHJvZHVjdEluZGV4LCBqKSA9PiB7CiAgICAgICAgICAgIHN1Ymxpc3RbcHJvZHVjdEluZGV4XSA9IHByb2R1Y3RWYWxzW2pdOwogICAgICAgICAgfSk7CiAgICAgICAgICByZXR1cm4gc3VibGlzdDsKICAgICAgICB9KQogICAgICAgIC5mbGF0KCk7CiAgICB9CiAgfTsKCiAgbGV0IGxhY2VFeHBhbmQgPSAobGlzdCkgPT4KICAgIGxhY2VFeHBhbmRPbmNlKGxpc3QubWFwKCh4KSA9PiAoQXJyYXkuaXNBcnJheSh4KSA%2FIGxhY2VFeHBhbmQoeCkgOiB4KSkpOwogIHJldHVybiB4LnNlcSguLi5sYWNlRXhwYW5kKHZhbHMpKTsKfSk7CmxldCBpbXBsYWNlID0gcmVnaXN0ZXIoImltcGxhY2UiLCAodHJpZywgLi4uc3RlcCkgPT4KICB0cmlnLmxhY2UoLi4uc3RlcCkubXVsKHRyaWcucGVyYygwKSkKKTsKCmxldCBjdHJsbWl4ID0gcmVnaXN0ZXIoIm1pZGltaXgiLCAodHJhY2tzKSA9PiB7CiAgcmV0dXJuIGFkZCguLi50cmFja3MubWFwKChtYWtlX3RyYWNrLCBpKSA9PiBtYWtlX3RyYWNrKHRyYWNrX2N0cmxzW2ldLCBpKSkpOwp9KTsKCmxldCBicHMgPSAxMzggLyA2MDsKbGV0IHJvb3QgPSA1OwoKbGV0IGkyeCA9IGltcHVsc2UoYnBzIC8gOCk7CmxldCBpNCA9IGltcHVsc2UoYnBzKTsKbGV0IGk4ID0gaW1wdWxzZShicHMgKiAyKTsKbGV0IGkxNiA9IGltcHVsc2UoYnBzICogNCk7CgpjdHJsbWl4KFsKICAvLyBraWNrCiAgKGMsIGkpID0%2BCiAgICBpNAogICAgICAuYXBwbHkoKGcwKSA9PiB7CiAgICAgICAgbGV0IGcxID0gaTguaW1wc2VxKDAsIDEpLm11bChjWzFdKTsKICAgICAgICBsZXQgZyA9IGFkZChnMCwgZzEpOwogICAgICAgIHJldHVybiBnCiAgICAgICAgICAuYnpzbShtaWRpbm90ZSgyNCArIHJvb3QpLCA1MTIsIDAuOTgpCiAgICAgICAgICAubXVsKGcubXVsKGNbMF0pLmFkKDAuMDAxLCAwLjMpKTsKICAgICAgfSkKICAgICAgLm11bCgxKSwKICAvLyBoYXQKICAoYywgaSkgPT4KICAgIGkxNgogICAgICAuYXBwbHkoKGcpID0%2BCiAgICAgICAgZy5zZXEoLTEsIC0xLCAxLCAtMSkuYXBwbHkoKG0pID0%2BCiAgICAgICAgICBub2lzZSgpCiAgICAgICAgICAgIC5ocGYobS5yYW5nZSgwLjk3LCAwLjk5KSwgMC4xKQogICAgICAgICAgICAubXVsKAogICAgICAgICAgICAgIGNbMV0KICAgICAgICAgICAgICAgIC5hcHBseSgoeikgPT4KICAgICAgICAgICAgICAgICAgZy5pbXBsYWNlKHosIFt6LCBbeiwgMV1dLCAxLCBbeiwgW3osIDFdXSkubXVsKGNbMF0pCiAgICAgICAgICAgICAgICApCiAgICAgICAgICAgICAgICAuYWQoMC4wMDEsIG0ucmFuZ2UoMC4wMywgMC4wNCkpCiAgICAgICAgICAgICAgICAubXVsKG0ucmFuZ2UoMC4yLCAxKSkKICAgICAgICAgICAgKQogICAgICAgICkKICAgICAgKQogICAgICAubXVsKDEuNCksCiAgLy8gc25hcmUKICAoYywgaSkgPT4KICAgIGk4CiAgICAgIC5hcHBseSgoZykgPT4KICAgICAgICBub2lzZSgpCiAgICAgICAgICAubHBmKGcuc2VxKDAuOSwgMC44NyksIDAuMSkKICAgICAgICAgIC5tdWwoCiAgICAgICAgICAgIGcKICAgICAgICAgICAgICAuaW1wbGFjZSgwLCAwLCBbMSwgMF0sIFswLCBbMSwgMF1dKQogICAgICAgICAgICAgIC5tdWwoY1swXSkKICAgICAgICAgICAgICAucGVyYyhnLnNlcSgwLjE3LCAwLjEzKSkKICAgICAgICAgICAgICAuYWRzcigwLjAwMSwgMC4wNCwgMC4yLCAwLjAxKQogICAgICAgICAgKQogICAgICApCiAgICAgIC5tdWwoMS4yKSwKICAvLyBiYXNzCiAgKGMsIGkpID0%2BCiAgICBpMTYKICAgICAgLmltcHNlcSgwLCAxLCAxLCAxKQogICAgICAuYXBwbHkoKGcpID0%2BCiAgICAgICAgZwogICAgICAgICAgLnNlcSgwLCAwLCAxMiwgMTIpCiAgICAgICAgICAuYWRkKGk4LmxhY2UoMCwgMCwgMCwgMCwgMCwgMCwgMCwgWzEsIDRdKSkKICAgICAgICAgIC5hZGQoMjQgKyByb290KQogICAgICAgICAgLm1pZGlub3RlKCkKICAgICAgICAgIC5zYXcoKQogICAgICAgICAgLmxwZihnLmFkKDAsIDAuMDUpLnBvdygyKS5yYW5nZSgwLjEsIDEpKQogICAgICAgICAgLm11bChnLm11bChjWzBdKS5hZCgwLjAwMSwgMC4xKSkKICAgICAgKQogICAgICAubXVsKDAuOSksCiAgLy8gbWVsMQogIChjLCBpKSA9PgogICAgaTE2LmFwcGx5KChnKSA9PgogICAgICBnCiAgICAgICAgLmxhY2UoMCwgMCwgMCwgMCwgMCwgMCwgMCwgMCwgMCwgMCwgMCwgMSwgMSwgMSwgMSwgWy0xLCBbNCwgNV1dKQogICAgICAgIC5hZGQoNDggKyByb290KQogICAgICAgIC5hZGQoWzAuMTIsIC0wLjEyXSkKICAgICAgICAubWlkaW5vdGUoKQogICAgICAgIC5zYXcoKQogICAgICAgIC5taXgoKQogICAgICAgIC5scGYoY1sxXS5iaXBvbGFyKCkucmFuZ2UoMC41LCAxKSkKICAgICAgICAuaHBmKDAuMzUpCiAgICAgICAgLm11bCgKICAgICAgICAgIDAuNCwKICAgICAgICAgIGcKICAgICAgICAgICAgLmltcHNlcSgwLCAwLCAxLCAxLCAxLCAxLCAxLCAxLCAxLCAxLCAxLCAxLCAwLCAxLCAwLCAxKQogICAgICAgICAgICAubXVsKGNbMF0pCiAgICAgICAgICAgIC5wZXJjKG5vaXNlKCkuaG9sZChnKS5yYW5nZXgoMC4wMywgMC4wNykpCiAgICAgICAgICAgIC5hZHNyKDAuMDAxLCAwLjA4LCAxLCAwLjAxKQogICAgICAgICkKICAgICAgICAuYWRkKCh4KSA9PiB4LmRlbGF5KDQuMDEgLyAoNCAqIGJwcykpLm11bCgwLjUpKQogICAgKSwKICAvLyBtZWwyCiAgKGMsIGkpID0%2BCiAgICBpMTYKICAgICAgLmltcHNlcSgxLCAxLCAxLCAxLCAwLCAxLCAwLCAxLCAwKQogICAgICAuYXBwbHkoKGcpID0%2BCiAgICAgICAgZwogICAgICAgICAgLnNlcSgwLCAxLCA0LCA1LCA3LCA4LCAxMSwgMTIsIDExLCA4LCA3LCA1LCA0LCAxKQogICAgICAgICAgLmFkZChnLnNlcSgwLCAwLCAxMiwgMCwgMCwgMCwgMTIsIDApKQogICAgICAgICAgLmFkZCg0OCArIHJvb3QsIGNbMV0uYmlwb2xhcigpLmhvbGQoZykucmFuZ2UoMCwgMTIpKQogICAgICAgICAgLm1pZGlub3RlKCkKICAgICAgICAgIC5jenJlc3NhdygKICAgICAgICAgICAgZwogICAgICAgICAgICAgIC5hZCgwLCAwLjIpCiAgICAgICAgICAgICAgLnJhbmdleCgxLCBzaW5lKHNpbmUoMC4yKS5yYW5nZXgoMC41LCA0LjMpKS5yYW5nZXgoMiwgMjApKQogICAgICAgICAgICAgIC5sYWcoMC4wMSkKICAgICAgICAgICkKICAgICAgICAgIC5tdWwoZy5tdWwoY1swXSkuYWQoMC4wMDEsIHNpbmUoMC41KS5yYW5nZXgoMC4wNSwgMC41KSkpCiAgICAgICAgICAucGFuKGxmbm9pc2UoYnBzICogNCkubGFnKDAuMSkpCiAgICAgICkKICAgICAgLmFwcGx5KChkcnkpID0%2BCiAgICAgICAgZHJ5CiAgICAgICAgICAuZmVlZCgoeCkgPT4KICAgICAgICAgICAgeAogICAgICAgICAgICAgIC5scGYoMC44LCAwLjEpCiAgICAgICAgICAgICAgLmhwZigwLjQpCiAgICAgICAgICAgICAgLmRlbGF5KDMgLyAoNCAqIGJwcykpCiAgICAgICAgICAgICAgLm11bChjWzJdLmJpcG9sYXIoKS5yYW5nZSgwLjIsIDAuNjUpKQogICAgICAgICAgKQogICAgICAgICAgLm11bCgxLjcpCiAgICAgICAgICAuYWRkKGRyeSkKICAgICAgKQogICAgICAubXVsKDAuODkpLAogIC8vIG1lbDMKICAoYywgaSkgPT4KICAgIGkxNgogICAgICAuaW1wbGFjZSgxLCAwLCBbMCwgMCwgMV0pCiAgICAgIC5hcHBseSgoZykgPT4KICAgICAgICBnCiAgICAgICAgICAubGFjZSg3LCA0LCBpMnguc2VxKDEyLCAxMykuaG9sZChnKSkKICAgICAgICAgIC5hZGQoCiAgICAgICAgICAgIDYwICsgcm9vdCwKICAgICAgICAgICAgZy5hZCgwLCBub2lzZSgpLmhvbGQoZykucmFuZ2V4KDAuMDIsIDAuMDUpKS5iaXBvbGFyKCkucmFuZ2UoMTIsIC0xMikKICAgICAgICAgICkKICAgICAgICAgIC5taWRpbm90ZSgpCiAgICAgICAgICAuc2luZSgpCiAgICAgICAgICAubXVsKGcubXVsKGNbMF0pLmFkKDAuMDAxLCAwLjEzKSkKICAgICAgKQogICAgICAubXVsKDAuNikKICAgICAgLnBhbihzaW5lKDAuMzMpLm11bCgwLjcpKQogICAgICAuYWRkKCh4KSA9PiB4LmRlbGF5KDcuOTkgLyAoNCAqIGJwcykpLm11bCgwLjYpKSwKXSkKICAuYXBwbHkoKGRyeSkgPT4KICAgIGRyeQogICAgICAubXVsKGdsb2JhbF9jdHJsc1swXSkKICAgICAgLmZlZWQoKHgpID0%2BCiAgICAgICAgeAogICAgICAgICAgLmhwZigwLjQsIDAuMDcpCiAgICAgICAgICAuZGVsYXkoNiAvICg0ICogYnBzKSkKICAgICAgICAgIC5tdWwoMC40NSkKICAgICAgKQogICAgICAubXVsKDIpCiAgICAgIC5hZGQoZHJ5KQogICkKICAubXVsKDAuOSkKICAub3V0KCk7Cg%3D%3D"
+            target="_blank"
+            >kabel.salat.dev</a
+          >
+        </li>
+      </ul>
+    </section>
+    <section>
+      <p>Kabelsalat + Strudel</p>
+      <!-- <img src="./img/eddyflux_rudolf5.gif" style="width: 800px" /> -->
+      <img src="./img/rudolf_trumpet.jpg" style="width: 800px" />
+      <clone-template tid="chapter0" class="chapters"></clone-template>
+      <p>
+        <a
+          href="https://youtu.be/MXz8131Ut0A?si=NoxgGdzw--e9WqGZ&t=148"
+          target="_blank"
+          >eddyflux Algorave Set @ Rudolf5</a
+        >
+      </p>
+    </section>
+    <section>
+      <p>Kabelsalat + Orca</p>
+      <!-- <img src="./img/janten_jubez.jpg" style="width: 800px" /> -->
+      <img src="./img/janten_solstice.gif" style="width: 800px" />
+      <clone-template tid="chapter0" class="chapters"></clone-template>
+      <p>
+        <a
+          href="https://youtu.be/1mE54z6ijhs?si=AUwOTsqKmU-PEod_&t=491"
+          target="_blank"
+          >Jan Ten @ Solstice Stream December</a
+        >
+      </p>
+      <p>
+        <a
+          href="https://youtu.be/wiHH35GR908?si=eYNqtd2vB0cmwG9G&t=1975"
+          target="_blank"
+          >Jan Ten @ TypeTechno 2.0</a
+        >
+      </p>
+    </section>
+    <!-- <section>
+      <p>Kabelsalat + Midi Controller</p>
+      <img src="./img/pulu_goa.gif" style="width: 800px" /> -->
+    <!-- <img src="./img/ks_pulu_midi.png" style="width: 800px" /> -->
+    <!-- <clone-template tid="chapter0" class="chapters"></clone-template>
+      <p>
+        <a href="https://www.youtube.com/watch?v=uGn2mVF_jkI" target="_blank"
+          >pulu - Goa Trance Jam With Kabelsalat</a
+        >
+      </p>
+    </section> -->
+    <section>
+      <h2>Why Another Live Coding System?</h2>
+      <!-- <clone-template tid="hero0"></clone-template> -->
+      <clone-template tid="chapter0" class="chapters"></clone-template>
+      <node-viz
+        style="margin-top: 40px"
+        code="return tidal().superdirt().supercollider()"
+      ></node-viz>
+      <node-viz
+        style="margin-top: 40px"
+        code="let o = strudel().superdough(); let o2 = o['?'](); o2.color='magenta';return o2;"
+      ></node-viz>
+      <ul>
+        <li>OG goal: live codable audio DSP for Strudel</li>
+        <li>I want to learn: learning through making</li>
+        <li>Inner peace</li>
+        <li><strong>Why not use web tool X Y Z?</strong></li>
+        <ul>
+          <li>Dynamically spawning graphs</li>
+          <li>Single sample feedback</li>
+          <li>I cannot learn from big codebases</li>
+          <li>Minimalism</li>
+          <li>Fun</li>
+        </ul>
+      </ul>
+    </section>
+    <section>
+      <clone-template tid="chapter0" class="chapters"></clone-template>
+      <h2>History</h2>
+      <ul>
+        <li>Started playing with Bytebeat in late 2023</li>
+        <li>
+          Made wacky
+          <a
+            href="https://loophole-letters.netlify.app/patcher/"
+            target="_blank"
+            >Patcher UI</a
+          >
+        </li>
+        <li>
+          Found
+          <a href="https://github.com/maximecb/noisecraft" target="_blank"
+            >noisecraft</a
+          >, adapted it for Live Coding
+        </li>
+        <li>Kabelsalat project started on june 7, 2024</li>
+        <li>also inspired by:</li>
+        <ul>
+          <li>SuperCollider</li>
+          <li>Hydra</li>
+          <li>Strudel</li>
+          <li>"It's like Hydra and Strudel having a baby"</li>
+        </ul>
+        <li>
+          Many details on
+          <a href="https://garten.salat.dev/" target="_blank"
+            >garten.salat.dev</a
+          >
+        </li>
+        <li>In active development</li>
+      </ul>
+      <img src="./img/first_kabel.png" />
+    </section>
+    <section>
+      <clone-template tid="chapter1" class="chapters"></clone-template>
+      <h2>noisecraft</h2>
+      <img src="./img/nc_graph2.png" alt="graph" />
+      <ul>
+        <li>
+          <a href="https://github.com/maximecb/noisecraft" target="_blank"
+            >github.com/maximecb/noisecraft</a
+          >
+        </li>
+        <li>Project by Maxime Chevalier-Boisvert</li>
+        <li>Modular synth patcher for the browser</li>
+        <li>Minimal (readable) codebase</li>
+        <ul>
+          <li>AudioWorklet only</li>
+          <li>Interesting compilation technique</li>
+        </ul>
+      </ul>
+      <ul>
+        <li>Kabelsalat started as a noisecraft fork</li>
+        <li>I gradually adapted it for live coding</li>
+        <li>Ended up rewriting most parts</li>
+        <ul>
+          <li>New compiler</li>
+          <li>Multichannel expansion</li>
+          <li>Feedback anywhere</li>
+          <li>More DSP</li>
+        </ul>
+      </ul>
+    </section>
+    <script>
+      globalThis.tidal = register("tidal");
+      globalThis.superdirt = register("superdirt");
+      globalThis.supercollider = register("supercollider");
+      globalThis.strudel = register("strudel");
+      globalThis.superdough = register("superdough");
+      globalThis["?"] = register("?");
+    </script>
+    <!-- <section>
+      <clone-template tid="chapter1" class="chapters"></clone-template>
+      <h3>Web Audio Nodes used by superdough</h3>
+      <p style="word-break: break-all">
+        AnalyserNode AudioBufferSourceNode AudioDestinationNode AudioWorkletNode
+        BiquadFilterNode ChannelMergerNode ChannelSplitterNode
+        ConstantSourceNode ConvolverNode DelayNode DynamicsCompressorNode
+        GainNode
+        <span style="color: #ffffff50">IIRFilterNode</span>
+        <span style="color: #ffffff50"
+          >MediaElementAudioSourceNode MediaStreamAudioDestinationNode
+          MediaStreamAudioSourceNode</span
+        >
+        OscillatorNode PannerNode StereoPannerNode WaveShaperNode
+      </p>
+      <ul>
+        <li>❌ this is all browser only (no node.js)</li>
+        <li>❌ there are differences between browsers</li>
+        <li>❌ this is hard to port</li>
+        <li>❌ you cannot do single sample feedback</li>
+        <li>❌ it feels clunky to use at times</li>
+        <li>❌ red cross = bad</li>
+      </ul>
+      <pre style="font-size: 0.5em">
+// a frequency modulated sine wave
+const lfo = audioCtx.createOscillator();
+lfo.frequency.value = 2;
+let min = 200,
+  max = 400;
+const lfoGain = audioCtx.createGain();
+lfoGain.gain.value = (max - min) / 2;
+const offset = audioCtx.createConstantSource();
+offset.offset.value = (max + min) / 2;
+const adder = audioCtx.createGain();
+lfo.connect(lfoGain).connect(adder);
+offset.connect(adder);
+offset.start();
+const carrier = audioCtx.createOscillator();
+carrier.frequency.value = 0;
+adder.connect(carrier.frequency);
+carrier.connect(audioCtx.destination);
+carrier.start();
+lfo.start();
+      </pre>
+    </section>
+    <section>
+      <clone-template tid="chapter1" class="chapters"></clone-template>
+      <h3>Web Audio Nodes used by kabelsalat</h3>
+      <p style="color: #ffffff50; word-break: break-all">
+        AnalyserNode AudioBufferSourceNode
+        <span style="color: #ffffff">AudioDestinationNode</span>
+        <span style="color: #ffffff">AudioWorkletNode</span>
+        BiquadFilterNode ChannelMergerNode ChannelSplitterNode
+        ConstantSourceNode ConvolverNode DelayNode DynamicsCompressorNode
+        GainNode IIRFilterNode MediaElementAudioSourceNode
+        MediaStreamAudioDestinationNode MediaStreamAudioSourceNode
+        OscillatorNode PannerNode StereoPannerNode WaveShaperNode
+      </p>
+      <ul>
+        <li>✅ easy to run in node.js</li>
+        <li>✅ no differences between browsers</li>
+        <li>✅ this is easier to port</li>
+        <li>✅ you can do single sample feedback</li>
+        <li>✅ it feels amazing to use</li>
+        <li>✅ green checkmark = good</li>
+      </ul>
+      <pre style="font-size: 0.5em">
+// a frequency modulated sine wave
+sine(2).range(200, 300).sine().out()
+      </pre>
+    </section> -->
+    <section>
+      <clone-template tid="chapter1" class="chapters"></clone-template>
+      <h2>1.graph based</h2>
+      <img src="./img/pd.png" alt="graph" class="hero" />
+      <ul>
+        <li>Pure Data, Max, Modular synths, ...</li>
+        <li>Modules + cables = graph</li>
+        <li>..to model signal flow</li>
+        <li>Each module has inputs and outputs</li>
+      </ul>
+      <node-viz
+        style="margin-top: 40px"
+        code="return saw(55).lpf(200).out()"
+      ></node-viz>
+    </section>
+    <section>
+      <h2>2.language</h2>
+      <clone-template tid="chapter2" class="chapters"></clone-template>
+      <img src="./img/hydra_chaining.jpg" alt="hydra chaining" class="hero" />
+      <p>
+        Source:
+        <a href="https://hydra.ojack.xyz/docs/docs/learning/getting-started/"
+          >Hydra docs</a
+        >
+      </p>
+      <!-- <p>text is...</p>
+      <ul>
+        <li>compact</li>
+        <li>understood</li>
+        <li>standardized</li>
+        <li>fast</li>
+      </ul> -->
+    </section>
+    <template id="example-node">
+      <node-viz
+        code="let n1 = saw(55); n1.color='cyan'; let n2 = lpf(n1, 200); n2.color='magenta'; let n3 = out(n2); n3.color = 'yellow'; return n3;"
+      ></node-viz>
+    </template>
+    <template id="example-node-rl">
+      <node-viz
+        code="let n1 = saw(55); n1.color='cyan'; let n2 = lpf(n1, 200); n2.color='magenta'; let n3 = out(n2); n3.color = 'yellow'; return n3;"
+        dir="RL"
+      ></node-viz>
+    </template>
+    <template id="method-chaining">
+      <p style="text-align: center">Method chaining:</p>
+      <pre
+        class="pristine"
+      ><span style="color:cyan">saw(55)</span>.<span style="color: magenta">lpf(200)</span>.<span style="color: yellow">out()</span></pre>
+    </template>
+    <template id="node-datastructure">
+      <p style="text-align: center">Node data structure:</p>
+      <pre class="pristine" style="font-size: 0.9em">
+<span style="color:yellow">{
+  "type": "out",
+  "ins": [
+    <span style="color:magenta" class="pristine">{
+      "type": "lpf",
+      "ins": [
+        <span style="color:cyan" class="pristine">{
+          "type": "saw",
+          "ins": [55]
+        }</span>
+        200
+      ]
+    }</span>
+  ]
+}</span>
+
+interface Node {
+  type: string;
+  ins: (Node | number)[]
+}</pre>
+    </template>
+    <template id="node-interface">
+      <pre class="pristine" style="font-size: 1em">
+interface Node {
+  type: string;
+  ins: (Node | number)[]
+}</pre
+      >
+    </template>
+    <template id="function-composition"
+      ><p style="text-align: center">Functional composition:</p>
+      <pre
+        class="pristine"
+      ><span style="color: yellow">out(<span style="color: magenta">lpf(<span style="color:cyan">saw(55)</span>, 200)</span>)</span></pre>
+      <!-- <p style="text-align: center">lisp style:</p>
+      <pre
+        class="pristine"
+      ><span style="color: yellow">(out <span style="color: magenta">(lpf <span style="color:cyan">(saw 55)</span> 200)</span>)</span></pre> -->
+    </template>
+    <template id="imperative-steps"
+      ><p style="text-align: center">Imperative steps:</p>
+      <pre class="pristine">
+<span style="color:cyan">r[0] = saw(55)</span>
+<span style="color: magenta">r[1] = lpf(r[0], 200)</span>
+<span style="color: yellow">out(r[1])</span>
+    </pre>
+    </template>
+    <section>
+      <clone-template tid="chapter2" class="chapters"></clone-template>
+      <clone-template tid="example-node" style="width: 600px"></clone-template>
+      <clone-template tid="method-chaining"></clone-template>
+      <ul>
+        <li>Left to right reading</li>
+        <li>No nesting</li>
+        <li>like Hydra / Strudel</li>
+        <li>This is syntactic sugar for...</li>
+      </ul>
+    </section>
+    <section>
+      <clone-template tid="chapter2" class="chapters"></clone-template>
+      <clone-template
+        tid="example-node-rl"
+        style="width: 600px"
+      ></clone-template>
+      <!-- <clone-template tid="method-chaining"></clone-template> -->
+      <clone-template tid="function-composition"></clone-template>
+      <ul>
+        <!-- <li>a(x).b(y) = b(a(x), y)</li> -->
+        <li>Inside out</li>
+        <li>Nesting</li>
+        <li>Less readable</li>
+        <li>These nested functions generate...</li>
+      </ul>
+    </section>
+    <section>
+      <clone-template tid="chapter2" class="chapters"></clone-template>
+      <clone-template
+        tid="example-node-rl"
+        style="width: 600px"
+      ></clone-template>
+      <clone-template tid="node-datastructure"></clone-template>
+
+      <ul>
+        <li>This is like a syntax tree</li>
+        <ul>
+          <li>We can iterate over this</li>
+          <li>We can do cool graph tricks</li>
+          <li>We can optimize it</li>
+          <li>We can compile this to...</li>
+        </ul>
+      </ul>
+    </section>
+    <section>
+      <clone-template tid="chapter2" class="chapters"></clone-template>
+      <clone-template tid="example-node" style="width: 600px"></clone-template>
+      <clone-template tid="imperative-steps"></clone-template>
+      <ul>
+        <li>Machine friendly (low abstraction)</li>
+        <li>Language agnostic</li>
+        <li>Top to bottom</li>
+        <li>Flat call structure</li>
+        <ul>
+          <li>good for JIT compilation</li>
+        </ul>
+      </ul>
+    </section>
+    <!-- <section>
+      <clone-template tid="chapter2" class="chapters"></clone-template>
+      <clone-template tid="example-node"></clone-template>
+      <clone-template tid="method-chaining"></clone-template>
+      <clone-template tid="function-composition"></clone-template>
+      <clone-template tid="node-datastructure"></clone-template>
+      <clone-template tid="imperative-steps"></clone-template>
+    </section> -->
+    <section>
+      <clone-template tid="chapter2" class="chapters"></clone-template>
+      <p>Chain:</p>
+      <node-garden rows="3">return add(4, 2).mul(3).div(2).out()</node-garden>
+    </section>
+    <section>
+      <clone-template tid="chapter2" class="chapters"></clone-template>
+      <p>Tree:</p>
+      <node-garden rows="3">
+        <!--
+return add(8,2).mul( add(3,5) )
+.mul( add(2,3).mul(4) ).out()
+-->
+      </node-garden>
+    </section>
+    <!-- <section>
+      <clone-template tid="chapter2" class="chapters"></clone-template>
+      <p>run method:</p>
+
+      <script>
+        codeblock(document.querySelector("#node-run"), 6);
+      </script>
+    </section> -->
+    <!-- <section>
+      <clone-template tid="chapter2" class="chapters"></clone-template>
+      <p>DAG:</p>
+      <node-garden rows="3"> -->
+    <!--
+let a = add(1, 2)
+return a.mul(3).add(a).out()
+          -->
+    <!-- </node-garden>
+      <ul>
+        <li>DAG = Directed Acyclic Graph</li>
+        <li>Calculate nodes once and memoize result</li>
+      </ul>
+    </section>
+    <section>
+      <clone-template tid="chapter2" class="chapters"></clone-template>
+      <p>DAG:</p>
+      <node-garden rows="3"> -->
+    <!--
+return add(1, 2)
+.apply( a => a.mul(3).add(a) )
+.out()
+          -->
+    <!-- </node-garden>
+      <ul>
+        <li>no intermediate variable needed</li>
+        <li>no break in control flow</li>
+      </ul>
+    </section> -->
+
+    <section>
+      <clone-template tid="chapter2" class="chapters"></clone-template>
+      <p>Multichannel expansion™:</p>
+      <node-garden rows="3">
+        <!--
+return add(1, [2, 3]).mul(4)
+      -->
+      </node-garden>
+      <ul>
+        <li>SuperCollider-like</li>
+        <li>poly-Node propagates through the graph</li>
+        <li>Good for multichannel Audio</li>
+      </ul>
+    </section>
+    <!-- <section>
+      <clone-template tid="chapter2" class="chapters"></clone-template>
+      <p>Channel Matching:</p>
+      <node-garden rows="3"> -->
+    <!--
+return add(1, [2, 3]).mul([4, 5])
+      -->
+    <!-- </node-garden>
+    </section> -->
+    <!-- <section>
+      <clone-template tid="chapter2" class="chapters"></clone-template>
+      <p>feedback:</p>
+      <node-garden rows="3"> -->
+    <!--
+const node = add(1)
+node.ins.push(node)
+return node.out()
+      -->
+    <!-- </node-garden>
+    </section> -->
+    <section>
+      <clone-template tid="chapter2" class="chapters"></clone-template>
+      <p>Feedback with lambdas:</p>
+      <node-garden rows="3">
+        <!--
+return add(1, o=>o).out()
+      -->
+      </node-garden>
+      <p>Don't forget to step through it</p>
+    </section>
+    <!-- <section>
+      <clone-template tid="chapter2" class="chapters"></clone-template>
+      <p>multichannel expansion + feedback:</p>
+      <node-garden rows="3"> -->
+    <!--
+return add([2, 3], o=>o)
+      -->
+    <!-- </node-garden>
+    </section> -->
+    <!-- <section>
+      <h2>2. for</h2>
+      <pre></pre>
+    </section> -->
+    <section>
+      <h2>3.for</h2>
+      <img src="./img/horseflip.gif" class="hero" />
+      <clone-template tid="chapter3" class="chapters"></clone-template>
+      <p>We love repetition</p>
+    </section>
+    <section>
+      <h2>4.audio</h2>
+      <img src="./img/spectrum.png" class="hero" />
+      <clone-template tid="chapter4" class="chapters"></clone-template>
+      <ul>
+        <li>Run ~48000 times per second</li>
+        <li>Make sure result is between -1 and 1</li>
+      </ul>
+    </section>
+    <section>
+      <p>DSP REPL:</p>
+      <clone-template tid="chapter4" class="chapters"></clone-template>
+      <dsp-repl rows="6"
+        ><!-- 
+$.dsp = (t) => {
+  $.l = $.r = sin(241*t * 2*PI)/4
+}
+--></dsp-repl
+      >
+      <ul>
+        <li>the $.dsp function runs for every sample = 48kHz</li>
+        <li>$.l and $.r are the left and right speakers</li>
+      </ul>
+    </section>
+    <section>
+      <clone-template tid="chapter4" class="chapters"></clone-template>
+      <p>Bytebeat example:</p>
+      <dsp-repl rows="7"
+        ><!-- 
+$.dsp = (t) => {
+  t = t*sampleRate;
+  $.l = $.r = ((( // ryg 2011-10-10
+((t*("36364689"[t>>13&7]&15))/12&128)+(((((t>>12)^(t>>12)-2)%11*t)/4|t>>13)&127)
+) & 255) / 127.5 - 1)/8
+}
+--></dsp-repl
+      >
+      <ul>
+        <li>only uses current time and math to make noise</li>
+        <li>ackchually this is floatbeat</li>
+      </ul>
+    </section>
+    <section>
+      <clone-template tid="chapter4" class="chapters"></clone-template>
+      <p>With Kabelsalat:</p>
+      <dsp-repl rows="9" viz="1" dir="LR"
+        ><!--
+register('out', (graph) => {
+  graph.viz()
+  graph = polify(graph).compile()
+  $.dsp = () => graph.update()
+})
+
+sine(241)
+.mul(sine(2).range(.5,1))
+.out() // <- what we registered above
+--></dsp-repl
+      >
+      <!-- <ul>
+        <li>we're still in a bytebeat editor</li>
+      </ul> -->
+    </section>
+    <section>
+      <clone-template tid="chapter4" class="chapters"></clone-template>
+      <p>Multichannel:</p>
+      <!-- next="1" -->
+      <dsp-repl rows="6" viz="1"
+        ><!--
+saw([60,121,239,361]).mix(2)
+.lpf(sine([.4,.6]).range(.6,.8),.2)
+.mul(.4).fadein(1).out()
+--></dsp-repl
+      >
+    </section>
+    <section>
+      <clone-template tid="chapter4" class="chapters"></clone-template>
+      <p>Feedback:</p>
+      <!-- next="1" -->
+      <dsp-repl rows="10" viz="1"
+        ><!--
+saw([55,110,220,330]).lpf( sine(.25).range(.3,.7) )
+.mix(2)
+.mul(impulse(4).perc(.1).lag(.05))
+.add(x=>x.delay(zaw(.01).range(.005,.02)).mul(.9))
+.add(x=>x.delay(.3).mul(.7))
+.fold().mul(.6)
+.out()
+--></dsp-repl
+      >
+    </section>
+    <section>
+      <clone-template tid="chapter4" class="chapters"></clone-template>
+      <p>register</p>
+      <dsp-repl rows="12" font-size="20" viz="1" dir="LR"
+        ><!--
+let fm = register('fm', (freq, fmh, fmi) => {
+  let modfreq = n(freq).mul(fmh)
+  let modgain = modfreq.mul(fmi)
+  return sine(modfreq).mul(modgain).sine()
+})
+
+let imp = impulse(6)
+let blips = imp.seq(50,50,100,50,200)
+ .fm(1.005, sine(.5).range(4,20) )
+ .mul( imp.ad(1,1) )
+
+blips.mul(.5).out()
+    -->
+      </dsp-repl>
+    </section>
+    <section>
+      <clone-template tid="chapter4" class="chapters"></clone-template>
+      <p>registerClass</p>
+      <dsp-repl rows="10" font-size="20" viz="1" dir="LR"
+        ><!--
+class IIRFilter extends Node {
+  p = 0;
+  update(input, cutoff) {
+    this.p = (input * cutoff) + (this.p * (1-cutoff));
+    return this.p;
+  }
+}
+registerClass('iir', IIRFilter)
+
+saw(60).iir(sine(.4).rangex(0.01,1)).mul(.6).out()
+    -->
+      </dsp-repl>
+      <!-- <p>on kabel.salat.dev, this is a bit different (addUgen)</p> -->
+    </section>
+    <!-- <section>
+      <clone-template tid="chapter4" class="chapters"></clone-template>
+      <p>custom ugen: fm</p>
+      <dsp-repl rows="24" font-size="16" viz="1"
+        > -->
+    <!--
+let fm2 = register("fm2", (freq, fmh = 1, fmi = 4) => {
+  let modfreq = n(freq).mul(fmh)
+  let modgain = modfreq.mul(fmi)
+  return sine(modfreq).mul(modgain).sine()
+})
+
+// rootnotes
+let root = impulse(0.125).seq(40, 42, 43, 42).add(2)
+
+$.blips ??= impulse(0.5)
+  .apply((imp) =>
+    imp
+      .seq(0, 12, 7, 15, 3, 7)
+      .add(root)
+      .midinote()
+      .fm2(2.005, imp.ad(0.01, 0.2).bipolar().range(2, 7))
+      .mul(imp.ad(0.02, 0.4))
+      .mul(imp.seq(1, 0, 1, 1, 0))
+      .pan(sine(0.6))
+      .add((x) => x.delay([0.33, 0.12]).mul(0.9))
+  )
+  .mul(0.6)
+
+$.chords ??= n([0, 7, 10])
+  .add(root)
+  //.add(impulse(1).seq(0,0,7,0,12))
+  .midinote()
+  .mul(sine(3).range(0.96, 1.04))
+  .lag(1)
+  .fm2(0.501, 8)
+  .mul(tri(2).range(0.5, 1))
+  .mix(2)
+
+$.bass ??= impulse(2)
+  .seq(0, 0, 0, 7, 0, 12, 0, 1)
+  .add(root)
+  .midinote()
+  .fm2(0.5, sine(2).range(6, 0.2))
+  .distort(0.7)
+
+$.kik ??= impulse(2)
+  .adsr(0, 0.11, 0, 0.11)
+  .apply((env) =>
+    env
+      .mul(env)
+      .mul(158) // frequency range
+      .sine(env)
+      .distort(0.9)
+  )
+
+$.snare ??= impulse(2, 0.5)
+  .seq(0, 1, 0, 1)
+  .adsr(0, 0.1, 0.02, 0.02)
+  .mul(noise())
+  .lpf(0.78, 0.29)
+
+add(
+$.blips, 
+$.chords, 
+$.bass.mul(0), 
+$.kik.mul(0), 
+$.snare.mul(0)
+).out()
+      --><!-- </dsp-repl>
+    </section> -->
+    <!-- <section>
+      <clone-template tid="chapter4" class="chapters"></clone-template>
+      <p>custom ugen: chorus</p>
+      <dsp-repl rows="18" viz="1" font-size="18"
+        > --><!--
+register('chorus', (input, speed, depth = 0.5, phase=Math.random()) => {
+  const maxDelay = n(depth).mul(0.005);
+  let lfo = n(speed).sine(0,phase).range(0, maxDelay);
+  return input.apply(x=>x.add(x.delay(lfo))).mul(.5)
+})
+
+n([0,3,7,10])
+.add(impulse(1).seq(50,50,52,52,54,54,55,56))
+.midinote().lag(0.69)
+.saw()
+.chorus([1,2.1,0.4],0.81)
+.mix(2)
+.lpf(0.50)
+.mul(.6)
+.fadein(.2)
+.out()
+
+      --><!-- </dsp-repl>
+    </section> -->
+    <!-- <section>
+      <clone-template tid="chapter4" class="chapters"></clone-template>
+      <p>stardust:</p>
+      <dsp-repl rows="12" font-size="18" viz="1"
+        > --><!--
+// stardust
+// by pulu : https://pulusound.fi
+let mel = n(sine(0.1).rangex(1, 5)).dust().apply(g => 
+  g.ad(0.001,sine(11.23).rangex(0.07, 0.2)).mul(
+    g.seq(52,57,60,59,45,52,59,45,57).add(g.seq(12,12,24,12,12,12)).midinote()
+      .mul(g.ad(0.001,0.03).bipolar().rangex(1,noise().hold(g).rangex(0.5,2)))
+      .sine()
+      .mul(noise().hold(g).lag(0.001).range(0.2,1))
+      .pan(noise().hold(g).lag(0.003).mul(0.8))
+  )
+)
+  .add(x => x.delay(sine(0.121).rangex(0.333, 0.347)).mul(sine(0.54).rangex(0.3, 0.7)))
+  .add(x => x.delay(sine(0.131).rangex(0.543, 0.557)).mul(sine(0.64).rangex(0.3, 0.7)))
+  .mul(1.05);
+let wind = noise()
+  .mul(dust(18).ad(0.003,0.05).bipolar().rangex(0.6,1))
+  .add(noise().hold(dust(500)))
+  .mul(n(0.7).apply(r => noise().hold(impulse(r)).slew(r).rangex(0.4,1)))
+  .distort(0.5)
+  .lpf(n(0.2).apply(r => noise().hold(impulse(r)).slew(r).rangex(0.5,0.9)),0.2)
+  .hpf(n(0.33).apply(r => noise().hold(impulse(r)).slew(r).rangex(0.3,0.4)))
+  .pan(sine(0.12).mul(0.7))
+  .add(x => x.delay(0.65).mul(0.72))
+  .mul(0.2);
+let drone = add(...[0,7,10,12].map((x,i) =>
+  n(x+45).midinote().sine()
+    .mul(n(x/25).sine(0, i/2*Math.PI).unipolar())
+    .pan(sine(1, 0, i/2*Math.PI).mul(0.6))
+))
+  .mul(0.8);
+add(mel, wind, drone)
+//.spawn(1,4,4)
+.out()
+--><!-- </dsp-repl
+      >
+    </section> -->
+    <section>
+      <h2>4.demos</h2>
+      <img src="./img/biquad.png" class="hero" />
+      <clone-template tid="chapter4" class="chapters"></clone-template>
+      <ul>
+        <li>
+          <a
+            href="https://kabel.salat.dev/#Ly8gcGx1Y2sKLy8gY29tYiBmaWx0ZXIgZnJvbSBmcmVldmVyYgphZGRVZ2VuKCdjb21iJywgY2xhc3MgQ29tYiB7CiAgY29uc3RydWN0b3IoKSB7Cgl0aGlzLmZpbHRlcnN0b3JlID0gMDsKICAgIHRoaXMubWF4U2l6ZSA9IDIyNTA7CiAgICB0aGlzLmJ1ZmlkeCA9IDA7CiAgICB0aGlzLmJ1ZmZlciA9IG5ldyBGbG9hdDMyQXJyYXkodGhpcy5tYXhTaXplKTsKICB9CiAgdXBkYXRlKGlucHV0LCBzaXplLCBkYW1wLCBmZWVkYmFjaykgewoJbGV0IGRhbXAxID0gZGFtcDsgCglsZXQgZGFtcDIgPSAxLWRhbXA7CglsZXQgb3V0cHV0ID0gdGhpcy5idWZmZXJbdGhpcy5idWZpZHhdOwoJLy8gdW5kZW5vcm1hbGlzZShvdXRwdXQpOwoJdGhpcy5maWx0ZXJzdG9yZSA9IChvdXRwdXQgKiBkYW1wMikgKyAodGhpcy5maWx0ZXJzdG9yZSAqIGRhbXAxKTsKCS8vdW5kZW5vcm1hbGlzZSh0aGlzLmZpbHRlcnN0b3JlKTsKCXRoaXMuYnVmZmVyW3RoaXMuYnVmaWR4XSA9IGlucHV0ICsgKHRoaXMuZmlsdGVyc3RvcmUqZmVlZGJhY2spOwogICAgdGhpcy5idWZpZHggPSAodGhpcy5idWZpZHgrMSklc2l6ZTsKCXJldHVybiBvdXRwdXQ7CiAgfQp9KQoKbGV0IHBsdWNrID0gcmVnaXN0ZXIoJ3BsdWNrJywgKAogZnJlcSwgCiBpbXAsIAogZGFtcD0wLjIsCiBmZWVkYmFjaz0uOTksCiBhdHRhY2s9LjAxCikgPT4gewpjb25zdCBzYW1wbGVzID0gbig0NDEwMCkuZGl2KGZyZXEpLnJvdW5kKCkKY29uc3Qgc2Vjb25kcyA9IG4oMSkuZGl2KGZyZXEpOwpyZXR1cm4gaW1wLmFkKGF0dGFjaywgc2Vjb25kcykKLm11bChwaW5rKCkpCi5jb21iKHNhbXBsZXMsZGFtcCxmZWVkYmFjaykKfSkKCgpsZXQgaW1wID0gaW1wdWxzZShbMywyXSkKaW1wLnNlcSgxMDAsIDMwMCwgMjAwLCA1MDAsIDQwMCwgNjAwKQoucGx1Y2soaW1wLCBzaW5lKC4xKS5yYW5nZSguMSwuNiksIC45OSkKLmFkZCh4PT54LmRlbGF5KFsuMjMsLjJdKS5tdWwoLjYpKQoub3V0KCkK"
+            target="_blank"
+            >karplus strong</a
+          >
+        </li>
+        <li>
+          <a
+            href="https://kabel.salat.dev/?p=YWRkVWdlbigndHJpZycsIGNsYXNzIFRyaWcgewogIGNvbnN0cnVjdG9yKCkgewogICAgdGhpcy5oaSA9IGZhbHNlOwogIH0KICB1cGRhdGUoaW5wdXQpIHsKICAgIGlmICghdGhpcy5oaSAmJiBpbnB1dCA%2BIDApIHsKICAgICAgdGhpcy5oaT10cnVlOwogICAgICByZXR1cm4gMTsKICAgIH0KICAgIGlmKHRoaXMuaGkgJiYgaW5wdXQgPD0wKSB7CiAgICAgIHRoaXMuaGk9ZmFsc2U7CiAgICB9CiAgICByZXR1cm4gMDsKICB9Cn0pCgpwdWxzZSgyKQoudHJpZygpIC8vIGNvbW1lbnQgb3V0IHRvIGhlYXIgZGlmZmVyZW5jZQouYXIoLjAxLC4yKQoubXVsKHNpbmUoMjAwKSkub3V0KCk%3D#Ly8gZnJlZXZlcmIKLy8gcG9ydGVkIGZyb20gaHR0cHM6Ly9naXRodWIuY29tL3NpbnNodS9mcmVldmVyYgphZGRVZ2VuKCdjb21iJywgY2xhc3MgQ29tYiB7CiAgY29uc3RydWN0b3IoKSB7Cgl0aGlzLmZpbHRlcnN0b3JlID0gMDsKICAgIHRoaXMubWF4U2l6ZSA9IDIwMDA7CiAgICB0aGlzLmJ1ZmlkeCA9IDA7CiAgICB0aGlzLmJ1ZmZlciA9IG5ldyBGbG9hdDMyQXJyYXkodGhpcy5tYXhTaXplKTsKICB9CiAgdXBkYXRlKGlucHV0LCBzaXplLCBkYW1wLCBmZWVkYmFjaykgewoJbGV0IGRhbXAxID0gZGFtcDsgCglsZXQgZGFtcDIgPSAxLWRhbXA7CglsZXQgb3V0cHV0ID0gdGhpcy5idWZmZXJbdGhpcy5idWZpZHhdOwoJLy8gdW5kZW5vcm1hbGlzZShvdXRwdXQpOwoJdGhpcy5maWx0ZXJzdG9yZSA9IChvdXRwdXQgKiBkYW1wMikgKyAodGhpcy5maWx0ZXJzdG9yZSAqIGRhbXAxKTsKCS8vdW5kZW5vcm1hbGlzZSh0aGlzLmZpbHRlcnN0b3JlKTsKCXRoaXMuYnVmZmVyW3RoaXMuYnVmaWR4XSA9IGlucHV0ICsgKHRoaXMuZmlsdGVyc3RvcmUqZmVlZGJhY2spOwogICAgdGhpcy5idWZpZHggPSAodGhpcy5idWZpZHgrMSklc2l6ZTsKCXJldHVybiBvdXRwdXQ7CiAgfQp9KQoKYWRkVWdlbignYWxscGFzcycsIGNsYXNzIEFsbFBhc3MgewogIGNvbnN0cnVjdG9yKCkgewogICAgdGhpcy5tYXhTaXplID0gMTAwMDsKICAgIHRoaXMuYnVmaWR4ID0gMDsKICAgIHRoaXMuYnVmZmVyID0gbmV3IEZsb2F0MzJBcnJheSh0aGlzLm1heFNpemUpOwogIH0KICB1cGRhdGUoaW5wdXQsIHNpemUsIGZlZWRiYWNrKSB7CiAgICBjb25zdCBidWZvdXQgPSB0aGlzLmJ1ZmZlclt0aGlzLmJ1ZmlkeF07CiAgICBzaXplID0gTWF0aC5taW4oc2l6ZSwgdGhpcy5tYXhTaXplKTsKICAgIHNpemUgPSBNYXRoLm1heChzaXplLCAxKTsKICAgIC8vdW5kZW5vcm1hbGlzZShidWZvdXQpOwogICAgY29uc3Qgb3V0cHV0ID0gYnVmb3V0IC0gaW5wdXQ7CiAgICB0aGlzLmJ1ZmZlclt0aGlzLmJ1ZmlkeF0gPSBpbnB1dCArIGJ1Zm91dCAqIGZlZWRiYWNrOwogICAgdGhpcy5idWZpZHggPSAodGhpcy5idWZpZHggKyAxKSAlIE1hdGgucm91bmQoc2l6ZSk7CiAgICByZXR1cm4gb3V0cHV0OwogIH0KfSkKCmxldCBmcmVldmVyYk1vbm8gPSByZWdpc3RlcignZnJlZXZlcmJNb25vJywgKAogaW5wdXQsIAovLyB3ZXQgPSAxLzMgLy8gMS9zY2FsZXdldAogcm9vbXNpemUgPSAuNSwgLy8gaW5pdGlhbHJvb20KLy8gZHJ5ID0gMCAvLyBpbml0aWFsZHJ5CiBkYW1wPS41LCAvLyBpbml0aWFsZGFtcAogd2V0ID0gLjUsCiBvZmZzZXQ9MCAvLyBzdGVyZW9zcHJlYWQKLy8gd2lkdGggPSAxIC8vIGluaXRpYWx3aWR0aAovLyBtb2RlID0gMCAvLyBpbml0aWFsbW9kZQopID0%2BIHsKcm9vbXNpemUgPSBuKHJvb21zaXplKTsgLy8gc2NhbGVyb29tCmRhbXAgPSBuKGRhbXApLm11bCgwLjQpOyAvLyBzY2FsZWRhbXAKcmV0dXJuIGlucHV0CiAubXVsKDAuMDE1KSAvLyAqIGdhaW4gKD1maXhlZGdhaW4gZm9yIG1vZGUhPT1mcmVlemUpCiAuY29tYigKICBwb2x5KDExMTYsMTE4OCwxMjc3LDEzNTYsMTQyMiwxNDkxLDE1NTcsMTYxNykuYWRkKG9mZnNldCksCiAgLy8gY29tcGlsZSB0aW1lIGFkZDoKICAvL1sxMTE2LDExODgsMTI3NywxMzU2LDE0MjIsMTQ5MSwxNTU3LDE2MTddLm1hcCh2PT52K29mZnNldCksCiAgZGFtcCwgcm9vbXNpemUKICkKIC5zcGxpdChjaHMgPT4gYWRkKC4uLmNocykpIC8vIGFkZCBwYXJhbGxlbCBjb21icwogLmFwcGx5KHg9Pls1NTYsNDQxLDM0MSwyMjVdCiAgLnJlZHVjZSgoYWNjLCB2KT0%2BYWNjLmFsbHBhc3MoCiAgIG4odikuYWRkKG9mZnNldCksCiAgIC8vIHYrb2Zmc2V0LCAvLyBjb21waWxlIHRpbWUgYWRkCiAgIC41KSwgeCkKICkKIC5tdWwod2V0KSAvLyB3ZXQKIC5hZGQoaW5wdXQubXVsKG4oMSkuc3ViKHdldCkpKSAvLyBkcnkKfSkKCi8vIDIgY2hhbm5lbHMgd2l0aCBzdGVyZW9zcHJlYWQgWzAsMjNdIApsZXQgZnJlZXZlcmIgPSByZWdpc3RlcignZnJlZXZlcmInLCAoCiBpbnB1dCwgcm9vbXNpemUsIGRhbXAsIHdldAopID0%2BIHBvbHkoCiBpbnB1dC5mcmVldmVyYk1vbm8ocm9vbXNpemUsIGRhbXAsIHdldCwgMCksCiBpbnB1dC5mcmVldmVyYk1vbm8ocm9vbXNpemUsIGRhbXAsIHdldCwgMjMpCikpCgoKbGV0IGtpY2sgPSBpbXB1bHNlKDIpLmFkc3IoMCwuMTEsMCwuMTEpCiAgLmFwcGx5KGVudiA9PiBlbnYubXVsKGVudikKICAgIC5tdWwoMTU4KSAvLyBmcmVxdWVuY3kgcmFuZ2UKICAgIC5zaW5lKGVudikKICAgIC5kaXN0b3J0KC45KQogICkKCmxldCBzbmFyZSA9IGltcHVsc2UoMiwuNSkuc2VxKDAsMSwwLDEpCi5hZHNyKDAsLjEsLjAyLC4wMikKIC5tdWwobm9pc2UoKSkubHBmKC43OCwuMjkpCgpsZXQgYmxpcHMgPSBpbXB1bHNlKDYpLmFwcGx5KGltcCA9PiBpbXAuc2VxKDEwMCwyMDAsMzAwLDQwMCw1MDAsNjAwLDcwMCkKLm11bCgyKS5zYXcoKQoubXVsKGltcC5hZCguMDEsLjEpKSkKLy8uYWRkKHg9PnguZGVsYXkoLjEyKS5tdWwoLjgpKQoubHBmKF8oMC43MCksLjIpCgpsZXQgaGggPSBub2lzZSgpCi5tdWwoaW1wdWxzZSgxKS5hZCguMDA1LC4wOCkucG93KDQpLmRlbGF5KC41KSkKLmhwZiguOCkKCmFkZCgKIGJsaXBzLAoga2ljay5tdWwoXygwLjAwKS5sYWcoLjEpKSwKIGhoLAogc2F3KDUwKQogIC5scGYoXygwLjY3KS5tdWwoc2luZSgzKS5yYW5nZSguNSwxKSksLjMpCiAgLm11bChzaW5lKDQpLnJhbmdlKC4yLDEpKS5taXgoMSkKICAubXVsKGltcHVsc2UoMikuYWQoLjIsLjUpKQopLm11bChfKDAuNjYpLmxhZyguMikpCi5mcmVldmVyYigKLy8gcm9vbXNpemU6CiBfKDAuOTgpLmJpcG9sYXIoKS5yYW5nZSgwLC45OTk5KSwKLy8gZGFtcDoKIF8oMC4xNCkubXVsKDIpLmFkZCguMDEpLAovLyB3ZXQ6CiBfKDAuNDcpLmxhZyguMSkKKQoubXVsKDAuMikKLmZvbGQoKQouY2xpcCgpCi5vdXQoKTsK"
+            target="_blank"
+            >stereo freeverb</a
+          >
+        </li>
+        <!--  <li>
+          <a
+            href="https://kabel.salat.dev/#Ly8gYmlxdWFkIGZpbHRlcgovLyBodHRwczovL3dlYmF1ZGlvLmdpdGh1Yi5pby9BdWRpby1FUS1Db29rYm9vay9hdWRpby1lcS1jb29rYm9vay5odG1sCmFkZFVnZW4oCiAgImJpcXVhZCIsCiAgY2xhc3MgQmlxdWFkRmlsdGVyIHsKICAgIGNvbnN0cnVjdG9yKCkgewogICAgICAvLyBiaXF1YWQgZXF1YXRpb246CiAgICAgIC8vIHlbbl0gPSAoYjAgKiB4W25dKSArIChiMSAqIHhbbi0xXSkgKyAoYjIgKiB4W24tMl0pIC0gKGExICogeVtuLTFdKSAtIChhMiAqIHlbbi0yXSkKICAgICAgdGhpcy54MSA9IDA7IC8vIHhbbi0xXQogICAgICB0aGlzLngyID0gMDsgLy8geFtuLTJdCiAgICAgIHRoaXMueTEgPSAwOyAvLyB5W24tMV0KICAgICAgdGhpcy55MiA9IDA7IC8vIHlbbi0yXQoKICAgICAgdGhpcy5hMCA9IDE7CiAgICAgIHRoaXMuYTEgPSAwOwogICAgICB0aGlzLmEyID0gMDsKICAgICAgdGhpcy5iMCA9IDE7CiAgICAgIHRoaXMuYjEgPSAwOwogICAgICB0aGlzLmIyID0gMDsKICAgIH0KICAgIHVwZGF0ZShpbnB1dCA9IDAsIHR5cGU9MCwgb21lZ2EgPSAwLjUsIGJhbmR3aWR0aCA9IDEsIGdhaW4gPSAxKSB7CiAgICAgIC8vIHRvIHJlcGxhY2Ugb21lZ2EgaW5wdXQgd2l0aCBmcmVxOgogICAgICAvL2NvbnN0IG9tZWdhID0gMiAqIE1hdGguUEkgKiBmcmVxIC8gc2FtcGxlUmF0ZTsKICAgICAgY29uc3Qgc2luX29tZWdhID0gTWF0aC5zaW4ob21lZ2EpOwogICAgICBjb25zdCBhbHBoYSA9CiAgICAgICAgc2luX29tZWdhICoKICAgICAgICBNYXRoLnNpbmgoKChNYXRoLmxvZygyKSAvIDIpICogYmFuZHdpZHRoICogb21lZ2EpIC8gc2luX29tZWdhKTsKCiAgICAgIGNvbnN0IGNvc19vbWVnYSA9IE1hdGguY29zKG9tZWdhKTsKCiAgICAgIGlmICh0eXBlID09PSAwKSB7CiAgICAgICAgLy8gbG93cGFzcwogICAgICAgIHRoaXMuYjEgPSAxIC0gY29zX29tZWdhOwogICAgICAgIHRoaXMuYjAgPSB0aGlzLmIxIC8gMjsKICAgICAgICB0aGlzLmIyID0gdGhpcy5iMDsKICAgICAgICB0aGlzLmEwID0gMSArIGFscGhhOwogICAgICAgIHRoaXMuYTEgPSAtMiAqIGNvc19vbWVnYTsKICAgICAgICB0aGlzLmEyID0gMSAtIGFscGhhOwogICAgICB9IGVsc2UgaWYgKHR5cGUgPT09IDEpIHsKICAgICAgICAvLyBoaWdocGFzcwogICAgICAgIHRoaXMuYjAgPSAoMSArIGNvc19vbWVnYSkvMjsKICAgICAgICB0aGlzLmIxID0gLSgxICsgY29zX29tZWdhKTsKICAgICAgICB0aGlzLmIyID0gdGhpcy5iMDsKICAgICAgICB0aGlzLmEwID0gMSArIGFscGhhOwogICAgICAgIHRoaXMuYTEgPSAtMiAqIGNvc19vbWVnYTsKICAgICAgICB0aGlzLmEyID0gMSAtIGFscGhhOwogICAgICB9IGVsc2UgaWYgKHR5cGUgPT09IDIpIHsKICAgICAgICAvLyBiYW5kIHBhc3MgKGNvbnN0YW50IHNraXJ0IGdhaW4sIHBlYWsgZ2FpbiA9IFEpCiAgICAgICAgdGhpcy5iMCA9IHNpbl9vbWVnYSAvIDI7CiAgICAgICAgdGhpcy5iMSA9IDA7CiAgICAgICAgdGhpcy5iMiA9IC10aGlzLmIwOwogICAgICAgIHRoaXMuYTAgPSAxICsgYWxwaGE7CiAgICAgICAgdGhpcy5hMSA9IC0yICogY29zX29tZWdhOwogICAgICAgIHRoaXMuYTIgPSAxIC0gYWxwaGE7CiAgICAgIH0gZWxzZSBpZiAodHlwZSA9PT0gMykgewogICAgICAgIC8vIG5vdGNoCiAgICAgICAgdGhpcy5iMCA9IDE7CiAgICAgICAgdGhpcy5iMSA9IC0yICogY29zX29tZWdhOwogICAgICAgIHRoaXMuYjIgPSAxOwogICAgICAgIHRoaXMuYTAgPSAxICsgYWxwaGE7CiAgICAgICAgdGhpcy5hMSA9IC0yICogY29zX29tZWdhOwogICAgICAgIHRoaXMuYTIgPSAxIC0gYWxwaGE7CiAgICAgIH0gZWxzZSBpZiAodHlwZSA9PT0gNCkgewogICAgICAgIC8vIGFsbHBhc3MKICAgICAgICB0aGlzLmIwID0gMSAtIGFscGhhOwogICAgICAgIHRoaXMuYjEgPSAtMiAqIGNvc19vbWVnYTsKICAgICAgICB0aGlzLmIyID0gMSArIGFscGhhOwogICAgICAgIHRoaXMuYTAgPSAxICsgYWxwaGE7CiAgICAgICAgdGhpcy5hMSA9IC0yICogY29zX29tZWdhOwogICAgICAgIHRoaXMuYTIgPSAxIC0gYWxwaGE7CiAgICAgIH0gZWxzZSBpZiAodHlwZSA9PT0gNSkgewogICAgICAgIC8vIHBlYWtpbmcKICAgICAgICBjb25zdCBBID0gTWF0aC5wb3coMTAsIGdhaW4gLyA0MCk7CiAgICAgICAgdGhpcy5iMCA9IDEgKyBhbHBoYSAqIEE7CiAgICAgICAgdGhpcy5iMSA9IC0yICogY29zX29tZWdhOwogICAgICAgIHRoaXMuYjIgPSAxIC0gYWxwaGEgKiBBOwogICAgICAgIHRoaXMuYTAgPSAxICsgYWxwaGEgLyBBOwogICAgICAgIHRoaXMuYTEgPSAtMiAqIGNvc19vbWVnYTsKICAgICAgICB0aGlzLmEyID0gMSAtIGFscGhhIC8gQTsKICAgICAgfSBlbHNlIGlmICh0eXBlID09PSA2KSB7CiAgICAgICAgLy8gbG93c2hlbGYKICAgICAgICBjb25zdCBBID0gTWF0aC5wb3coMTAsIGdhaW4gLyA0MCk7CiAgICAgICAgY29uc3Qgc3FydDJBYSA9IDIqTWF0aC5zcXJ0KEEpKmFscGhhOwogICAgICAgIGNvbnN0IGFtMXcwID0gKEEtMSkqY29zX29tZWdhOwogICAgICAgIGNvbnN0IGFwMXcwID0gKEErMSkqY29zX29tZWdhOwogICAgICAgIHRoaXMuYjAgPSBBKigoQSsxKSAtIGFtMXcwICsgc3FydDJBYSk7CiAgICAgICAgdGhpcy5iMSA9IDIqQSooKEEtMSkgLSBhcDF3MCk7CiAgICAgICAgdGhpcy5iMiA9IEEqKChBKzEpIC0gYW0xdzAgLSBzcXJ0MkFhKTsKICAgICAgICB0aGlzLmEwID0gKEErMSkgKyBhbTF3MCArIHNxcnQyQWE7CiAgICAgICAgdGhpcy5hMSA9IC0yICogKChBLTEpICsgYXAxdzApOwogICAgICAgIHRoaXMuYTIgPSAoQSsxKSArIGFtMXcwIC0gc3FydDJBYTsKICAgICAgfSBlbHNlIGlmICh0eXBlID09PSA3KSB7CiAgICAgICAgLy8gaGlnaHNoZWxmCiAgICAgICAgY29uc3QgQSA9IE1hdGgucG93KDEwLCBnYWluIC8gNDApOwogICAgICAgIGNvbnN0IHNxcnQyQWEgPSAyKk1hdGguc3FydChBKSphbHBoYTsKICAgICAgICBjb25zdCBhbTF3MCA9IChBLTEpKmNvc19vbWVnYTsKICAgICAgICBjb25zdCBhcDF3MCA9IChBKzEpKmNvc19vbWVnYTsKICAgICAgICB0aGlzLmIwID0gQSooKEErMSkgKyBhbTF3MCArIHNxcnQyQWEpOwogICAgICAgIHRoaXMuYjEgPSAtMipBKigoQS0xKSArIGFwMXcwKTsKICAgICAgICB0aGlzLmIyID0gQSooKEErMSkgKyBhbTF3MCAtIHNxcnQyQWEpOwogICAgICAgIHRoaXMuYTAgPSAoQSsxKSAtIGFtMXcwICsgc3FydDJBYTsKICAgICAgICB0aGlzLmExID0gMiAqICgoQS0xKSAtIGFwMXcwKTsKICAgICAgICB0aGlzLmEyID0gKEErMSkgLSBhbTF3MCAtIHNxcnQyQWE7CiAgICAgIH0KICAgICAgdGhpcy5iMCAvPSB0aGlzLmEwOwogICAgICB0aGlzLmIxIC89IHRoaXMuYTA7CiAgICAgIHRoaXMuYjIgLz0gdGhpcy5hMDsKICAgICAgdGhpcy5hMSAvPSB0aGlzLmEwOwogICAgICB0aGlzLmEyIC89IHRoaXMuYTA7CiAgICAgIHRoaXMuYTAgPSAxOwoKICAgICAgY29uc3Qgb3V0cHV0ID0KICAgICAgICB0aGlzLmIwICogaW5wdXQgKwogICAgICAgIHRoaXMuYjEgKiB0aGlzLngxICsKICAgICAgICB0aGlzLmIyICogdGhpcy54MiAtCiAgICAgICAgdGhpcy5hMSAqIHRoaXMueTEgLQogICAgICAgIHRoaXMuYTIgKiB0aGlzLnkyOwoKICAgICAgdGhpcy54MiA9IHRoaXMueDE7CiAgICAgIHRoaXMueDEgPSBpbnB1dDsKICAgICAgdGhpcy55MiA9IHRoaXMueTE7CiAgICAgIHRoaXMueTEgPSBvdXRwdXQ7CgogICAgICByZXR1cm4gb3V0cHV0OwogICAgfQogIH0KKTsKCnBpbmsoKQouYmlxdWFkKAogaW1wdWxzZSguNSkuc2VxKDAsMSwyLDMsNCw1LDYsNyksIC8vIHR5cGUKIHRyaSgwLjUpLnJhbmdleCgwLjEsIDAuNyksIAogMSwgCiAyMCwgLy9nYWluCikuZGl2KDEwKS5vdXQoKTsK"
+            target="_blank"
+            >biquad filter</a
+          >
+        </li> -->
+      </ul>
+    </section>
+    <section>
+      <h2>5.visual</h2>
+      <img
+        src="./img/mechanicalgif2.gif"
+        class="hero"
+        style="height: 600px; width: 600px"
+      />
+      <clone-template tid="chapter5" class="chapters"></clone-template>
+      <ul>
+        <li>Graphs are also useful for visuals</li>
+        <li>Proof of concept: hydro</li>
+        <li>Compiles Kabelsalat Node's to GLSL code</li>
+        <li>
+          <a href="https://codeberg.org/froos/hydro" target="_blank"
+            >codeberg.org/froos/hydro</a
+          >
+        </li>
+      </ul>
+    </section>
+    <section>
+      <clone-template tid="chapter5" class="chapters"></clone-template>
+
+      <iframe
+        id="hydroFrame"
+        src="hydro.html"
+        style="border: 0; width: 800px; height: 500px"
+      ></iframe>
+      <textarea
+        spellcheck="false"
+        id="hydroInput"
+        rows="6"
+        style="font-size: 0.6em"
+      ></textarea>
+      <div id="hydroViz" style="height: 800px"></div>
+      <script>
+        hydroInput.value = `// 3.3 by ΔNDR0M3DΔ, CC BY-NC-SA 4.0
+osc().modulateRotate(o0,0.3).out()
+osc(33,0.3,0.3).diff(o3,3).out(o1)
+osc(3,0.3,33).modulateKaleid(o3,3).diff(o0).out(o2)
+src(o0,3).mult(o1,3).kaleid(3).out(o3)
+render(o2)`;
+        let hydroMsg = (msg) => hydroFrame.contentWindow.postMessage(msg);
+        let updateHydro = (code) => hydroMsg({ code });
+        let stopHydro = (code) => hydroMsg({ stop: true });
+        const typeFunctions = {
+          vec2: [
+            "st",
+            "rotate",
+            "scale",
+            "pixelate",
+            "repeat",
+            "repeatX",
+            "repeatY",
+            "kaleid",
+            "scroll",
+            "scrollX",
+            "scrollY",
+            "modulateRepeat",
+            "modulateRepeatX",
+            "modulateRepeatY",
+            "modulateKaleid",
+            "modulateScrollX",
+            "modulateScrollY",
+            "modulate",
+            "modulateScale",
+            "modulatePixelate",
+            "modulateRotate",
+            "modulateHue",
+          ],
+          vec4: [
+            "noise",
+            "voronoi",
+            "osc",
+            "shape",
+            "gradient",
+            "src",
+            "solid",
+            "prev",
+            "posterize",
+            "shift",
+            "invert",
+            "contrast",
+            "brightness",
+            "luma",
+            "thresh",
+            "color",
+            "saturate",
+            "hue",
+            "colorama",
+            "sum",
+            "r",
+            "g",
+            "b",
+            "a",
+            "add",
+            "sub",
+            "layer",
+            "blend",
+            "mult",
+            "diff",
+            "mask",
+            "out",
+            "render",
+          ],
+        };
+        const typeColor = {
+          vec2: "yellow",
+          vec4: "magenta",
+        };
+        function getType(functionName) {
+          if (functionName.startsWith("_")) {
+            functionName = functionName.slice(1);
+          }
+          const match = Object.entries(typeFunctions).find(([key, fns]) =>
+            fns.includes(functionName)
+          );
+          return match?.[0];
+        }
+        function getFunctionColor(functionName) {
+          const type = getType(functionName);
+          if (type) {
+            return typeColor[type];
+          }
+          return "white";
+        }
+        window.hydroOut = (outputs) => {
+          const output = {
+            type: "render",
+            ins: Object.values(outputs).map((output, i) => ({
+              type: "out",
+              ins: [output, i],
+            })),
+          };
+          renderNode(
+            output,
+            hydroViz,
+            (gvnode, node) => {
+              gvnode.color = getFunctionColor(node.type);
+              return gvnode;
+            },
+            (gvedge, target, i) => {
+              gvedge.color = getFunctionColor(target.ins[i].type);
+              return gvedge;
+            },
+            "TB"
+          );
+        };
+
+        let maybeRender = () => {
+          const slide = getSlide();
+          if (slide.contains(hydroFrame)) {
+            updateHydro(hydroInput.value);
+          } else {
+            stopHydro();
+          }
+        };
+        /* maybeRender(); */
+        document.addEventListener("change-slide", () => maybeRender());
+        hydroInput.addEventListener("keydown", (e) => {
+          if ((e.ctrlKey || e.altKey) && e.key === "Enter") {
+            updateHydro(e.target.value);
+          }
+          if ((e.ctrlKey || e.altKey) && e.code === "Period") {
+            stopHydro();
+          }
+        });
+        /* hydroMsg({ code: hydroInput.value }); */
+      </script>
+    </section>
+    <section>
+      <h2>6.live coding</h2>
+      <clone-template tid="chapter6" class="chapters"></clone-template>
+      <img src="./img/strudel_atnight.jpg" class="hero" />
+      <ul>
+        <li>How can we interact with the code?</li>
+        <ul>
+          <li>by text</li>
+          <li>by in-source UI</li>
+          <li>via MIDI</li>
+        </ul>
+        <li>What happens when we update the code?</li>
+        <li>How do we maintain a sense of time</li>
+      </ul>
+    </section>
+    <section>
+      <clone-template tid="chapter6" class="chapters"></clone-template>
+      <p>In-source UI</p>
+      <img src="./img/ks_widgets_demo2.gif" style="width: 700px" />
+    </section>
+    <section>
+      <clone-template tid="chapter6" class="chapters"></clone-template>
+      <p>spawn:</p>
+      <dsp-repl rows="6" viz="1" dir="LR"
+        ><!--
+$.m ??= 0 // init to 0
+$.m = ($.m+5)%24+50
+
+midinote($.m).sine().spawn(2, .1, 1)
+--></dsp-repl
+      >
+      <ul>
+        <li>Global mutable variables via $</li>
+        <li>Spawn to fade between 2 or more graphs</li>
+        <li>-> No audible cracks</li>
+      </ul>
+    </section>
+    <section>
+      <clone-template tid="chapter6" class="chapters"></clone-template>
+      <p>Maintain time:</p>
+      <!-- next="1" -->
+      <dsp-repl rows="10" viz="1" dir="LR"
+        ><!--
+$.seq ??= impulse(4).seq(120,240,360,480)
+
+tri($.seq)
+.spawn()
+--></dsp-repl
+      >
+      <ul>
+        <li>"??=" -> nullish coalescing assignment</li>
+        <li>.. block based evaluation (TBD)</li>
+      </ul>
+    </section>
+    <!-- <section>
+      <clone-template tid="chapter6" class="chapters"></clone-template>
+      <p>dynamic spawn:</p>
+      <dsp-repl rows="10" viz="1"
+        > --><!--
+    $.m ??= 0
+$.m = ($.m+5)%12
+
+let env = impulse(0).ad(.02,.4)
+n($.m+52).add([0,3,7,10,14]).midinote()
+.pulse(.2).mix(2)
+.lpf(env,.3).div(4)
+.mul(env)
+.add(x=>x.delay(.16).mul(.5))
+.spawn(2, 0, .1)
+--><!-- </dsp-repl
+      >
+    </section> -->
+    <section>
+      <h2>7.on the web</h2>
+      <img src="./img/strudel_cybercafe.png" class="hero" />
+      <clone-template tid="chapter7" class="chapters"></clone-template>
+    </section>
+    <section>
+      <p>Strudel -> Kabelsalat</p>
+      <clone-template tid="chapter7" class="chapters"></clone-template>
+      <img src="./img/nudelsalat.png" style="width: 860px" />
+      <a href="https://www.youtube.com/watch?v=9zAx1kFr-yY" target="_blank"
+        >youtube.com/watch?v=9zAx1kFr-yY</a
+      >
+      come jam on nudel.cc
+    </section>
+    <section>
+      <p>Kabelsalat -> Strudel</p>
+      <clone-template tid="chapter7" class="chapters"></clone-template>
+      <img src="./img/strudelsalat.png" style="width: 860px" />
+    </section>
+    <section>
+      <p>Blocksalat</p>
+      <clone-template tid="chapter7" class="chapters"></clone-template>
+      <img src="./img/blocksalat.png" style="width: 860px" />
+      <a href="https://block.salat.dev" target="_blank">block.salat.dev</a>
+    </section>
+    <section>
+      <p>tldaw</p>
+      <clone-template tid="chapter7" class="chapters"></clone-template>
+      <img src="./img/tldaw.png" style="width: 860px" />
+      <a href="https://felixroos.github.io/tldaw/" target="_blank"
+        >felixroos.github.io/tldaw (broken)</a
+      >
+    </section>
+    <section>
+      <h2>8.and beyond</h2>
+      <clone-template tid="chapter8" class="chapters"></clone-template>
+      <ul>
+        <li>C compilation</li>
+        <li>Mondo Kabelsalat</li>
+        <li>WebAssembly Kabelsalat</li>
+        <li>KabelSalat -> sclang</li>
+        <li>What would you do with this?</li>
+      </ul>
+    </section>
+    <section>
+      <img src="./img/itsallgraphs.png" />
+      <clone-template tid="chapter0" class="chapters"></clone-template>
+      <p>Thanks</p>
+      <ul>
+        <li>Raphael Forment</li>
+        <li>Maxime Chevalier-Boisvert</li>
+        <!-- <li>yaxu</li> -->
+        <li>ICLC</li>
+        <li>You</li>
+      </ul>
+    </section>
+    <div
+      style="
+        display: flex;
+        position: fixed;
+        bottom: 0;
+        width: 100%;
+        justify-content: space-between;
+      "
+    >
+      <button style="font-size: 1.5em" id="prevSlideButton">prev</button>
+      <button style="font-size: 1.5em" id="nextSlideButton">next</button>
+    </div>
+    <script>
+      const slides = Array.from(document.querySelectorAll("section"));
+      let slideIndex = Number(window.location.hash.slice(1)) || 0;
+      function getSlide() {
+        return slides[slideIndex];
+      }
+      let setSlideIndex = (index) => {
+        slideIndex = index % slides.length;
+        document.dispatchEvent(
+          new CustomEvent("change-slide", {
+            detail: slideIndex,
+          })
+        );
+        slides.forEach((slide, i) => {
+          //slide.style.display = "none";
+          if (i < slideIndex) {
+            /* slide.style.transform = "translate(-100vw)"; */
+            slide.style.opacity = "0";
+            slide.style.pointerEvents = "none";
+          } else if (i === slideIndex) {
+            /* slide.style.transform = "translate(0px,0px)"; */
+            slide.style.opacity = "1";
+            //slide.style.display = "flex";
+            slide.style.pointerEvents = "inherit";
+          } else if (i > slideIndex) {
+            /* slide.style.transform = "translate(100vw)"; */
+            slide.style.opacity = "0";
+            slide.style.pointerEvents = "none";
+          }
+          // slide.style.display = "none";
+        });
+        const slide = slides[slideIndex];
+        // slide.style.display = "flex";
+        window.location.hash = slideIndex;
+      };
+      setSlideIndex(slideIndex);
+      let nextSlide = () => setSlideIndex((slideIndex + 1) % slides.length);
+      let prevSlide = () =>
+        setSlideIndex((slideIndex - 1 + slides.length) % slides.length);
+      window.nextSlide = nextSlide;
+      window.prevSlide = prevSlide;
+      document.onkeydown = (e) => {
+        if (e.ctrlKey) {
+          if (e.key === "ArrowLeft") {
+            prevSlide();
+          } else if (e.key === "ArrowRight") {
+            nextSlide();
+          }
+        }
+      };
+      nextSlideButton.onclick = nextSlide;
+      prevSlideButton.onclick = prevSlide;
+    </script>
+  </body>
+</html>

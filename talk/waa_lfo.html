@@ -1,0 +1,28 @@
+<script>
+  document.onclick = () => {
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    const lfo = audioCtx.createOscillator();
+    lfo.frequency.value = 2;
+    let min = 200,
+      max = 400;
+
+    const lfoGain = audioCtx.createGain();
+    lfoGain.gain.value = (max - min) / 2;
+    const offset = audioCtx.createConstantSource();
+    offset.offset.value = (max + min) / 2;
+
+    const adder = audioCtx.createGain();
+    lfo.connect(lfoGain).connect(adder);
+    offset.connect(adder);
+    offset.start();
+
+    const carrier = audioCtx.createOscillator();
+    carrier.frequency.value = 0;
+    adder.connect(carrier.frequency);
+    carrier.connect(audioCtx.destination);
+
+    carrier.start();
+    lfo.start();
+  };
+</script>

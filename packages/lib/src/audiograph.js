@@ -210,7 +210,7 @@ class Unit {
     this.nodes = [];
     this.active = true;
 
-    for (let i in schema.ugens) {
+    for (let i in schema.ugens) { // TODO: for in is slow?
       const ugen = schema.ugens[i];
       if (UGENS.has(ugen.type)) {
         const nodeClass = UGENS.get(ugen.type);
