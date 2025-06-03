@@ -1,4 +1,4 @@
-import { For, createSignal } from "solid-js";
+import { createSignal, For } from "solid-js";
 import { nodeRegistry } from "@kabelsalat/core";
 import { MiniRepl } from "./MiniRepl.jsx";
 
@@ -63,8 +63,7 @@ export function Reference() {
                     ? "bg-teal-700"
                     : "bg-stone-700")
                 }
-                onClick={() => toggleTag(tag)}
-              >
+                onClick={() => toggleTag(tag)}>
                 {tag} ({tagRefs[tag]})
               </a>{" "}
             </>
@@ -84,8 +83,7 @@ export function Reference() {
                   const container = document.getElementById("scroll-container");
                   const pos = el.offsetTop - container.offsetTop - 10;
                   container.scrollTo(0, pos);
-                }}
-              >
+                }}>
                 {name}
               </a>{" "}
             </>

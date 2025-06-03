@@ -1,14 +1,15 @@
-import { Show, createSignal, onCleanup, onMount } from "solid-js";
+import { createSignal, onCleanup, onMount, Show } from "solid-js";
 import "@kabelsalat/graphviz";
 import { SalatRepl } from "@kabelsalat/web";
 import { Icon } from "./Icon";
 import { Reference } from "./Reference";
+import { $settings, Settings } from "./Settings";
 import { examples } from "../examples";
 import { persistentAtom } from "@nanostores/persistent";
 import { useStore } from "@nanostores/solid";
-import { History, addToHistory, $history } from "./History";
+import { $history, addToHistory, History } from "./History";
 import { Codemirror, codemirrorView } from "./Codemirror";
-import { updateWidgets, flash } from "@kabelsalat/codemirror";
+import { flash, updateWidgets } from "@kabelsalat/codemirror";
 import { transpiler } from "@kabelsalat/transpiler";
 
 export const $hideWelcome = persistentAtom("hideWelcome", "false");
@@ -52,7 +53,9 @@ let vizSettings = { resolveModules: false };
 let TAB_GRAPH = "graph";
 let TAB_DOCS = "docs";
 let TAB_PATCHES = "browse";
-const panels = [TAB_GRAPH, TAB_PATCHES, TAB_DOCS];
+let TAB_SETTINGS = "settings";
+
+const panels = [TAB_GRAPH, TAB_PATCHES, TAB_DOCS, TAB_SETTINGS];
 
 function getURLCode() {
   let url = new URL(window.location);
@@ -80,6 +83,7 @@ function updateCode(code) {
 }
 
 export function Repl() {
+  const settings = useStore($settings);
   let [started, setStarted] = createSignal(false);
   let [recording, setRecording] = createSignal(false);
   const repl = new SalatRepl({
@@ -135,16 +139,14 @@ export function Repl() {
           <div
             class={`font-bold font-mono text-xl
         bg-gradient-to-r from-teal-400 to-fuchsia-300 inline-block text-transparent bg-clip-text cursor-pointer`}
-            onClick={() => setZen((z) => !z)}
-          >
+            onClick={() => setZen((z) => !z)}>
             🔌 kabelsalat
           </div>
           <Show when={!zen()}>
             <div class="flex justify-start items-center space-x-4 font-light">
               <button
                 onClick={() => (started() ? repl.stop() : run())}
-                class="items-center flex space-x-1 hover:opacity-50"
-              >
+                class="items-center flex space-x-1 hover:opacity-50">
                 {!started() ? (
                   <>
                     <Icon type="play" />
@@ -159,8 +161,7 @@ export function Repl() {
               </button>
               <button
                 onClick={() => run()}
-                class="items-center flex space-x-1 hover:opacity-50"
-              >
+                class="items-center flex space-x-1 hover:opacity-50">
                 <Icon type="refresh" />
                 <span class="hidden sm:block">run</span>
               </button>
@@ -168,8 +169,7 @@ export function Repl() {
                 onClick={() =>
                   recording() ? repl.stopRecording() : repl.record()
                 }
-                class="items-center flex space-x-1 hover:opacity-50"
-              >
+                class="items-center flex space-x-1 hover:opacity-50">
                 {!recording() ? (
                   <>
                     <Icon type="record" />
@@ -184,8 +184,7 @@ export function Repl() {
               </button>
               <a
                 class="items-center flex space-x-1 hover:opacity-50"
-                href="/learn"
-              >
+                href="/learn">
                 <Icon type="learn" />
                 <span class="hidden sm:block">learn</span>
               </a>
@@ -199,8 +198,7 @@ export function Repl() {
             started() ? "animate-pulse" : ""
           } 
         bg-gradient-to-r from-teal-400 to-fuchsia-300 inline-block text-transparent bg-clip-text cursor-pointer fixed top-2 right-4 z-10`}
-          onClick={() => setZen((z) => !z)}
-        >
+          onClick={() => setZen((z) => !z)}>
           🔌
         </div>
       </Show>
@@ -230,9 +228,9 @@ export function Repl() {
       <div
         class={`grid flex-auto shrink grow overflow-hidden ${
           zen() ? `sm:grid-cols-1` : "sm:grid-cols-2"
-        }`}
-      >
+        }`}>
         <Codemirror
+          settings={settings()}
           code={code()}
           onChange={setCode}
           onEvaluate={() => run()}
@@ -240,8 +238,7 @@ export function Repl() {
         />
         <Show when={!zen()}>
           <div
-            class={`hidden sm:flex flex-col h-full overflow-hidden border-l border-stone-800`}
-          >
+            class={`hidden sm:flex flex-col h-full overflow-hidden border-l border-stone-800`}>
             <nav class={`border-b border-stone-800 py-0 px-4 flex space-x-4`}>
               <For each={panels}>
                 {(panel) => (
@@ -252,8 +249,7 @@ export function Repl() {
                       (activePanel() === panel
                         ? `border-b-2 border-teal-600`
                         : "")
-                    }
-                  >
+                    }>
                     {panel}
                   </div>
                 )}
@@ -261,8 +257,7 @@ export function Repl() {
             </nav>
             <div
               id="scroll-container"
-              class={`select-none bg-stone-900 overflow-auto text-gray-500 p-4 grow-0 h-full`}
-            >
+              class={`select-none bg-stone-900 overflow-auto text-gray-500 p-4 grow-0 h-full`}>
               <Show when={activePanel() === TAB_GRAPH}>
                 <div
                   ref={(el) => {
@@ -274,13 +269,17 @@ export function Repl() {
                     } catch (err) {
                       handleError(err);
                     }
-                  }}
-                ></div>
+                  }}></div>
               </Show>
               <Show when={activePanel() === TAB_DOCS}>
                 <div class="prose prose-invert">
                   <h2>reference</h2>
                   <Reference />
+                </div>
+              </Show>
+              <Show when={activePanel() === TAB_SETTINGS}>
+                <div class="prose prose-invert">
+                  <Settings />
                 </div>
               </Show>
               <Show when={activePanel() === TAB_PATCHES}>
@@ -294,8 +293,7 @@ export function Repl() {
                             ? " border-b border-teal-600"
                             : ""
                         }`}
-                        onClick={() => run(example.code)}
-                      >
+                        onClick={() => run(example.code)}>
                         {example.label}
                       </a>
                     </div>

@@ -4,16 +4,25 @@ import { javascript } from "@codemirror/lang-javascript";
 import { insertNewline } from "@codemirror/commands";
 import { widgetPlugin } from "./widgets.js";
 import { flashField } from "./flash.js";
+import { keybindings } from "./keybindings.js";
 import {
-  lineNumbers,
-  highlightActiveLineGutter,
   highlightActiveLine,
+  highlightActiveLineGutter,
   keymap,
+  lineNumbers,
 } from "@codemirror/view";
 import { bracketMatching } from "@codemirror/language";
-import { Prec } from "@codemirror/state";
+import { Compartment, Prec } from "@codemirror/state";
 
-export function initEditor({ root, code, onChange, onEvaluate, onStop }) {
+export function initEditor({
+  root,
+  code,
+  settings,
+  onChange,
+  onEvaluate,
+  onStop,
+}) {
+  const keybindingsCompartment = new Compartment();
   let editor = new EditorView({
     extensions: [
       //basicSetup,
@@ -26,6 +35,7 @@ export function initEditor({ root, code, onChange, onEvaluate, onStop }) {
       widgetPlugin,
       EditorView.lineWrapping,
       javascript(),
+      keybindingsCompartment.of(keybindings(settings.keybindings)),
       EditorView.updateListener.of((v) => {
         if (v.docChanged) {
           onChange?.(v.state.doc.toString());
@@ -64,6 +74,7 @@ export function initEditor({ root, code, onChange, onEvaluate, onStop }) {
     ],
     parent: root,
   });
+
   const setCode = (code) => {
     const changes = {
       from: 0,
@@ -72,9 +83,15 @@ export function initEditor({ root, code, onChange, onEvaluate, onStop }) {
     };
     editor.dispatch({ changes });
   };
-  setCode(code);
 
+  setCode(code);
   const getCode = () => editor.state.doc.toString();
 
-  return { setCode, getCode, editor };
+  const setKeybindings = (bindings) => {
+    editor.dispatch({
+      effects: keybindingsCompartment.reconfigure(keybindings(bindings)),
+    });
+  };
+
+  return { setCode, getCode, editor, setKeybindings };
 }
