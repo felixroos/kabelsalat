@@ -4,6 +4,33 @@ export class Node {
     value !== undefined && (this.value = value);
     this.ins = [];
   }
+  static parseInput(input, node) {
+    if (typeof input === "function") {
+      if (!node) {
+        throw new Error(
+          "tried to parse function input without without passing node.."
+        );
+      }
+      return input(node);
+    }
+    if (typeof input === "object") {
+      // is node
+      return input;
+    }
+    if (typeof input === "number" && !isNaN(input)) {
+      return n(input);
+    }
+    if (typeof input === "string") {
+      return n(input);
+    }
+    console.log(
+      `invalid input type "${typeof input}" for node of type "${
+        node.type
+      }", falling back to 0. The input was:`,
+      input
+    );
+    return 0;
+  }
 }
 export const node = (type, value) => new Node(type, value);
 
@@ -11,34 +38,6 @@ export let nodeRegistry = new Map();
 
 const polyType = "poly";
 const outputType = "exit";
-
-function parseInput(input, node) {
-  if (typeof input === "function") {
-    if (!node) {
-      throw new Error(
-        "tried to parse function input without without passing node.."
-      );
-    }
-    return input(node);
-  }
-  if (typeof input === "object") {
-    // is node
-    return input;
-  }
-  if (typeof input === "number" && !isNaN(input)) {
-    return n(input);
-  }
-  if (typeof input === "string") {
-    return n(input);
-  }
-  console.log(
-    `invalid input type "${typeof input}" for node of type "${
-      node.type
-    }", falling back to 0. The input was:`,
-    input
-  );
-  return 0;
-}
 
 Node.prototype.inherit = function (parent) {
   parent.inputOf && (this.inputOf = parent.inputOf);
@@ -79,7 +78,7 @@ export function getNode(type, ...args) {
   // early exit if no expansion is happening
   if (maxExpansions === 1) {
     const next = node(type);
-    return next.withIns(...args.map((arg) => parseInput(arg, next))); //
+    return next.withIns(...args.map((arg) => Node.parseInput(arg, next))); //
   }
 
   // dont expand exit node, but instead input all channels
@@ -88,7 +87,7 @@ export function getNode(type, ...args) {
       .map((arg) => {
         if (arg.type === polyType) {
           // we expect arg.ins to not contain functions..
-          return arg.ins.map((arg) => parseInput(arg).inherit(arg));
+          return arg.ins.map((arg) => Node.parseInput(arg).inherit(arg));
         }
         return arg;
       })
@@ -102,10 +101,10 @@ export function getNode(type, ...args) {
     const cloned = new Node(type);
     const inputs = args.map((arg) => {
       if (arg.type === polyType) {
-        const input = parseInput(arg.ins[i % arg.ins.length], cloned);
+        const input = Node.parseInput(arg.ins[i % arg.ins.length], cloned);
         return input.inherit(arg);
       }
-      arg = parseInput(arg, cloned); // wire up cloned node for feedback..
+      arg = Node.parseInput(arg, cloned); // wire up cloned node for feedback..
       if (arg.type === polyType) {
         // this can happen when arg was a function that contained multichannel expansion...
         arg = arg.ins[i];
@@ -176,9 +175,9 @@ export function module(name, fn, schema) {
       const id = moduleId++;
       // TODO: support function as arg for feedback => parseInput expects 2 args
       args = args.map((input, i) =>
-        parseInput(input).asModuleInput(name, id, i)
+        Node.parseInput(input).asModuleInput?.(name, id, i)
       );
-      return fn(...args).asModuleOutput(name, id);
+      return fn(...args).asModuleOutput?.(name, id);
     },
     schema
   );
@@ -348,9 +347,11 @@ export function evaluate(code, scope) {
     nodes.push(this.output(channels));
   };
   if (scope) {
+    scope.out = (node = n(0), ch) => node.out(ch);
     // pass all members of scope as function arguments to avoid using global scope
     Function(...Object.keys(scope), code)(...Object.values(scope));
   } else {
+    globalThis.out = (node = n(0), ch) => node.out(ch);
     // expect scope to be assigned to globalThis
     Function(code)();
   }

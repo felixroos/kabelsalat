@@ -2,8 +2,8 @@ import { assert } from "@kabelsalat/lib/src/utils.js";
 import "@kabelsalat/core/src/compiler.js"; // Node.prototype.compile
 import { MIDI, parseMidiMessage } from "@kabelsalat/lib/src/midi.js";
 import { Mouse } from "@kabelsalat/lib/src/mouse.js";
-import workletUrl from "./worklet.js?worker&url";
-import recorderUrl from "./recorder.js?worker&url";
+import workletUrl from "./worklet.js?audioworklet";
+import recorderUrl from "./recorder.js?audioworklet";
 import { audioBuffersToWav } from "./wav.js";
 import { register } from "@kabelsalat/core";
 import * as js from "@kabelsalat/lib/src/lang/js.js";
@@ -12,12 +12,14 @@ export class AudioView {
   constructor() {
     this.ugens = new Map();
   }
-  async updateGraph(node) {
+  async spawn(node, duration) {
     this.graph = node;
     const { src, ugens, registers } = node.compile({
       log: false,
     });
-    this.initMouse();
+    if (!this.mouse && src.includes("mouse")) {
+      this.initMouse();
+    }
     if (
       !this.midiInited &&
       ugens.some((ugen) => ugen.type.startsWith("Midi"))
@@ -27,10 +29,11 @@ export class AudioView {
     if (!this.audioIn && ugens.some((ugen) => ugen.type === "AudioIn")) {
       await this.initAudioIn();
     }
-    this.sendUgens();
+    this.sendCustomUgens();
     this.send({
-      type: "NEW_UNIT",
+      type: "SPAWN_UNIT",
       unit: { src, ugens, registers },
+      duration, // experimental
     });
   }
 
@@ -38,14 +41,23 @@ export class AudioView {
   registerUgen(ugen) {
     this.ugens.set(ugen.name, ugen);
   }
-  sendUgens() {
+  // custom ugens
+  sendCustomUgens() {
+    if (!this.ugens.size) {
+      return;
+    }
+    let messages = [];
     for (let [name, ugen] of this.ugens) {
-      this.send({
+      messages.push({
         type: "SET_UGEN",
         className: name,
         ugen: ugen + "",
       });
     }
+    this.send({
+      type: "BATCH_MSG",
+      messages,
+    });
   }
 
   scheduleMessage(msg, time) {
@@ -110,6 +122,7 @@ export class AudioView {
     });
   }
   initMouse() {
+    console.log("init mouse");
     this.mouse = new Mouse();
     this.mouse.on("move", (x, y) => {
       this.setControl("mouseX", x);
@@ -195,7 +208,7 @@ export class AudioView {
 
     this.recorder = new window.AudioWorkletNode(this.audioCtx, "recorder");
     this.audioWorklet.connect(this.recorder);
-    this.sendUgens();
+    this.sendCustomUgens();
     this.recorder.connect(this.audioCtx.destination);
 
     this.recorder.port.onmessage = (e) => {
@@ -261,6 +274,9 @@ export class AudioView {
 
   set fadeTime(fadeTime) {
     this.send({ type: "FADE_TIME", fadeTime });
+  }
+  set maxUnits(maxUnits) {
+    this.send({ type: "MAX_UNITS", maxUnits });
   }
 }
 

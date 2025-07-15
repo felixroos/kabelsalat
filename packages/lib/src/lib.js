@@ -164,7 +164,7 @@ export let clock = registerNode("clock", {
 });
 export let clockdiv = registerNode("clockdiv", {
   ugen: "ClockDiv",
-  tags: ["clock"],
+  tags: ["clock", "trigger"],
   description: "Clock signal divider",
   examples: [`impulse(8).clockdiv(2).ad(.1,.1).mul(sine(220)).out()`],
   ins: [
@@ -531,6 +531,34 @@ export let cos = registerNode("cos", {
   compile: ({ vars: [input = 0], name, lang }) =>
     langs[lang].def(name, langs[lang].defCos(input)),
 });
+export let tan = registerNode("tan", {
+  tags: ["math"],
+  description: "calculates the tan of the input signal",
+  ins: [{ name: "in" }],
+  compile: ({ vars: [input = 0], name, lang }) =>
+    langs[lang].def(name, langs[lang].defTan(input)),
+});
+export let acos = registerNode("acos", {
+  tags: ["math"],
+  description: "calculates the acos of the input signal",
+  ins: [{ name: "in" }],
+  compile: ({ vars: [input = 0], name, lang }) =>
+    langs[lang].def(name, langs[lang].defAcos(input)),
+});
+export let asin = registerNode("asin", {
+  tags: ["math"],
+  description: "calculates the asin of the input signal",
+  ins: [{ name: "in" }],
+  compile: ({ vars: [input = 0], name, lang }) =>
+    langs[lang].def(name, langs[lang].defAsin(input)),
+});
+export let atan = registerNode("atan", {
+  tags: ["math"],
+  description: "calculates the atan of the input signal",
+  ins: [{ name: "in" }],
+  compile: ({ vars: [input = 0], name, lang }) =>
+    langs[lang].def(name, langs[lang].defAtan(input)),
+});
 export let mul = registerNode("mul", {
   tags: ["math"],
   description: "Multiplies the given signals.",
@@ -584,6 +612,42 @@ export let round = registerNode("round", {
   examples: [`sine(440.5).round().out()`],
   compile: ({ vars: [input = 0], name, lang }) =>
     langs[lang].def(name, langs[lang].round(input)),
+});
+export let clamp = registerNode("clamp", {
+  tags: ["math"],
+  description: "Clamps the signal to stay within the given range",
+  ins: [{ name: "in" }, { name: "min" }, { name: "max" }],
+  examples: [`sine(440.5).clamp(-.6,.6).out()`],
+  compile: ({ vars: [input = 0, min = -1, max = 1], name, lang }) => {
+    const minV = langs[lang].min(min, max);
+    const maxV = langs[lang].max(min, max);
+    const clamped = langs[lang].min(langs[lang].max(input, minV), maxV);
+    return langs[lang].def(name, clamped);
+  },
+});
+export let floor = registerNode("floor", {
+  tags: ["math"],
+  description: "Rounds the signal down",
+  ins: [{ name: "in" }],
+  examples: [`sine(440.5).floor().out()`],
+  compile: ({ vars: [input = 0], name, lang }) =>
+    langs[lang].def(name, langs[lang].floor(input)),
+});
+export let ceil = registerNode("ceil", {
+  tags: ["math"],
+  description: "Rounds the signal up",
+  ins: [{ name: "in" }],
+  examples: [`sine(440.5).ceil().out()`],
+  compile: ({ vars: [input = 0], name, lang }) =>
+    langs[lang].def(name, langs[lang].ceil(input)),
+});
+export let sign = registerNode("sign", {
+  tags: ["math"],
+  description: "Returns 1 if positive and -1 if negative. uses Math.sign",
+  ins: [{ name: "in" }],
+  examples: [`sine(440.5).ceil().out()`],
+  compile: ({ vars: [input = 0], name, lang }) =>
+    langs[lang].def(name, langs[lang].sign(input)),
 });
 export let min = registerNode("min", {
   tags: ["math"],
@@ -647,6 +711,20 @@ export let greater = registerNode("greater", {
   compile: ({ vars: [a = 0, b = 0], name, lang }) =>
     langs[lang].def(name, `${a} > ${b}`),
 });
+export let lower = registerNode("lower", {
+  tags: ["logic"],
+  description: "returns 1 if input is lower then threshold",
+  ins: [{ name: "in" }, { name: "threshold" }],
+  examples: [
+    `lower(sine(1),0)
+.bipolar().range(100,200)
+.sine().out()`,
+  ],
+  compile: ({ vars: [a = 0, b = 0], name, lang }) =>
+    langs[lang].def(name, `${a} < ${b}`),
+});
+export let gt = greater;
+export let lt = lower;
 export let xor = registerNode("xor", {
   tags: ["logic"],
   description: "returns 1 if exactly one of the inputs is 1",
@@ -667,6 +745,28 @@ export let or = registerNode("or", {
   ins: [{ name: "a" }, { name: "b" }],
   compile: ({ vars: [a = 0, b = 0], name, lang }) =>
     langs[lang].def(name, `${a} || ${b} ? 1 : 0`),
+});
+export let not = registerNode("not", {
+  tags: ["logic"],
+  description: "returns 1 if input is 0, otherwise 0",
+  ins: [{ name: "in" }],
+  compile: ({ vars: [input = 0], name, lang }) =>
+    langs[lang].def(name, `(${input} === 0 ? 1 : 0)`),
+});
+export let bool = registerNode("bool", {
+  tags: ["logic"],
+  description: "returns 1 signal is non zero. inspired by genish",
+  ins: [{ name: "a" }],
+  compile: ({ vars: [a = 0], name, lang }) =>
+    langs[lang].def(name, `(${a} === 0 ? 0 : 1)`),
+});
+export let ifelse = registerNode("ifelse", {
+  tags: ["logic"],
+  description: "if control is 1, a is returned, otherwise b",
+  ins: [{ name: "control" }, { name: "a" }, { name: "b" }],
+  compile: ({ vars: [control = 0, a = 0, b = 0], name, lang }) =>
+    langs[lang].def(name, `(${control} === 1 ? ${a} : ${b})`),
+  examples: [`ifelse(pulse(1), sine(220), sine(330)).out()`],
 });
 export let range = registerNode("range", {
   tags: ["math"],
@@ -863,6 +963,12 @@ export let pick = registerNode("pick", {
   ugen: "Pick",
   description: "Pick",
   ins: [{ name: "index" }, { name: "inputs", dynamic: true }],
+  description: "picks input of given index",
+  examples: [
+    `sine(.25).range(0,2).round()
+.pick(...sine([220,330,440]).ins)
+.out()`,
+  ],
   compile: ({ vars, ...meta }) => langs[meta.lang].defUgen(meta, ...vars),
 });
 

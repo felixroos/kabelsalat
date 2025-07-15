@@ -33,6 +33,11 @@ export class SalatRepl {
         }
       });
     }
+    const self = this;
+    // this is the "dynamic" alternative to .out
+    core.Node.prototype.spawn = function (channels = [0, 1], duration) {
+      self.audio.spawn(this.output(channels).exit(), duration);
+    };
   }
 
   registerUgen(type, implementation) {
@@ -70,7 +75,9 @@ export class SalatRepl {
   }
   async play(node) {
     await this.audio.init();
-    this.audio.updateGraph(node);
+    if (node.ins.length) {
+      this.audio.spawn(node);
+    }
     this.onToggle?.(true);
   }
   run(code) {

@@ -24,13 +24,6 @@ export class AudioNode {
     this.sampleTime = 1 / sampleRate;
     this.send = send;
   }
-
-  /**
-   * Set/update the entire state for this node
-   */
-  setState(state) {
-    this.state = state;
-  }
 }
 
 /**

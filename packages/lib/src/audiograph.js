@@ -17,18 +17,36 @@ export class AudioGraph {
     // Method to send messages to the main thread
     this.send = send;
     this.units = [];
-    this.fadeTime = 0.1;
+    this.unitID = 0;
+    this.fadeTime = 0.5;
+    this.maxUnits = 1;
     this.q = []; // scheduler queue
   }
 
-  fadeOutLastUnit() {
-    if (this.units.length) {
-      this.units[this.units.length - 1].fadeOut(this.playPos, this.fadeTime);
+  fadeOutUnit(unit) {
+    unit.fadeOut(this.playPos, this.fadeTime);
+    this.freeUnit(unit.id, this.fadeTime);
+  }
+  fadeOutUnitById(id) {
+    const unit = this.units.find((unit) => unit.id === id);
+    if (unit) {
+      this.fadeOutUnit(unit);
     }
+  }
+  fadeOutAllUnits() {
+    this.units.forEach((unit) => this.fadeOutUnit(unit));
+  }
+  fadeOutOldUnits() {
+    const activeUnits = this.units.filter((unit) => unit.active);
+    const toCut = activeUnits.length - this.maxUnits;
+    if (toCut <= 0) {
+      return;
+    }
+    activeUnits.slice(0, toCut).forEach((unit) => this.fadeOutUnit(unit));
   }
 
   stop() {
-    this.fadeOutLastUnit();
+    this.fadeOutAllUnits();
     this.send({
       type: "STOP",
       fadeTime: this.fadeTime,
@@ -38,20 +56,36 @@ export class AudioGraph {
   /**
    * Update the audio graph given a new compiled unit
    */
-  newUnit(schema) {
-    const unit = new Unit(schema, this.sampleRate, this.send);
-    this.fadeOutLastUnit();
-
+  spawnUnit(schema, duration) {
     // create and fade in new unit sample generator
+    const unit = new Unit(this.unitID++, schema, this.sampleRate, this.send);
+    this.units.push(unit);
     unit.fadeIn(this.playPos, this.fadeTime);
 
-    // filter out finished units
-    this.units = this.units.filter((unit) => unit.getLevel(this.playPos) > 0);
+    this.fadeOutOldUnits();
+    // with ${schema.ugens.length} ugens
+    console.log(`spawn unit ${unit.id}, units alive: ${this.units.length}`);
+    if (duration) {
+      this.scheduleMessage({
+        msg: { type: "FADE_OUT_UNIT", id: unit.id },
+        time: duration,
+      });
+    }
+  }
 
-    this.units.push(unit);
-    console.log(
-      `${schema.ugens.length} ugens spawned, ${this.units.length} units alive`
-    );
+  freeUnit(id, timeout) {
+    if (timeout) {
+      this.scheduleMessage({
+        msg: { type: "FREE_UNIT", id },
+        time: timeout,
+      });
+      return;
+    }
+    const lenBefore = this.units.length;
+    this.units = this.units.filter((unit) => unit.id !== id);
+    if (lenBefore > this.units.length) {
+      console.log(`free unit ${id}, units alive: ${this.units.length}`);
+    }
   }
 
   /**
@@ -61,29 +95,30 @@ export class AudioGraph {
     // let node = "nodeId" in msg ? this.nodes[msg.nodeId] : null;
 
     switch (msg.type) {
-      case "NEW_UNIT":
-        this.newUnit(msg.unit);
+      case "SPAWN_UNIT":
+        this.spawnUnit(msg.unit, msg.duration);
         break;
-
-      /* case "SET_STATE":
-        node.setState(msg.state);
-        break; */
-
+      case "FREE_UNIT":
+        this.freeUnit(msg.id);
+        break;
+      case "FADE_OUT_UNIT":
+        this.fadeOutUnitById(msg.id);
+        break;
       case "NOTE_ON":
         this.noteOn(msg);
         break;
-
       case "CC":
         this.midiCC(msg);
         break;
-
       case "SET_CONTROL":
         this.setControl(msg);
         break;
       case "FADE_TIME":
         this.fadeTime = Number(msg.fadeTime);
         break;
-
+      case "MAX_UNITS":
+        this.maxUnits = Number(msg.maxUnits);
+        break;
       case "STOP":
         this.stop();
         break;
@@ -96,7 +131,6 @@ export class AudioGraph {
       case "BATCH_MSG":
         msg.messages.forEach((msg) => this.parseMsg(msg));
         break;
-
       default:
         throw new TypeError(`unknown message type ${msg.type}`);
     }
@@ -169,12 +203,14 @@ export class AudioGraph {
 }
 
 class Unit {
-  constructor(schema, sampleRate, send) {
+  constructor(id, schema, sampleRate, send) {
+    this.id = id;
     this.sampleRate = sampleRate;
     this.send = send;
     this.nodes = [];
+    this.active = true;
 
-    for (let i in schema.ugens) {
+    for (let i in schema.ugens) { // TODO: for in is slow?
       const ugen = schema.ugens[i];
       if (UGENS.has(ugen.type)) {
         const nodeClass = UGENS.get(ugen.type);
@@ -258,18 +294,27 @@ class Unit {
       match.setValue(value);
     }
   }
+  getLevel(t) {
+    if (this.fadeStart === undefined) {
+      return 0;
+    }
+    if (this.active) {
+      return lerp((t - this.fadeStart) / this.fadeTime, 0, 0.3);
+    }
+    return lerp((t - this.fadeStart) / this.fadeTime, this.fadeFrom, 0);
+  }
   fadeIn(time, fadeTime) {
-    const fadeStart = time;
-    const fadeEnd = time + fadeTime;
-    this.getLevel = (t) =>
-      lerp((t - fadeStart) / (fadeEnd - fadeStart), 0, 0.3);
+    this.fadeStart = time;
+    this.fadeTime = fadeTime;
   }
 
   fadeOut(time, fadeTime) {
-    const fadeStart = time;
-    const fadeEnd = time + fadeTime;
-    const fadeFrom = this.getLevel(time);
-    this.getLevel = (t) =>
-      lerp((t - fadeStart) / (fadeEnd - fadeStart), fadeFrom, 0);
+    this.fadeTime = fadeTime;
+    this.fadeFrom = this.getLevel(time);
+    this.active = false;
+    this.fadeStart = time;
+  }
+  isDone(time) {
+    return !this.active && this.getLevel(time) === 0;
   }
 }
