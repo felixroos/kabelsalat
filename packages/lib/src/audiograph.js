@@ -259,16 +259,24 @@ class Unit {
         node.type === "midigate" &&
         (node.channel === -1 || node.channel === channel)
     );
+    const midivelocities = this.nodes.filter(
+      (node) =>
+        node.type === "midivelocity" &&
+        (node.channel === -1 || node.channel === channel)
+    );
 
     if (velocity > 0) {
       // get free voice or steal one
       let freqNode = midifreqs.find((node) => node.isFree()) || midifreqs[0];
       let gateNode = midigates.find((node) => node.isFree()) || midigates[0];
+      let velocityNode = midivelocities.find((node) => node.isFree()) || midivelocities[0];
       freqNode?.noteOn(note, velocity);
       gateNode?.noteOn(note, velocity);
+      velocityNode?.noteOn(note, velocity);
     } else {
       midifreqs.find((node) => node.note === note)?.noteOff();
       midigates.find((node) => node.note === note)?.noteOff();
+      midivelocities.find((node) => node.note === note)?.noteOff();
     }
   }
 

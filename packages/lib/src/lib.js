@@ -5,6 +5,7 @@ import {
   register,
   module,
   node,
+  compile,
 } from "@kabelsalat/core";
 import * as js from "./lang/js.js";
 import * as c from "./lang/c.js";
@@ -457,6 +458,15 @@ export let midigate = registerNode("midigate", {
     "outputs gate of midi note in. Multiple instances will do voice allocation",
   examples: [`midigate().lag(1).mul(sine(220)).out()`],
   ins: [{ name: "channel", default: -1 }],
+  compile: ({ vars: [channel = -1], ...meta }) =>
+    langs[meta.lang].defUgen(meta, channel),
+});
+export let midivelocity = registerNode("midivelocity", {
+  ugen: "MidiVelocity",
+  tags: ["external", "midi"],
+  description: "outputs velocity of midi note in. Multiple instances will do voice allocation",
+  examples: [`midigate().ar(0.01,0.2).mul(saw(midifreq())).mul(midivelocity()).mul(.8).out()`],
+  ins: [{ name: "channel", default: -1}],
   compile: ({ vars: [channel = -1], ...meta }) =>
     langs[meta.lang].defUgen(meta, channel),
 });
