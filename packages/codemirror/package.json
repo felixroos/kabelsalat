@@ -16,6 +16,9 @@
     "@codemirror/view": "^6.28.4",
     "codemirror": "^6.0.1",
     "@lezer/highlight": "^1.2.0",
-    "@kabelsalat/transpiler": "workspace:*"
+    "@kabelsalat/transpiler": "workspace:*",
+    "@replit/codemirror-emacs": "^6.1.0",
+    "@replit/codemirror-vim": "^6.2.1",
+    "@replit/codemirror-vscode-keymap": "^6.0.2"
   }
 }
