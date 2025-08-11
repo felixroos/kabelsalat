@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@kabelsalat/core": "workspace:*",
+    "@kabelsalat/strudel": "workspace:*",
     "@kabelsalat/lib": "workspace:*"
   },
   "devDependencies": {
