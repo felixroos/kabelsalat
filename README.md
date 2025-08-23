@@ -1,6 +1,6 @@
 # kabelsalat
 
-currently moving to <https://codeberg.org/froos/kabelsalat/>
+permanently moved to <https://codeberg.org/froos/kabelsalat/>
 
 update your local repo via
 
